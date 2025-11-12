@@ -35,6 +35,7 @@ This file provides AI coding assistants with comprehensive guidance for generati
 - Custom session-based auth (SHA-256 hashed tokens)
 - **Argon2** password hashing (@node-rs/argon2)
 - **@oslojs/crypto** and **@oslojs/encoding** for cryptographic utilities
+- **Authentication helpers** in remote functions via `getUser()` and `requireAdminUser()`
 
 ### Validation & i18n
 - **Valibot v1.1** for schema validation
@@ -193,20 +194,6 @@ Valibot schemas for input validation:
 - Name with "Schema" suffix: `CreateBlogSchema`, `UpdateBlogSchema`
 - Integrate with `form()` and `query()` remote functions
 
-### Server Load Functions & Actions (`src/routes/**/*.server.ts`)
-Server-side data loading and form handling:
-
-**Key Files:**
-- `src/routes/demo/lucia/+page.server.ts`
-- `src/routes/demo/lucia/login/+page.server.ts`
-
-**Conventions:**
-- Type with `PageServerLoad` and `Actions` from `./$types`
-- Check `event.locals.user` for authentication
-- Use `redirect(302, path)` for navigation
-- Use `fail(statusCode, data)` for validation errors
-- Access form data with `await event.request.formData()`
-
 ### Page Components (`src/routes/**/*.svelte`)
 SvelteKit page components:
 
@@ -274,32 +261,22 @@ export const createProduct = form(CreateProductSchema, async (data) => {
 });
 ```
 
-#### 4. **Page Route** (`src/routes/products/+page.server.ts`)
-```typescript
-import { getAllProducts } from '$lib/remotes/product.remote';
-import type { PageServerLoad } from './$types';
-
-export const load: PageServerLoad = async () => {
-  const products = await getAllProducts();
-  return { products };
-};
-```
-
-#### 5. **Page Component** (`src/routes/products/+page.svelte`)
+#### 4. **Page Component** (`src/routes/products/+page.svelte`)
 ```svelte
 <script lang="ts">
-  let { data } = $props();
+  import { getAllProducts } from '$lib/remotes/product.remote';
+  import { Button } from '$lib/components/ui/button';
 </script>
 
 <h1>Products</h1>
 <ul>
-  {#each data.products as product}
+  {#each await getAllProducts() as product}
     <li>{product.name} - ${product.price}</li>
   {/each}
 </ul>
 ```
 
-#### 6. **Components** (based on 4-tier architecture)
+#### 5. **Components** (based on 4-tier architecture)
 
 **If creating base UI component** (`src/lib/components/ui/`):
 - Check https://www.shadcn-svelte.com/llms.txt first
@@ -316,15 +293,10 @@ export const load: PageServerLoad = async () => {
   import * as m from '$lib/paraglide/messages';
   
   let { product = $bindable() } = $props();
-  
-  async function handleSubmit() {
-    const result = await createProduct(product);
-    // Handle result
-  }
 </script>
 
-<form onsubmit={handleSubmit}>
-  <Input bind:value={product.name} placeholder={m.productName()} />
+<form {...createProduct}>
+  <Input {...createProduct.fields.name.as('text')} placeholder={m.productName()} />
   <Button type="submit">{m.save()}</Button>
 </form>
 ```
@@ -1679,6 +1651,8 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Use `Date.now()` for timestamps (use `new Date()`)
 - Create multiple schema files (use single `schema.ts`)
 - Do not create Summary files
+- **Create `+page.server.ts` or `+layout.server.ts` files** - Use remote functions with `query()` and `form()` instead
+- **Use load functions for data fetching** - All data should be fetched via remote functions called from components
 
 ### ✓ Always Do
 
@@ -1686,8 +1660,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Validate all inputs server-side with Valibot
 - Use `cn()` for className merging
 - Generate UUIDs server-side with `crypto.randomUUID()`
-- Type all functions properly (PageServerLoad, Actions, etc.)
-- Check authentication in load functions
+- Type all functions properly
 - Use `new Date()` for timestamp fields
 - Follow shadcn-svelte pattern for UI components
 - Wrap database operations in remote functions
@@ -1697,7 +1670,8 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Check https://www.shadcn-svelte.com/llms.txt before creating new UI components**
 - **Update .results/ documentation when adding features**
 - **Use remote functions pattern for all UI data interactions**
-- **If .results folder is update check if instruction file needs update**
+- **Use `await` in components to call remote functions** - `{#each await getAllProducts() as product}`
+- **If .results folder is updated check if instruction file needs update**
 
 **Remote Functions Specific:**
 - **Use `query()` for all read operations** - Never call DB directly from components
@@ -1711,6 +1685,28 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Use `query.batch()` for N+1 problems** - Batch simultaneous queries
 - **Handle submission states** - Check `form.pending`, `form.result` (use `invalid()` for errors)
 - **Call `form.reset()` when using enhance** - Forms don't auto-reset with custom enhancement
+
+**Authentication in Remote Functions:**
+- **Use `getUser()` helper** - Call in remote functions to require authentication (redirects to `/auth/login` if not logged in)
+- **Use `requireAdminUser()` helper** - Call in remote functions to require admin privileges (redirects to `/auth/login` if not admin)
+- **Both helpers automatically redirect** - No need for manual authentication checks
+- **Import from auth module** - `import { getUser, requireAdminUser } from '$lib/server/auth'`
+
+Example protected remote function:
+```typescript
+import { query } from '$app/server';
+import { getUser, requireAdminUser } from '$lib/server/auth';
+
+export const getProtectedData = query(async () => {
+  const user = getUser(); // Redirects to login if not authenticated
+  return { data: 'protected', userId: user.id };
+});
+
+export const getAdminData = query(async () => {
+  const user = requireAdminUser(); // Redirects to login if not admin
+  return { data: 'admin only', userId: user.id };
+});
+```
 
 ---
 

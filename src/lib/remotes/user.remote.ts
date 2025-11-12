@@ -14,6 +14,7 @@ import { eq, count } from 'drizzle-orm';
 import { hash, verify } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import * as v from 'valibot';
+import { redirect } from '@sveltejs/kit';
 
 // Helper function to generate user ID
 function generateUserId() {
@@ -24,6 +25,8 @@ function generateUserId() {
 
 // Query functions (read operations)
 export const getAllUsers = query(async () => {
+    auth.requireAdminUser();
+
 	return await db
 		.select({
 			id: tables.user.id,
@@ -37,6 +40,8 @@ export const getAllUsers = query(async () => {
 });
 
 export const getUserById = query(GetUserByIdSchema, async (data) => {
+    auth.requireAdminUser();
+
 	const [user] = await db
 		.select({
 			id: tables.user.id,
@@ -57,6 +62,8 @@ export const getUserById = query(GetUserByIdSchema, async (data) => {
 });
 
 export const getUserByUsername = query(v.string(), async (username) => {
+    auth.requireAdminUser();
+    
 	const [user] = await db
 		.select({
 			id: tables.user.id,
@@ -83,7 +90,7 @@ export const login = form(LoginSchema, async (data, invalid) => {
 		.where(eq(tables.user.username, username));
 
 	if (!existingUser) {
-		invalid(invalid.username('Incorrect username or password'));
+		invalid(invalid.password('Incorrect username or password'));
 		return;
 	}
 
@@ -104,13 +111,7 @@ export const login = form(LoginSchema, async (data, invalid) => {
 	const session = await auth.createSession(sessionToken, existingUser.id);
 	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-	return {
-		id: existingUser.id,
-		username: existingUser.username,
-		email: existingUser.email,
-		role: existingUser.role,
-		isAdmin: existingUser.isAdmin
-	};
+    redirect(303, '/');
 });
 
 export const register = form(RegisterSchema, async (data, invalid) => {
@@ -189,6 +190,8 @@ export const logout = form(async () => {
 
 // Admin CRUD operations
 export const createUser = form(CreateUserSchema, async (data) => {
+    auth.requireAdminUser();
+
 	const event = getRequestEvent();
 	const { username, email, password, role, isAdmin } = data;
 
@@ -243,6 +246,8 @@ export const createUser = form(CreateUserSchema, async (data) => {
 });
 
 export const updateUser = form(UpdateUserSchema, async (data) => {
+    auth.requireAdminUser();
+
 	const event = getRequestEvent();
 	const { id, username, email, password, role, isAdmin } = data;
 
@@ -325,6 +330,8 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 });
 
 export const deleteUser = form(DeleteUserSchema, async (data) => {
+    auth.requireAdminUser();
+
 	const event = getRequestEvent();
 	const { id } = data;
 
