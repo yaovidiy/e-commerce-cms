@@ -11,6 +11,24 @@
   "ui-components": [
     "./src/lib/components/ui/button/button.svelte"
   ],
+  "admin-components": [
+    "./src/lib/components/admin/layout/",
+    "./src/lib/components/admin/features/",
+    "./src/lib/components/admin/widgets/"
+  ],
+  "client-components": [
+    "./src/lib/components/client/layout/",
+    "./src/lib/components/client/features/",
+    "./src/lib/components/client/widgets/"
+  ],
+  "common-components": [
+    "./src/lib/components/common/layout/",
+    "./src/lib/components/common/data-display/",
+    "./src/lib/components/common/forms/",
+    "./src/lib/components/common/feedback/",
+    "./src/lib/components/common/navigation/",
+    "./src/lib/components/common/utility/"
+  ],
   "page-components": [
     "./src/routes/+layout.svelte",
     "./src/routes/+page.svelte",

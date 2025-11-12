@@ -50,8 +50,31 @@ This file provides AI coding assistants with comprehensive guidance for generati
 
 ## File Categories Reference
 
-### UI Components (`src/lib/components/ui/`)
-shadcn-svelte style components with:
+### Component Architecture (4-Tier Structure)
+
+Components are organized into **4 top-level folders** following separation of concerns:
+
+```
+src/lib/components/
+├── ui/              # shadcn-svelte base components (NO business logic)
+├── admin/           # Admin panel specific components
+├── client/          # Customer-facing components
+└── common/          # Shared components across admin/client
+```
+
+**Decision Tree - Where does this component go?**
+```
+Base UI primitive (button, input, dialog)? → /ui
+Contains business logic or fetches data?
+  ├─ Admin panel only? → /admin
+  ├─ Customer-facing only? → /client
+  └─ Used in both? → /common
+```
+
+📖 **Full guide**: `docs/COMPONENTS_STRUCTURE.md`
+
+#### 1. UI Components (`src/lib/components/ui/`)
+shadcn-svelte base primitives with:
 - Module script for types and variants (`tv()`)
 - Regular script for props (`$props()`)
 - `cn()` utility for class merging
@@ -67,6 +90,64 @@ shadcn-svelte style components with:
 - Support `ref` via `$bindable()`
 - Render children with `{@render children?.()}`
 - Polymorphic components (button/anchor based on `href`)
+- **NO business logic or API calls**
+
+#### 2. Admin Components (`src/lib/components/admin/`)
+Admin dashboard/CMS components organized by:
+- **`layout/`** - Sidebars, headers, navigation
+- **`features/`** - Domain-grouped modules (product-management/, blog-management/, order-management/)
+- **`widgets/`** - Dashboard widgets, stats cards
+
+**Example Structure:**
+```
+admin/features/product-management/
+├── product-list-table.svelte
+├── product-form.svelte
+├── product-quick-edit.svelte
+└── index.ts
+```
+
+**Conventions:**
+- Use remote functions for data fetching
+- Check `event.locals.user` for authentication
+- Group by feature domain
+- NO customer-facing UI code
+
+#### 3. Client Components (`src/lib/components/client/`)
+Customer-facing e-commerce components organized by:
+- **`layout/`** - Site headers, footers, navigation
+- **`features/`** - Product catalog, cart, checkout, user account, blog
+- **`widgets/`** - Marketing widgets, promos, newsletters
+
+**Example Structure:**
+```
+client/features/product-catalog/
+├── product-card.svelte
+├── product-grid.svelte
+├── product-filters.svelte
+└── index.ts
+```
+
+**Conventions:**
+- Optimize for SEO and performance
+- Group by customer journey
+- Use i18n for multi-language support
+- NO admin logic
+
+#### 4. Common Components (`src/lib/components/common/`)
+Shared components used across both admin and client:
+- **`layout/`** - Generic page layouts, containers
+- **`data-display/`** - Tables, pagination, empty states
+- **`forms/`** - Rich text editors, image uploads, date pickers
+- **`feedback/`** - Toasts, confirmations, loading spinners
+- **`navigation/`** - Tabs, steppers, breadcrumbs
+- **`utility/`** - Error boundaries, SEO, language switchers
+
+**Conventions:**
+- Context-agnostic (works in admin and client)
+- Higher-level than `/ui`, more generic than `/admin` or `/client`
+- Can compose `/ui` components
+- NO admin-only or client-only logic
 
 ### Remote Functions (`src/lib/remotes/`)
 Server-side functions using SvelteKit's experimental remoteFunctions:
@@ -216,8 +297,67 @@ export const load: PageServerLoad = async () => {
 </ul>
 ```
 
-#### 6. **UI Component** (if needed: `src/lib/components/ui/product-card/`)
-Follow shadcn-svelte pattern with module script, variants, and barrel exports.
+#### 6. **Components** (based on 4-tier architecture)
+
+**If creating base UI component** (`src/lib/components/ui/`):
+- Check https://www.shadcn-svelte.com/llms.txt first
+- Follow shadcn-svelte pattern with module script, variants, and barrel exports
+- NO business logic
+
+**If creating admin feature component** (`src/lib/components/admin/features/product-management/`):
+```svelte
+<!-- product-form.svelte -->
+<script lang="ts">
+  import { Input } from '$lib/components/ui/input';
+  import { Button } from '$lib/components/ui/button';
+  import { createProduct } from '$lib/remotes/product.remote';
+  import * as m from '$lib/paraglide/messages';
+  
+  let { product = $bindable() } = $props();
+  
+  async function handleSubmit() {
+    const result = await createProduct(product);
+    // Handle result
+  }
+</script>
+
+<form onsubmit={handleSubmit}>
+  <Input bind:value={product.name} placeholder={m.productName()} />
+  <Button type="submit">{m.save()}</Button>
+</form>
+```
+
+**If creating client feature component** (`src/lib/components/client/features/product-catalog/`):
+```svelte
+<!-- product-card.svelte -->
+<script lang="ts">
+  import { Button } from '$lib/components/ui/button';
+  import { Card } from '$lib/components/ui/card';
+  import * as m from '$lib/paraglide/messages';
+  
+  let { product } = $props();
+</script>
+
+<Card>
+  <h3>{product.name}</h3>
+  <p>${product.price}</p>
+  <Button>{m.addToCart()}</Button>
+</Card>
+```
+
+**If creating shared component** (`src/lib/components/common/data-display/`):
+```svelte
+<!-- data-table.svelte -->
+<script lang="ts">
+  import { Table } from '$lib/components/ui/table';
+  
+  let { data, columns } = $props();
+</script>
+
+<Table>
+  <!-- Generic table used in both admin and client -->
+</Table>
+```
 
 ---
 
@@ -353,6 +493,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Skip server-side validation
 - Use `Date.now()` for timestamps (use `new Date()`)
 - Create multiple schema files (use single `schema.ts`)
+- Do not create Summary files
 
 ### ✓ Always Do
 
@@ -362,7 +503,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Generate UUIDs server-side with `crypto.randomUUID()`
 - Type all functions properly (PageServerLoad, Actions, etc.)
 - Check authentication in load functions
-- Use `new Date()` for timestamp fields
+- Use `new Date()` for timestamp fie*lds
 - Follow shadcn-svelte pattern for UI components
 - Wrap database operations in remote functions
 - Export types from schemas (`$inferSelect`, `$inferInsert`)
@@ -371,6 +512,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Check https://www.shadcn-svelte.com/llms.txt before creating new UI components**
 - **Update .results/ documentation when adding features**
 - **Use remote functions pattern for all UI data interactions**
+- **If .results folder is update check if instraction file needs update**
 
 ---
 
@@ -407,17 +549,36 @@ When adding new features or components:
    - Never bypass remote functions layer in UI components
 
 ### File Locations
-- UI Components: `src/lib/components/ui/{name}/`
-- Remote Functions: `src/lib/remotes/{domain}.remote.ts`
-- Database: `src/lib/server/db/`
-- Schemas: `src/lib/server/schemas/index.ts`
-- Routes: `src/routes/`
-- Auth: `src/lib/server/auth.ts`
-- i18n: `src/lib/i18n.ts`, `messages/{locale}.json`
+- **UI Components**: `src/lib/components/ui/{name}/` (shadcn-svelte primitives)
+- **Admin Components**: `src/lib/components/admin/{layout|features|widgets}/`
+- **Client Components**: `src/lib/components/client/{layout|features|widgets}/`
+- **Common Components**: `src/lib/components/common/{layout|data-display|forms|feedback|navigation|utility}/`
+- **Remote Functions**: `src/lib/remotes/{domain}.remote.ts`
+- **Database**: `src/lib/server/db/`
+- **Schemas**: `src/lib/server/schemas/index.ts`
+- **Routes**: `src/routes/`
+- **Auth**: `src/lib/server/auth.ts`
+- **i18n**: `src/lib/i18n.ts`, `messages/{locale}.json`
 
 ### Import Patterns
 ```typescript
+// UI Components (shadcn-svelte)
 import { Button } from '$lib/components/ui/button';
+import { Input } from '$lib/components/ui/input';
+
+// Admin Components
+import { ProductForm } from '$lib/components/admin/features/product-management';
+import { AdminSidebar } from '$lib/components/admin/layout';
+
+// Client Components
+import { ProductCard } from '$lib/components/client/features/product-catalog';
+import { CartDrawer } from '$lib/components/client/features/cart';
+
+// Common Components
+import { DataTable } from '$lib/components/common/data-display';
+import { RichTextEditor } from '$lib/components/common/forms';
+
+// Utilities & Server
 import { cn } from '$lib/utils';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';

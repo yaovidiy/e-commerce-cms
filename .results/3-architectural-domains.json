@@ -1,4 +1,26 @@
 {
+  "component-architecture": {
+    "required_patterns": {
+      "4-tier-structure": "Components organized in 4 top-level folders: ui/, admin/, client/, common/",
+      "ui-components": "shadcn-svelte base primitives in /ui (buttons, inputs, dialogs)",
+      "admin-components": "Admin panel components in /admin with layout/, features/, widgets/ subfolders",
+      "client-components": "Customer-facing components in /client with layout/, features/, widgets/ subfolders",
+      "common-components": "Shared components in /common with layout/, data-display/, forms/, feedback/, navigation/, utility/ subfolders",
+      "feature-grouping": "Group components by domain in features/ (product-management/, blog-management/)",
+      "barrel-exports": "Use index.ts for barrel exports in feature folders"
+    },
+    "architectural_constraints": {
+      "decision-tree": "Use decision tree: base UI primitive → /ui, admin-only → /admin, client-only → /client, shared → /common",
+      "no-mixing": "Never mix admin and client logic in same component",
+      "extract-common": "Duplicate code between admin/client must be extracted to /common",
+      "shadcn-first": "Always check shadcn-svelte before creating custom UI components",
+      "max-nesting": "Maximum 3 levels of folder nesting",
+      "naming": "Files: kebab-case.svelte, Exports: PascalCase, Folders: kebab-case",
+      "remote-functions": "All data operations use remote functions pattern",
+      "i18n": "All user-facing text uses translation keys",
+      "no-business-in-ui": "UI components must not contain business logic or API calls"
+    }
+  },
   "ui": {
     "required_patterns": {
       "component-structure": "UI components must use shadcn-svelte pattern with module script for types and regular script for props",

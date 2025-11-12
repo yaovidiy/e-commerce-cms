@@ -3,6 +3,17 @@
 ## Overview
 UI components follow the shadcn-svelte pattern with Svelte 5 runes, tailwind-variants for styling, and TypeScript for type safety.
 
+## Component Architecture
+
+The project uses a **4-tier component architecture**:
+
+1. **`/ui`** - shadcn-svelte base primitives (buttons, inputs, dialogs)
+2. **`/admin`** - Admin panel specific components (dashboard, product management)
+3. **`/client`** - Customer-facing components (catalog, cart, checkout)
+4. **`/common`** - Shared components across admin/client (data tables, forms)
+
+📖 **See full architecture guide**: `docs/COMPONENTS_STRUCTURE.md`
+
 ## File Structure
 Each component gets its own directory with two files:
 
