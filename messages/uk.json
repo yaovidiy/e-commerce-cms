@@ -1,4 +1,39 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "hello_world": "Hello, {name} from uk!"
+  "hello_world": "Hello, {name} from uk!",
+  
+  "auth_login": "Вхід",
+  "auth_signup": "Реєстрація",
+  "auth_logout": "Вихід",
+  "auth_username": "Ім'я користувача",
+  "auth_email": "Електронна пошта",
+  "auth_password": "Пароль",
+  "auth_confirm_password": "Підтвердити пароль",
+  "auth_remember_me": "Запам'ятати мене",
+  "auth_forgot_password": "Забули пароль?",
+  "auth_no_account": "Немає облікового запису?",
+  "auth_have_account": "Вже є обліковий запис?",
+  "auth_sign_in": "Увійти",
+  "auth_sign_up": "Зареєструватися",
+  "auth_sign_out": "Вийти",
+  "auth_welcome_back": "З поверненням",
+  "auth_create_account": "Створити обліковий запис",
+  
+  "auth_error_invalid_credentials": "Неправильне ім'я користувача або пароль",
+  "auth_error_username_taken": "Ім'я користувача вже зайняте",
+  "auth_error_username_required": "Ім'я користувача обов'язкове",
+  "auth_error_username_too_short": "Ім'я користувача повинно містити принаймні 3 символи",
+  "auth_error_username_too_long": "Ім'я користувача повинно містити не більше 31 символу",
+  "auth_error_username_invalid": "Ім'я користувача може містити лише малі літери, цифри, дефіси та підкреслення",
+  "auth_error_email_invalid": "Недійсна адреса електронної пошти",
+  "auth_error_password_required": "Пароль обов'язковий",
+  "auth_error_password_too_short": "Пароль повинен містити принаймні 6 символів",
+  "auth_error_password_too_long": "Пароль повинен містити не більше 255 символів",
+  "auth_error_passwords_not_match": "Паролі не співпадають",
+  "auth_error_unauthorized": "Не авторизовано",
+  "auth_error_no_session": "Немає активного сеансу",
+  
+  "auth_success_login": "Успішний вхід",
+  "auth_success_signup": "Обліковий запис успішно створено",
+  "auth_success_logout": "Успішний вихід"
 }

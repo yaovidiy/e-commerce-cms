@@ -150,18 +150,20 @@ Shared components used across both admin and client:
 - NO admin-only or client-only logic
 
 ### Remote Functions (`src/lib/remotes/`)
-Server-side functions using SvelteKit's experimental remoteFunctions:
+Server-side functions using SvelteKit's experimental remoteFunctions. These provide type-safe communication between client and server, always executing on the server with access to server-only modules.
 
 **Key Files:**
 - `src/lib/remotes/blog.remote.ts`
 - `src/lib/remotes/product.remote.ts`
+- `src/lib/remotes/user.remote.ts`
 
-**Conventions:**
-- Use `query()` for read operations (no validation or with Valibot schema)
-- Use `form()` for write operations (always with Valibot schema)
-- Name patterns: `getAll{Entities}`, `get{Entity}By{Field}`, `create{Entity}`, `update{Entity}`
-- Return created records with `.returning()`
-- Generate IDs with `crypto.randomUUID()`
+**Four Types of Remote Functions:**
+1. **`query()`** - Read dynamic data from the server
+2. **`form()`** - Write data via forms (progressive enhancement)
+3. **`command()`** - Write data programmatically (client-side only)
+4. **`prerender()`** - Static data computed at build time
+
+📖 **Full guide**: See "Remote Functions Deep Dive" section below
 
 ### Database Schema (`src/lib/server/db/`)
 Drizzle ORM schemas with SQLite:
@@ -361,6 +363,1189 @@ export const load: PageServerLoad = async () => {
 
 ---
 
+## Remote Functions Deep Dive
+
+### Overview
+
+Remote functions are SvelteKit's experimental feature for type-safe client-server communication. They enable calling server-side functions from anywhere in your app with full TypeScript safety, automatic serialization, and progressive enhancement.
+
+**Key Benefits:**
+- Type-safe communication between client and server
+- Access to server-only modules (environment variables, database clients)
+- Works with or without JavaScript (progressive enhancement for forms)
+- Automatic data serialization (supports `Date`, `Map`, custom types via transport hook)
+- Built-in validation via Standard Schema (Valibot)
+
+**Configuration** (`svelte.config.js`):
+```javascript
+export default {
+  kit: {
+    experimental: {
+      remoteFunctions: true  // Required
+    }
+  },
+  compilerOptions: {
+    experimental: {
+      async: true  // Optional: enables await in components
+    }
+  }
+};
+```
+
+---
+
+### 1. query() - Reading Data
+
+Use `query()` for fetching data from the server. Queries can be called anywhere and work as Promises.
+
+#### Basic Query
+
+**Definition** (`src/lib/remotes/blog.remote.ts`):
+```typescript
+import { query } from '$app/server';
+import { db } from '$lib/server/db';
+import * as tables from '$lib/server/db/schema';
+
+export const getPosts = query(async () => {
+  return await db.select().from(tables.post);
+});
+```
+
+**Usage in Component**:
+```svelte
+<script lang="ts">
+  import { getPosts } from '$lib/remotes/blog.remote';
+</script>
+
+<h1>Recent posts</h1>
+
+<ul>
+  {#each await getPosts() as post}
+    <li><a href="/blog/{post.slug}">{post.title}</a></li>
+  {/each}
+</ul>
+```
+
+#### Query with Validation
+
+Always validate arguments using Valibot schemas:
+
+**Definition**:
+```typescript
+import * as v from 'valibot';
+import { query } from '$app/server';
+import { error } from '@sveltejs/kit';
+
+export const getPost = query(v.string(), async (slug) => {
+  const [post] = await db.select()
+    .from(tables.post)
+    .where(eq(tables.post.slug, slug));
+  
+  if (!post) error(404, 'Not found');
+  return post;
+});
+```
+
+**Usage**:
+```svelte
+<script lang="ts">
+  import { getPost } from '../blog.remote';
+  
+  let { params } = $props();
+  const post = $derived(await getPost(params.slug));
+</script>
+
+<h1>{post.title}</h1>
+<div>{@html post.content}</div>
+```
+
+#### Query Properties
+
+Queries have multiple ways to access data:
+
+**Using `await` (recommended)**:
+```svelte
+{#each await getPosts() as post}
+  <li>{post.title}</li>
+{/each}
+```
+
+**Using properties**:
+```svelte
+<script lang="ts">
+  const query = getPosts();
+</script>
+
+{#if query.error}
+  <p>Error loading posts</p>
+{:else if query.loading}
+  <p>Loading...</p>
+{:else}
+  <ul>
+    {#each query.current as post}
+      <li>{post.title}</li>
+    {/each}
+  </ul>
+{/if}
+```
+
+#### Refreshing Queries
+
+Update query data on demand:
+
+```svelte
+<button onclick={() => getPosts().refresh()}>
+  Check for new posts
+</button>
+```
+
+**Important**: Queries are cached while on the page, so `getPosts() === getPosts()` is true. No need for references to update.
+
+#### Batched Queries (query.batch)
+
+Solve N+1 problems by batching simultaneous queries:
+
+**Definition**:
+```typescript
+import { query } from '$app/server';
+import * as v from 'valibot';
+
+export const getWeather = query.batch(v.string(), async (cities) => {
+  // Single database call with all cities
+  const weather = await db.select()
+    .from(tables.weather)
+    .where(inArray(tables.weather.city, cities));
+  
+  const lookup = new Map(weather.map(w => [w.city, w]));
+  
+  // Return resolver function
+  return (city) => lookup.get(city);
+});
+```
+
+**Usage** (multiple calls batched automatically):
+```svelte
+{#each cities.slice(0, limit) as city}
+  <h3>{city.name}</h3>
+  <CityWeather weather={await getWeather(city.id)} />
+{/each}
+```
+
+---
+
+### 2. form() - Writing Data with Forms
+
+Use `form()` for mutations via HTML forms. Supports progressive enhancement (works without JavaScript).
+
+#### Basic Form Function
+
+**Definition** (`src/lib/remotes/blog.remote.ts`):
+```typescript
+import * as v from 'valibot';
+import { form } from '$app/server';
+import { error, redirect } from '@sveltejs/kit';
+
+export const createPost = form(
+  v.object({
+    title: v.pipe(v.string(), v.nonEmpty()),
+    content: v.pipe(v.string(), v.nonEmpty())
+  }),
+  async (data) => {
+    // Validate authentication
+    const user = await auth.getUser();
+    if (!user) error(401, 'Unauthorized');
+    
+    const slug = data.title.toLowerCase().replace(/ /g, '-');
+    
+    await db.insert(tables.post).values({
+      id: crypto.randomUUID(),
+      slug,
+      title: data.title,
+      content: data.content,
+      createdAt: new Date()
+    });
+    
+    redirect(303, `/blog/${slug}`);
+  }
+);
+```
+
+**Usage in Component**:
+```svelte
+<script lang="ts">
+  import { createPost } from '../blog.remote';
+</script>
+
+<h1>Create a new post</h1>
+
+<form {...createPost}>
+  <label>
+    <h2>Title</h2>
+    <input {...createPost.fields.title.as('text')} />
+  </label>
+  
+  <label>
+    <h2>Content</h2>
+    <textarea {...createPost.fields.content.as('text')}></textarea>
+  </label>
+  
+  <button>Publish!</button>
+</form>
+```
+
+#### Field Types and Methods
+
+The `fields` object provides type-safe access to form inputs:
+
+**Text/Textarea/Email/etc.**:
+```svelte
+<input {...createPost.fields.title.as('text')} />
+<input {...createPost.fields.email.as('email')} />
+<textarea {...createPost.fields.content.as('text')}></textarea>
+```
+
+**Numbers**:
+```svelte
+<input {...form.fields.height.as('number')} />
+```
+
+**Checkboxes** (single boolean):
+```svelte
+<input {...form.fields.likesDogs.as('checkbox')} />
+```
+
+**Schema for optional boolean**:
+```typescript
+likesDogs: v.optional(v.boolean(), false)  // Default false if unchecked
+```
+
+**Radio buttons**:
+```svelte
+{#each ['windows', 'mac', 'linux'] as os}
+  <label>
+    <input {...survey.fields.operatingSystem.as('radio', os)}>
+    {os}
+  </label>
+{/each}
+```
+
+**Checkboxes** (multiple values as array):
+```svelte
+{#each ['html', 'css', 'js'] as language}
+  <label>
+    <input {...survey.fields.languages.as('checkbox', language)}>
+    {language}
+  </label>
+{/each}
+```
+
+**Schema for checkbox array**:
+```typescript
+languages: v.optional(v.array(v.picklist(['html', 'css', 'js'])), [])
+```
+
+**Select dropdown**:
+```svelte
+<select {...survey.fields.operatingSystem.as('select')}>
+  <option>windows</option>
+  <option>mac</option>
+  <option>linux</option>
+</select>
+```
+
+**File uploads**:
+```svelte
+<form {...createProfile} enctype="multipart/form-data">
+  <input {...createProfile.fields.photo.as('file')} />
+</form>
+```
+
+**Schema for file**:
+```typescript
+photo: v.file()  // or v.file('image/*') for content type validation
+```
+
+#### Nested Fields
+
+Support for deeply nested objects and arrays:
+
+**Schema**:
+```typescript
+const schema = v.object({
+  name: v.string(),
+  info: v.object({
+    height: v.number(),
+    likesDogs: v.optional(v.boolean(), false)
+  }),
+  attributes: v.array(v.string())
+});
+```
+
+**Usage**:
+```svelte
+<script>
+  import { createProfile } from './data.remote';
+  const { name, info, attributes } = createProfile.fields;
+</script>
+
+<form {...createProfile}>
+  <input {...name.as('text')} />
+  <input {...info.height.as('number')} />
+  <input {...info.likesDogs.as('checkbox')} />
+  
+  <input {...attributes[0].as('text')} />
+  <input {...attributes[1].as('text')} />
+  <input {...attributes[2].as('text')} />
+</form>
+```
+
+#### Validation
+
+**Display validation errors**:
+```svelte
+<form {...createPost}>
+  <label>
+    <h2>Title</h2>
+    
+    {#each createPost.fields.title.issues() as issue}
+      <p class="error">{issue.message}</p>
+    {/each}
+    
+    <input {...createPost.fields.title.as('text')} />
+  </label>
+</form>
+```
+
+**All validation errors**:
+```svelte
+{#each createPost.fields.allIssues() as issue}
+  <p class="error">{issue.message}</p>
+{/each}
+```
+
+**Programmatic validation**:
+```svelte
+<!-- Validate on input -->
+<form {...createPost} oninput={() => createPost.validate()}>
+
+<!-- Validate on change -->
+<form {...createPost} onchange={() => createPost.validate()}>
+
+<!-- Validate all fields (including untouched) -->
+<button onclick={() => createPost.validate({ includeUntouched: true })}>
+  Validate All
+</button>
+```
+
+**Client-side preflight validation**:
+```svelte
+<script>
+  import * as v from 'valibot';
+  import { createPost } from '../data.remote';
+  
+  const schema = v.object({
+    title: v.pipe(v.string(), v.nonEmpty()),
+    content: v.pipe(v.string(), v.nonEmpty())
+  });
+</script>
+
+<form {...createPost.preflight(schema)}>
+  <!-- Validation runs client-side before server submission -->
+</form>
+```
+
+**Programmatic validation in form handler**:
+```typescript
+export const buyHotcakes = form(
+  v.object({
+    qty: v.pipe(v.number(), v.minValue(1, 'you must buy at least one'))
+  }),
+  async (data, invalid) => {
+    try {
+      await db.buy(data.qty);
+    } catch (e) {
+      if (e.code === 'OUT_OF_STOCK') {
+        // Mark field as invalid programmatically
+        invalid(invalid.qty(`we don't have enough hotcakes`));
+      }
+    }
+  }
+);
+```
+
+**Nested field validation**:
+```typescript
+invalid.profile.email('Email already exists')
+invalid.items[0].qty('Insufficient stock')
+invalid('General form error')  // Form-level error
+```
+
+#### Getting/Setting Values
+
+**Get current values**:
+```svelte
+<form {...createPost}>
+  <!-- form inputs -->
+</form>
+
+<div class="preview">
+  <h2>{createPost.fields.title.value()}</h2>
+  <div>{@html render(createPost.fields.content.value())}</div>
+</div>
+```
+
+**Get all values as object**:
+```typescript
+const formData = createPost.fields.value();  // { title, content }
+```
+
+**Set values programmatically**:
+```typescript
+// Set entire object
+createPost.fields.set({
+  title: 'My new blog post',
+  content: 'Lorem ipsum...'
+});
+
+// Set individual fields
+createPost.fields.title.set('My new blog post');
+createPost.fields.content.set('Lorem ipsum...');
+```
+
+#### Handling Sensitive Data
+
+Fields with leading underscore won't repopulate on validation errors (no value sent back):
+
+```svelte
+<form {...register}>
+  <label>
+    Username
+    <input {...register.fields.username.as('text')} />
+  </label>
+  
+  <label>
+    Password
+    <input {...register.fields._password.as('password')} />
+  </label>
+</form>
+```
+
+If validation fails, only `username` will be populated on page reload.
+
+#### Single-Flight Mutations
+
+**Server-side refresh** (inside form handler):
+```typescript
+export const createPost = form(schema, async (data) => {
+  // ... create post logic
+  
+  // Refresh getPosts() on server and send with result
+  await getPosts().refresh();
+  
+  redirect(303, `/blog/${slug}`);
+});
+
+export const updatePost = form(schema, async (data) => {
+  const result = await externalApi.update(post);
+  
+  // Set query data directly (no refetch needed)
+  await getPost(post.id).set(result);
+});
+```
+
+**Client-side refresh** (using enhance):
+```svelte
+<form {...createPost.enhance(async ({ submit }) => {
+  // Refresh specific query on submit
+  await submit().updates(getPosts());
+})}>
+```
+
+**With optimistic updates**:
+```svelte
+<form {...createPost.enhance(async ({ submit }) => {
+  await submit().updates(
+    getPosts().withOverride((posts) => [newPost, ...posts])
+  );
+})}>
+```
+
+Override applies immediately and releases when submission completes.
+
+#### Returns and Redirects
+
+**Returning data**:
+```typescript
+export const createPost = form(schema, async (data) => {
+  // ... logic
+  return { success: true };
+});
+```
+
+**Accessing returned data**:
+```svelte
+<form {...createPost}>
+  <!-- ... -->
+</form>
+
+{#if createPost.result?.success}
+  <p>Successfully published!</p>
+{/if}
+```
+
+**Important**: `result` is ephemeral (vanishes on navigation/reload/resubmit).
+
+**Redirecting**:
+```typescript
+export const createPost = form(schema, async (data) => {
+  // ... logic
+  redirect(303, `/blog/${slug}`);
+});
+```
+
+#### Form Enhancement
+
+Customize submission behavior:
+
+```svelte
+<form {...createPost.enhance(async ({ form, data, submit }) => {
+  try {
+    await submit();
+    form.reset();  // Clear inputs
+    showToast('Successfully published!');
+  } catch (error) {
+    showToast('Oh no! Something went wrong');
+  }
+})}>
+```
+
+**Properties**:
+- `form` - The HTMLFormElement
+- `data` - FormData object
+- `submit()` - Function to perform submission
+
+**Note**: When using `enhance`, forms don't auto-reset. Call `form.reset()` manually.
+
+#### Form Submission States
+
+```svelte
+<form {...createPost}>
+  <button disabled={!!createPost.pending}>
+    {createPost.pending ? 'Publishing...' : 'Publish'}
+  </button>
+</form>
+
+{#if createPost.result}
+  <p>Success: {createPost.result.message}</p>
+{/if}
+```
+
+**Note**: Server-side errors thrown with `error()` will trigger error boundaries. Use the `invalid()` function to mark field-specific validation errors that appear in `fields.{field}.issues()`.
+
+#### Multiple Form Instances
+
+Isolate forms in lists using `.for()`:
+
+```svelte
+<script lang="ts">
+  import { getTodos, modifyTodo } from '../data.remote';
+</script>
+
+<h1>Todos</h1>
+
+{#each await getTodos() as todo}
+  {@const modify = modifyTodo.for(todo.id)}
+  <form {...modify}>
+    <!-- ... -->
+    <button disabled={!!modify.pending}>save changes</button>
+  </form>
+{/each}
+```
+
+#### Alternative Submit Buttons
+
+Use different actions for different buttons:
+
+```svelte
+<script lang="ts">
+  import { login, register } from '$lib/auth';
+</script>
+
+<form {...login}>
+  <label>
+    Username
+    <input {...login.fields.username.as('text')} />
+  </label>
+  
+  <label>
+    Password
+    <input {...login.fields._password.as('password')} />
+  </label>
+  
+  <button>login</button>
+  <button {...register.buttonProps}>register</button>
+</form>
+```
+
+The second button submits to `register` instead of `login`. `buttonProps` also has an `enhance` method.
+
+---
+
+### 3. command() - Programmatic Mutations
+
+Use `command()` for mutations called programmatically (not via form submission). **Prefers `form()` when possible** for progressive enhancement.
+
+#### Basic Command
+
+**Definition**:
+```typescript
+import * as v from 'valibot';
+import { command } from '$app/server';
+
+export const addLike = command(v.string(), async (id) => {
+  await db.update(tables.item)
+    .set({ likes: sql`likes + 1` })
+    .where(eq(tables.item.id, id));
+});
+```
+
+**Usage**:
+```svelte
+<script lang="ts">
+  import { addLike } from './likes.remote';
+  
+  let { item } = $props();
+</script>
+
+<button onclick={async () => {
+  try {
+    await addLike(item.id);
+  } catch (error) {
+    showToast('Something went wrong!');
+  }
+}}>
+  add like
+</button>
+```
+
+**Important**: Commands cannot be called during render (only in event handlers).
+
+#### Updating Queries from Commands
+
+**Server-side refresh**:
+```typescript
+export const addLike = command(v.string(), async (id) => {
+  await db.update(tables.item)
+    .set({ likes: sql`likes + 1` })
+    .where(eq(tables.item.id, id));
+  
+  getLikes(id).refresh();
+});
+```
+
+**Client-side refresh**:
+```typescript
+await addLike(item.id).updates(getLikes(item.id));
+```
+
+**With optimistic updates**:
+```typescript
+await addLike(item.id).updates(
+  getLikes(item.id).withOverride((n) => n + 1)
+);
+```
+
+---
+
+### 4. prerender() - Static Data
+
+Use `prerender()` for data that changes at most once per deployment. Computed at build time and cached on CDN.
+
+#### Basic Prerender
+
+**Definition**:
+```typescript
+import { prerender } from '$app/server';
+
+export const getPosts = prerender(async () => {
+  const posts = await db.select().from(tables.post);
+  return posts;
+});
+```
+
+**Usage** (same as query):
+```svelte
+{#each await getPosts() as post}
+  <li>{post.title}</li>
+{/each}
+```
+
+Data is cached using Cache API and survives reloads. Cleared when user visits new deployment.
+
+#### Prerender with Arguments
+
+**Definition**:
+```typescript
+import * as v from 'valibot';
+
+export const getPost = prerender(v.string(), async (slug) => {
+  const [post] = await db.select()
+    .from(tables.post)
+    .where(eq(tables.post.slug, slug));
+  
+  if (!post) error(404, 'Not found');
+  return post;
+});
+```
+
+**Specify inputs to prerender**:
+```typescript
+export const getPost = prerender(
+  v.string(),
+  async (slug) => { /* ... */ },
+  {
+    inputs: () => [
+      'first-post',
+      'second-post',
+      'third-post'
+    ]
+  }
+);
+```
+
+**Dynamic prerender** (allows runtime calls with non-prerendered args):
+```typescript
+export const getPost = prerender(
+  v.string(),
+  async (slug) => { /* ... */ },
+  {
+    dynamic: true,
+    inputs: () => ['first-post', 'second-post']
+  }
+);
+```
+
+---
+
+### Using getRequestEvent()
+
+Access `RequestEvent` inside remote functions:
+
+```typescript
+import { getRequestEvent, query } from '$app/server';
+import { findUser } from '$lib/server/database';
+
+export const getProfile = query(async () => {
+  const user = await getUser();
+  
+  return {
+    name: user.name,
+    avatar: user.avatar
+  };
+});
+
+// Reusable helper - runs once per request (cached)
+const getUser = query(async () => {
+  const { cookies } = getRequestEvent();
+  return await findUser(cookies.get('session_id'));
+});
+```
+
+**Important notes**:
+- Cannot set headers (except cookies in `form`/`command`)
+- `route`, `params`, `url` relate to the page calling the function, not the endpoint URL
+- Never use these values for authorization checks (they persist across navigation)
+
+**Setting cookies** (in `form` and `command` only):
+```typescript
+import { form, getRequestEvent } from '$app/server';
+
+export const login = form(LoginSchema, async (data) => {
+  const event = getRequestEvent();
+  
+  // ... auth logic
+  
+  event.cookies.set('session', token, {
+    path: '/',
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 30  // 30 days
+  });
+  
+  return { success: true };
+});
+```
+
+---
+
+### Validation Error Handling
+
+**Custom error handler** (`src/hooks.server.ts`):
+```typescript
+import type { HandleValidationError } from '@sveltejs/kit';
+
+export const handleValidationError: HandleValidationError = ({ event, issues }) => {
+  // Log for monitoring
+  console.error('Validation error:', issues);
+  
+  return {
+    message: 'Invalid request'
+  };
+};
+```
+
+**Unchecked validation** (opt-out):
+```typescript
+import { query } from '$app/server';
+
+export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
+  // TypeScript shape might not match actual runtime arguments
+  // Use with caution - bypasses validation
+});
+```
+
+---
+
+### Redirects
+
+Use `redirect()` in `query`, `form`, and `prerender`:
+
+```typescript
+import { redirect } from '@sveltejs/kit';
+
+export const createPost = form(schema, async (data) => {
+  // ... logic
+  redirect(303, `/blog/${slug}`);
+});
+```
+
+**Not supported in `command`**. If needed, return redirect object and handle client-side:
+
+```typescript
+export const doSomething = command(schema, async (data) => {
+  // ... logic
+  return { redirect: '/success' };
+});
+```
+
+```svelte
+<button onclick={async () => {
+  const result = await doSomething(data);
+  if (result.redirect) {
+    goto(result.redirect);
+  }
+}}>
+```
+
+---
+
+### Remote Functions Naming Conventions
+
+**Queries** (read operations):
+- `getAll{Entities}` - List all: `getAllProducts()`, `getAllPosts()`
+- `get{Entity}By{Field}` - Find by field: `getPostBySlug()`, `getUserById()`
+- `get{Entity}` - Find one: `getPost()`, `getUser()` (when argument is obvious)
+
+**Forms** (write via forms):
+- `create{Entity}` - Create new: `createPost()`, `createUser()`
+- `update{Entity}` - Update existing: `updatePost()`, `updateUser()`
+- `delete{Entity}` - Delete: `deletePost()`, `deleteUser()`
+- Use present tense verbs: `login()`, `register()`, `checkout()`
+
+**Commands** (programmatic writes):
+- Action verbs: `addLike()`, `removeFavorite()`, `markAsRead()`
+- Present tense: `toggleVisibility()`, `incrementCounter()`
+
+**Prerender** (static data):
+- Same as queries but for build-time data
+- Often used for navigation, metadata, static content
+
+---
+
+### Complete Example: Authentication
+
+**Schema** (`src/lib/server/schemas/index.ts`):
+```typescript
+import * as v from 'valibot';
+
+export const LoginSchema = v.object({
+  username: v.pipe(v.string(), v.minLength(3), v.maxLength(31)),
+  password: v.pipe(v.string(), v.minLength(6), v.maxLength(255))
+});
+
+export const RegisterSchema = v.object({
+  username: v.pipe(
+    v.string(),
+    v.minLength(3),
+    v.maxLength(31),
+    v.regex(/^[a-z0-9-]+$/, 'Only lowercase, numbers, and dashes')
+  ),
+  password: v.pipe(v.string(), v.minLength(6), v.maxLength(255))
+});
+```
+
+**Remote Functions** (`src/lib/remotes/user.remote.ts`):
+```typescript
+import { form, query, getRequestEvent } from '$app/server';
+import { hash, verify } from '@node-rs/argon2';
+import { redirect } from '@sveltejs/kit';
+import * as auth from '$lib/server/auth';
+import { LoginSchema, RegisterSchema } from '$lib/server/schemas';
+
+export const login = form(LoginSchema, async (data, invalid) => {
+  const event = getRequestEvent();
+  
+  const [user] = await db.select()
+    .from(tables.user)
+    .where(eq(tables.user.username, data.username));
+  
+  if (!user) {
+    invalid(invalid.username('Incorrect username or password'));
+    return;
+  }
+  
+  const validPassword = await verify(user.hashedPassword, data.password);
+  if (!validPassword) {
+    invalid(invalid.password('Incorrect username or password'));
+    return;
+  }
+  
+  const sessionToken = auth.generateSessionToken();
+  const session = await auth.createSession(sessionToken, user.id);
+  
+  auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+  
+  redirect(303, '/dashboard');
+});
+
+export const register = form(RegisterSchema, async (data, invalid) => {
+  const event = getRequestEvent();
+  
+  // Check if username exists
+  const [existing] = await db.select()
+    .from(tables.user)
+    .where(eq(tables.user.username, data.username));
+  
+  if (existing) {
+    invalid(invalid.username('Username already taken'));
+    return;
+  }
+  
+  // Hash password
+  const hashedPassword = await hash(data.password, {
+    memoryCost: 19456,
+    timeCost: 2,
+    outputLen: 32,
+    parallelism: 1
+  });
+  
+  // Check if first user (make admin)
+  const userCount = await db.select({ count: count() })
+    .from(tables.user);
+  const isFirstUser = userCount[0].count === 0;
+  
+  // Create user
+  const [newUser] = await db.insert(tables.user).values({
+    id: crypto.randomUUID(),
+    username: data.username,
+    hashedPassword,
+    role: isFirstUser ? 'admin' : 'user',
+    isAdmin: isFirstUser,
+    createdAt: new Date()
+  }).returning();
+  
+  // Create session
+  const sessionToken = auth.generateSessionToken();
+  const session = await auth.createSession(sessionToken, newUser.id);
+  
+  auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+  
+  redirect(303, '/dashboard');
+});
+
+export const logout = form(v.object({}), async () => {
+  const event = getRequestEvent();
+  
+  const sessionId = event.cookies.get('auth-session');
+  if (sessionId) {
+    await auth.invalidateSession(sessionId);
+    auth.deleteSessionTokenCookie(event);
+  }
+  
+  redirect(303, '/');
+});
+
+export const getCurrentUser = query(async () => {
+  const event = getRequestEvent();
+  return event.locals.user;
+});
+```
+
+**Login Form** (`src/lib/components/client/features/auth/login-form.svelte`):
+```svelte
+<script lang="ts">
+  import { login } from '$lib/remotes/user.remote';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import * as m from '$lib/paraglide/messages';
+</script>
+
+<form {...login}>
+  <div>
+    <Label for={login.fields.username.name}>
+      {m.username()}
+    </Label>
+    <Input {...login.fields.username.as('text')} />
+    {#each login.fields.username.issues() as issue}
+      <p class="text-destructive text-sm">{issue.message}</p>
+    {/each}
+  </div>
+  
+  <div>
+    <Label for={login.fields.password.name}>
+      {m.password()}
+    </Label>
+    <Input {...login.fields.password.as('password')} />
+    {#each login.fields.password.issues() as issue}
+      <p class="text-destructive text-sm">{issue.message}</p>
+    {/each}
+  </div>
+  
+  <Button type="submit" disabled={!!login.pending}>
+    {login.pending ? m.loggingIn() : m.login()}
+  </Button>
+</form>
+```
+
+**Signup Form** (`src/lib/components/client/features/auth/signup-form.svelte`):
+```svelte
+<script lang="ts">
+  import { register } from '$lib/remotes/user.remote';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import * as m from '$lib/paraglide/messages';
+  
+  let confirmPassword = $state('');
+  let passwordMismatch = $state(false);
+  
+  function checkPasswords() {
+    const password = register.fields.password.value();
+    passwordMismatch = password !== confirmPassword && confirmPassword.length > 0;
+  }
+</script>
+
+<form {...register}>
+  <div>
+    <Label for={register.fields.username.name}>
+      {m.username()}
+    </Label>
+    <Input {...register.fields.username.as('text')} />
+    {#each register.fields.username.issues() as issue}
+      <p class="text-destructive text-sm">{issue.message}</p>
+    {/each}
+  </div>
+  
+  <div>
+    <Label for={register.fields.password.name}>
+      {m.password()}
+    </Label>
+    <Input
+      {...register.fields.password.as('password')}
+      oninput={checkPasswords}
+    />
+    {#each register.fields.password.issues() as issue}
+      <p class="text-destructive text-sm">{issue.message}</p>
+    {/each}
+  </div>
+  
+  <div>
+    <Label>{m.confirmPassword()}</Label>
+    <Input
+      type="password"
+      bind:value={confirmPassword}
+      oninput={checkPasswords}
+    />
+    {#if passwordMismatch}
+      <p class="text-destructive text-sm">{m.passwordsMustMatch()}</p>
+    {/if}
+  </div>
+  
+  <Button
+    type="submit"
+    disabled={!!register.pending || passwordMismatch}
+  >
+    {register.pending ? m.registering() : m.register()}
+  </Button>
+</form>
+```
+
+**Logout Button** (`src/lib/components/client/features/auth/logout-button.svelte`):
+```svelte
+<script lang="ts">
+  import { logout } from '$lib/remotes/user.remote';
+  import { Button } from '$lib/components/ui/button';
+  import * as m from '$lib/paraglide/messages';
+</script>
+
+<form {...logout}>
+  <Button type="submit" disabled={!!logout.pending} variant="ghost">
+    {logout.pending ? m.loggingOut() : m.logout()}
+  </Button>
+</form>
+```
+
+---
+
+### Best Practices
+
+1. **Always Validate Arguments**
+   - Use Valibot schemas for all `query`, `form`, `command` with arguments
+   - Never trust client input
+   - Schema validation runs before your callback
+
+2. **Use Appropriate Function Type**
+   - `query()` - Reading data (GET-like)
+   - `form()` - Mutations via forms (supports no-JS)
+   - `command()` - Programmatic mutations (requires JS)
+   - `prerender()` - Static/build-time data
+
+3. **Progressive Enhancement**
+   - Prefer `form()` over `command()` when possible
+   - Forms work without JavaScript using `method` and `action` attributes
+   - Use `enhance()` to customize behavior when JS is available
+
+4. **Authentication & Authorization**
+   - Use `getRequestEvent()` to access cookies
+   - Check `event.locals.user` for authentication
+   - Perform authorization checks in remote functions, not in components
+   - Never rely on `params` or `url` from `getRequestEvent()` for auth
+
+5. **Error Handling**
+   - Use `error(statusCode, message)` for user-facing errors
+   - Implement `handleValidationError` hook for custom error responses
+   - Show validation errors with `fields.{field}.issues()`
+
+6. **Performance**
+   - Use `query.batch()` to solve N+1 problems
+   - Implement single-flight mutations with `refresh()` or `set()`
+   - Use `prerender()` for data that changes per deployment
+   - Queries are cached per page - no need for manual caching
+
+7. **Type Safety**
+   - Export types from schemas: `$inferSelect`, `$inferInsert`
+   - TypeScript infers form field types from schema
+   - Use proper typing for `PageServerLoad` and `Actions`
+
+8. **Naming Conventions**
+   - Use descriptive, action-oriented names
+   - Follow `get{Entity}`, `create{Entity}`, `update{Entity}` patterns
+   - Keep names consistent across the codebase
+
+---
+
 ## Integration Rules
 
 ### Authentication Constraints
@@ -503,7 +1688,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Generate UUIDs server-side with `crypto.randomUUID()`
 - Type all functions properly (PageServerLoad, Actions, etc.)
 - Check authentication in load functions
-- Use `new Date()` for timestamp fie*lds
+- Use `new Date()` for timestamp fields
 - Follow shadcn-svelte pattern for UI components
 - Wrap database operations in remote functions
 - Export types from schemas (`$inferSelect`, `$inferInsert`)
@@ -512,7 +1697,20 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Check https://www.shadcn-svelte.com/llms.txt before creating new UI components**
 - **Update .results/ documentation when adding features**
 - **Use remote functions pattern for all UI data interactions**
-- **If .results folder is update check if instraction file needs update**
+- **If .results folder is update check if instruction file needs update**
+
+**Remote Functions Specific:**
+- **Use `query()` for all read operations** - Never call DB directly from components
+- **Use `form()` for mutations via forms** - Prefer over `command()` for progressive enhancement
+- **Spread form objects onto form elements** - `<form {...formFunction}>`
+- **Use fields API for inputs** - `<input {...form.fields.name.as('text')} />`
+- **Display validation errors** - `{#each form.fields.name.issues() as issue}`
+- **Always validate arguments** - Pass Valibot schema to `query()`, `form()`, `command()`
+- **Use `getRequestEvent()` to access cookies** - Never use `params` or `url` for auth
+- **Implement single-flight mutations** - Use `refresh()` or `set()` to update queries
+- **Use `query.batch()` for N+1 problems** - Batch simultaneous queries
+- **Handle submission states** - Check `form.pending`, `form.result` (use `invalid()` for errors)
+- **Call `form.reset()` when using enhance** - Forms don't auto-reset with custom enhancement
 
 ---
 

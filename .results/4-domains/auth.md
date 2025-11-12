@@ -1,14 +1,25 @@
 # Authentication Domain Implementation
 
 ## Overview
-The authentication system uses custom session-based authentication with Argon2 password hashing and SHA-256 hashed session tokens. All authentication logic runs server-side via hooks.
+The authentication system uses custom session-based authentication with Argon2 password hashing and SHA-256 hashed session tokens. All authentication logic runs server-side via hooks and remote functions.
 
 ## Architecture
 
 ### Core Files
 - `src/lib/server/auth.ts`: Authentication utilities
+- `src/lib/remotes/user.remote.ts`: Auth remote functions (login, register, logout, CRUD)
+- `src/lib/server/schemas/index.ts`: Validation schemas
 - `src/hooks.server.ts`: Request handling and session validation
 - Database tables: `user` and `session`
+- UI Components: Login form, signup form, logout button
+
+### Remote Functions Pattern
+**All authentication operations use SvelteKit's experimental remote functions for type-safe client-server communication:**
+- `login()` - Form function for authentication
+- `register()` - Form function for registration with first-user-as-admin logic
+- `logout()` - Form function for session termination
+- `getAllUsers()`, `getUserById()`, `getUserByUsername()` - Query functions
+- `createUser()`, `updateUser()`, `deleteUser()` - Admin CRUD operations
 
 ## Session Management
 
