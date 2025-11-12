@@ -1,0 +1,145 @@
+{
+  "ui": {
+    "required_patterns": {
+      "component-structure": "UI components must use shadcn-svelte pattern with module script for types and regular script for props",
+      "variant-system": "Use tailwind-variants tv() for creating variant-based component APIs",
+      "class-merging": "Always use cn() utility for merging Tailwind classes",
+      "svelte-5-runes": "Must use $props, $bindable, @render syntax - no legacy export let",
+      "typescript": "All components must be TypeScript with proper type exports"
+    },
+    "architectural_constraints": {
+      "styling": "Only Tailwind v4 utility classes allowed, no inline styles or component-scoped CSS",
+      "props-pattern": "Props must be defined with $props() rune and include ref support via $bindable",
+      "children-rendering": "Children must be rendered with {@render children?.()} syntax",
+      "type-exports": "Export component Props, Variants, and Size types from index.ts barrel files",
+      "component-location": "UI components go in src/lib/components/ui/{component-name}/",
+      "polymorphic-components": "Components can accept both href (renders <a>) or render as <button>"
+    }
+  },
+  "routing": {
+    "required_patterns": {
+      "file-based-routing": "SvelteKit file-based routing in src/routes/",
+      "layouts": "+layout.svelte for shared layouts",
+      "pages": "+page.svelte for page components",
+      "server-loads": "+page.server.ts for server-side data loading with PageServerLoad type",
+      "form-actions": "Form submissions via SvelteKit actions exported from +page.server.ts"
+    },
+    "architectural_constraints": {
+      "i18n-routing": "Must use i18n.reroute() in hooks.ts for internationalized routes",
+      "auth-protection": "Protected routes check event.locals.user and redirect if null",
+      "load-return-types": "Server load functions must type with PageServerLoad",
+      "actions-type": "Form actions must type with Actions from ./$types",
+      "redirects": "Use redirect(302, path) from @sveltejs/kit for navigation",
+      "failures": "Use fail(statusCode, data) for form validation errors"
+    }
+  },
+  "state-management": {
+    "required_patterns": {
+      "server-state": "Use event.locals for request-scoped state (user, session)",
+      "svelte-runes": "Use $state rune for reactive client state (Svelte 5)",
+      "no-global-store": "No centralized state management library (no Redux/Zustand)",
+      "load-functions": "Data fetching via load functions, not client-side stores"
+    },
+    "architectural_constraints": {
+      "locals-typing": "event.locals typed in app.d.ts with user and session",
+      "server-first": "Server-side data fetching preferred over client-side",
+      "remote-functions": "Use query() and form() patterns for server communication",
+      "reactive-state": "Client reactivity via Svelte 5 runes, not stores"
+    }
+  },
+  "data-layer": {
+    "required_patterns": {
+      "orm": "Drizzle ORM for all database operations",
+      "database": "SQLite via better-sqlite3",
+      "schema-definition": "Define schemas in src/lib/server/db/schema.ts using drizzle-orm/sqlite-core",
+      "db-instance": "Single db instance exported from src/lib/server/db/index.ts",
+      "type-inference": "Use $inferSelect and $inferInsert for type generation",
+      "migrations": "Use drizzle-kit for schema migrations (db:push, db:migrate)",
+      "remote-functions": "Wrap database operations in query() or form() remote functions"
+    },
+    "architectural_constraints": {
+      "server-only": "Database code must stay in $lib/server/* (never client-side)",
+      "sqlite-dialect": "Must use SQLite dialect and patterns",
+      "primary-keys": "Use text() for primary keys with UUIDs or base32 encoded strings",
+      "timestamps": "Use integer() with { mode: 'timestamp' } for dates",
+      "foreign-keys": "Always define .references() for relationships",
+      "query-building": "Use Drizzle query builder (select, insert, update, delete) with type safety",
+      "env-variables": "DATABASE_URL must be provided via environment"
+    }
+  },
+  "auth": {
+    "required_patterns": {
+      "session-based": "Custom session-based authentication (not JWT)",
+      "password-hashing": "Argon2 for password hashing with specific parameters",
+      "session-tokens": "SHA-256 hashed tokens stored as cookies",
+      "token-generation": "Base32-encoded random bytes for session tokens",
+      "user-ids": "Base32-encoded random bytes for user IDs (120 bits entropy)",
+      "hooks": "Authentication handled in hooks.server.ts before all requests"
+    },
+    "architectural_constraints": {
+      "cookie-name": "Session cookie must be named 'auth-session'",
+      "session-duration": "30-day expiry with 15-day renewal window",
+      "argon2-params": "memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1",
+      "token-encoding": "Use @oslojs/encoding for base32 and hex encoding",
+      "crypto-lib": "Use @oslojs/crypto for SHA-256 hashing",
+      "locals-injection": "Set event.locals.user and event.locals.session in handle hook",
+      "validation": "Username: 3-31 chars, lowercase/numbers/dashes. Password: 6-255 chars",
+      "session-table": "Store sessions in database with id, userId, expiresAt columns"
+    }
+  },
+  "validation": {
+    "required_patterns": {
+      "schema-library": "Valibot for all validation schemas",
+      "schema-location": "Define schemas in src/lib/server/schemas/",
+      "form-validation": "Use with form() remote function for automatic validation",
+      "query-validation": "Use with query() remote function for input validation"
+    },
+    "architectural_constraints": {
+      "valibot-syntax": "Use v.object(), v.string(), v.pipe() syntax",
+      "validation-chains": "Chain validators with v.pipe() for multiple checks",
+      "min-max-lengths": "Always validate string lengths (minLength, maxLength)",
+      "type-inference": "Schemas automatically infer TypeScript types",
+      "server-side": "Validation must happen server-side, not client-only"
+    }
+  },
+  "i18n": {
+    "required_patterns": {
+      "paraglide": "Use @inlang/paraglide-sveltekit for internationalization",
+      "compile-time": "Translations compiled at build time (zero runtime overhead)",
+      "message-files": "JSON files in messages/{locale}.json",
+      "i18n-handle": "Wrap app with <ParaglideJS> in root +layout.svelte",
+      "reroute": "Use i18n.reroute() in hooks.ts for route localization"
+    },
+    "architectural_constraints": {
+      "project-config": "i18n config in project.inlang/ directory",
+      "supported-locales": "Currently supports 'en' and 'uk' locales",
+      "generated-code": "Auto-generated code in src/lib/paraglide/",
+      "no-runtime-loading": "No dynamic translation loading - all compile-time",
+      "handle-sequence": "i18n handle must run before auth handle in sequence()"
+    }
+  },
+  "testing": {
+    "required_patterns": {
+      "e2e-testing": "Playwright for end-to-end tests",
+      "test-location": "Tests in e2e/ directory"
+    },
+    "architectural_constraints": {
+      "test-command": "Use pnpm test or pnpm test:e2e to run tests",
+      "playwright-config": "Configuration in playwright.config.ts"
+    }
+  },
+  "build-tooling": {
+    "required_patterns": {
+      "build-tool": "Vite 5 as build tool and dev server",
+      "framework-plugin": "@sveltejs/vite-plugin-svelte for Svelte support",
+      "tailwind-plugin": "@tailwindcss/vite for Tailwind v4 CSS",
+      "i18n-plugin": "paraglide Vite plugin for i18n generation"
+    },
+    "architectural_constraints": {
+      "plugin-order": "tailwindcss() must come before sveltekit() in Vite plugins",
+      "experimental-features": "remoteFunctions: true and async: true enabled",
+      "adapter": "@sveltejs/adapter-auto for deployment",
+      "preprocess": "vitePreprocess() for Svelte preprocessing"
+    }
+  }
+}

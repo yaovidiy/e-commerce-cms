@@ -1,0 +1,95 @@
+{
+  "svelte-components": [
+    "./src/routes/+layout.svelte",
+    "./src/routes/+page.svelte",
+    "./src/routes/demo/+page.svelte",
+    "./src/routes/demo/paraglide/+page.svelte",
+    "./src/routes/demo/lucia/+page.svelte",
+    "./src/routes/demo/lucia/login/+page.svelte",
+    "./src/lib/components/ui/button/button.svelte"
+  ],
+  "ui-components": [
+    "./src/lib/components/ui/button/button.svelte"
+  ],
+  "page-components": [
+    "./src/routes/+layout.svelte",
+    "./src/routes/+page.svelte",
+    "./src/routes/demo/+page.svelte",
+    "./src/routes/demo/paraglide/+page.svelte",
+    "./src/routes/demo/lucia/+page.svelte",
+    "./src/routes/demo/lucia/login/+page.svelte"
+  ],
+  "server-load-functions": [
+    "./src/routes/demo/lucia/+page.server.ts",
+    "./src/routes/demo/lucia/login/+page.server.ts"
+  ],
+  "server-actions": [
+    "./src/routes/demo/lucia/+page.server.ts",
+    "./src/routes/demo/lucia/login/+page.server.ts"
+  ],
+  "remote-functions": [
+    "./src/lib/remotes/blog.remote.ts",
+    "./src/lib/remotes/product.remote.ts"
+  ],
+  "database-schema": [
+    "./src/lib/server/db/schema.ts"
+  ],
+  "database-client": [
+    "./src/lib/server/db/index.ts"
+  ],
+  "validation-schemas": [
+    "./src/lib/server/schemas/index.ts"
+  ],
+  "authentication": [
+    "./src/lib/server/auth.ts"
+  ],
+  "hooks": [
+    "./src/hooks.server.ts",
+    "./src/hooks.ts"
+  ],
+  "utilities": [
+    "./src/lib/utils.ts"
+  ],
+  "i18n": [
+    "./src/lib/i18n.ts"
+  ],
+  "type-definitions": [
+    "./src/app.d.ts"
+  ],
+  "styles": [
+    "./src/app.css"
+  ],
+  "component-exports": [
+    "./src/lib/components/ui/button/index.ts"
+  ],
+  "library-entry": [
+    "./src/lib/index.ts"
+  ],
+  "config-files": [
+    "./vite.config.ts",
+    "./svelte.config.js",
+    "./drizzle.config.ts",
+    "./eslint.config.js",
+    "./playwright.config.ts",
+    "./tsconfig.json",
+    "./components.json",
+    "./.prettierrc"
+  ],
+  "translation-files": [
+    "./messages/en.json",
+    "./messages/uk.json"
+  ],
+  "migration-files": [
+    "./drizzle/0000_yellow_human_robot.sql"
+  ],
+  "test-files": [
+    "./e2e/demo.test.ts"
+  ],
+  "documentation": [
+    "./README.md"
+  ],
+  "environment": [
+    "./.env",
+    "./.env.example"
+  ]
+}
