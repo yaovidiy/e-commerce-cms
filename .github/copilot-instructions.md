@@ -255,7 +255,8 @@ Follow shadcn-svelte pattern with module script, variants, and barrel exports.
 - **Generated code**: Auto-generated in `src/lib/paraglide/`
 - **Route localization**: Enabled via `i18n.reroute()` in `hooks.ts`
 - **Wrapper**: Must wrap app with `<ParaglideJS>` in root layout
-- **Handle sequence**: i18n handle before auth handle
+- **No hardcoded text**: Always use translation keys (`import * as m from '$lib/paraglide/messages'`)
+- **Update all languages**: When adding translations, update ALL message files (`en.json`, `uk.json`)
 
 ### Validation Constraints
 - **Server-side mandatory**: Never skip validation
@@ -365,6 +366,8 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - Follow shadcn-svelte pattern for UI components
 - Wrap database operations in remote functions
 - Export types from schemas (`$inferSelect`, `$inferInsert`)
+- **Always use translation keys** - Never hardcode text in components/pages
+- **Update all message files** - When adding translations, update `en.json`, `uk.json`
 - **Check https://www.shadcn-svelte.com/llms.txt before creating new UI components**
 - **Update .results/ documentation when adding features**
 - **Use remote functions pattern for all UI data interactions**
