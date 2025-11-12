@@ -24,6 +24,22 @@ function generateUserId() {
 }
 
 // Query functions (read operations)
+export const me = query(async () => {
+	const event = getRequestEvent();
+	
+	if (!event?.locals?.user) {
+		return null;
+	}
+
+	return {
+		id: event.locals.user.id,
+		username: event.locals.user.username,
+		email: event.locals.user.email,
+		role: event.locals.user.role,
+		isAdmin: event.locals.user.isAdmin
+	};
+});
+
 export const getAllUsers = query(async () => {
     auth.requireAdminUser();
 

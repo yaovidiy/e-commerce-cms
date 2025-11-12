@@ -17,7 +17,8 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
-		"@lucide/svelte": "^0.553.0",
+		"@internationalized/date": "^3.8.1",
+		"@lucide/svelte": "^0.544.0",
 		"@playwright/test": "^1.45.3",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
@@ -25,6 +26,7 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/better-sqlite3": "^7.6.11",
 		"@types/eslint": "^9.6.0",
+		"bits-ui": "^2.11.0",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.22.0",
 		"eslint": "^9.7.0",

@@ -35,5 +35,19 @@
   
   "auth_success_login": "Successfully logged in",
   "auth_success_signup": "Account created successfully",
-  "auth_success_logout": "Successfully logged out"
+  "auth_success_logout": "Successfully logged out",
+  
+  "nav_home": "Home",
+  "nav_dashboard": "Dashboard",
+  "nav_products": "Products",
+  "nav_blog": "Blog",
+  "nav_about": "About",
+  "nav_contact": "Contact",
+  "nav_admin": "Go to Admin",
+  "nav_admin_panel": "Admin Panel",
+  "nav_toggle_sidebar": "Toggle Sidebar",
+  "nav_application": "Application",
+  "nav_account": "Account",
+  "nav_settings": "Settings",
+  "nav_profile": "Profile"
 }

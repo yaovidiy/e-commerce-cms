@@ -35,5 +35,19 @@
   
   "auth_success_login": "Успішний вхід",
   "auth_success_signup": "Обліковий запис успішно створено",
-  "auth_success_logout": "Успішний вихід"
+  "auth_success_logout": "Успішний вихід",
+  
+  "nav_home": "Головна",
+  "nav_dashboard": "Панель",
+  "nav_products": "Продукти",
+  "nav_blog": "Блог",
+  "nav_about": "Про нас",
+  "nav_contact": "Контакти",
+  "nav_admin": "Адмін панель",
+  "nav_admin_panel": "Адміністрування",
+  "nav_toggle_sidebar": "Перемкнути бічну панель",
+  "nav_application": "Додаток",
+  "nav_account": "Обліковий запис",
+  "nav_settings": "Налаштування",
+  "nav_profile": "Профіль"
 }
