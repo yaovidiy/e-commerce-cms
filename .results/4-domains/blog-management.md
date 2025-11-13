@@ -239,6 +239,7 @@ Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 
 ### Features
 - **Text Formatting**: Bold, italic, strikethrough, inline code
+- **Text Alignment**: Left, center, right, justify alignment for paragraphs and headings
 - **Headings**: H1, H2, H3 support
 - **Lists**: Bullet lists and numbered lists
 - **Blockquotes**: Quote formatting
@@ -250,7 +251,7 @@ Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 
 ### Technology
 - Built with **TipTap v3** (headless rich text editor)
-- Extensions: StarterKit, Link, Image, Youtube
+- Extensions: StarterKit, Link, Image, Youtube, TextAlign
 - Fully reactive with Svelte 5 runes
 - Stores content as HTML
 
@@ -269,6 +270,7 @@ Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 
 ### Toolbar Actions
 - Text: Bold, Italic, Strikethrough, Code
+- Alignment: Left, Center, Right, Justify
 - Headings: H1, H2, H3
 - Lists: Bullet list, Ordered list, Blockquote
 - Media: Link, Image, YouTube video

@@ -54,6 +54,7 @@
 		"@tiptap/core": "^3.10.7",
 		"@tiptap/extension-image": "^3.10.7",
 		"@tiptap/extension-link": "^3.10.7",
+		"@tiptap/extension-text-align": "^3.10.7",
 		"@tiptap/extension-youtube": "^3.10.7",
 		"@tiptap/pm": "^3.10.7",
 		"@tiptap/starter-kit": "^3.10.7",

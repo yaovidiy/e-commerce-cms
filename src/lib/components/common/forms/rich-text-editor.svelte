@@ -5,6 +5,7 @@
 	import Link from '@tiptap/extension-link';
 	import Image from '@tiptap/extension-image';
 	import Youtube from '@tiptap/extension-youtube';
+	import TextAlign from '@tiptap/extension-text-align';
 	import { cn } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
 	import {
@@ -23,7 +24,11 @@
 		Link as LinkIcon,
 		ImageIcon,
 		Youtube as YoutubeIcon,
-		RemoveFormatting
+		RemoveFormatting,
+		AlignLeft,
+		AlignCenter,
+		AlignRight,
+		AlignJustify
 	} from '@lucide/svelte';
 
 	let {
@@ -67,6 +72,9 @@
 					HTMLAttributes: {
 						class: 'rounded-lg'
 					}
+				}),
+				TextAlign.configure({
+					types: ['heading', 'paragraph']
 				})
 			],
 			content: value,
@@ -181,6 +189,49 @@
 				class={editor.isActive('code') ? 'bg-muted' : ''}
 			>
 				<Code class="h-4 w-4" />
+			</Button>
+
+			<div class="w-px h-8 bg-border mx-1"></div>
+
+			<!-- Text Alignment -->
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => editor?.chain().focus().setTextAlign('left').run()}
+				class={editor.isActive({ textAlign: 'left' }) ? 'bg-muted' : ''}
+			>
+				<AlignLeft class="h-4 w-4" />
+			</Button>
+
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => editor?.chain().focus().setTextAlign('center').run()}
+				class={editor.isActive({ textAlign: 'center' }) ? 'bg-muted' : ''}
+			>
+				<AlignCenter class="h-4 w-4" />
+			</Button>
+
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => editor?.chain().focus().setTextAlign('right').run()}
+				class={editor.isActive({ textAlign: 'right' }) ? 'bg-muted' : ''}
+			>
+				<AlignRight class="h-4 w-4" />
+			</Button>
+
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				onclick={() => editor?.chain().focus().setTextAlign('justify').run()}
+				class={editor.isActive({ textAlign: 'justify' }) ? 'bg-muted' : ''}
+			>
+				<AlignJustify class="h-4 w-4" />
 			</Button>
 
 			<div class="w-px h-8 bg-border mx-1"></div>
