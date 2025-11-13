@@ -171,6 +171,27 @@
       "i18n-support": "All user-facing text must use translation keys"
     }
   },
+  "blog-management": {
+    "required_patterns": {
+      "crud-operations": "Complete CRUD system for managing blog posts in admin panel",
+      "remote-functions": "getAllBlogs (query), createBlog/updateBlog/deleteBlog (form)",
+      "modal-forms": "Dialog component for delete confirmation",
+      "auto-refresh": "Use $effect() to detect form.result and refresh query",
+      "action-menu": "DropdownMenu with view, edit, and delete actions",
+      "auto-slug": "Generate URL-friendly slug from title automatically",
+      "search-filter": "Client-side filtering by blog title"
+    },
+    "architectural_constraints": {
+      "admin-only": "All blog management operations require admin privileges via requireAdminUser()",
+      "author-auto-set": "Author ID automatically set from logged-in user in createBlog",
+      "slug-generation": "Auto-generate slug from title with manual edit option",
+      "server-refresh": "Use query().refresh() in remote functions after mutations",
+      "form-validation": "Validate title (1-200), content (min 1), slug (1-200) with Valibot",
+      "redirect-on-create": "Redirect to /admin/blogs after successful blog creation",
+      "i18n-support": "All user-facing text must use translation keys",
+      "textarea-content": "Use textarea for content field (future: rich text editor)"
+    }
+  },
   "build-tooling": {
     "required_patterns": {
       "build-tool": "Vite 5 as build tool and dev server",

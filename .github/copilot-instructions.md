@@ -108,6 +108,12 @@ admin/features/product-management/
 ├── product-form.svelte
 ├── product-quick-edit.svelte
 └── index.ts
+
+admin/features/blog-management/
+├── blog-list-table.svelte
+├── blog-form.svelte
+├── delete-blog-dialog.svelte
+└── index.ts
 ```
 
 **Conventions:**
@@ -2093,6 +2099,7 @@ import { Input } from '$lib/components/ui/input';
 
 // Admin Components
 import { ProductForm } from '$lib/components/admin/features/product-management';
+import { BlogListTable, BlogForm } from '$lib/components/admin/features/blog-management';
 import { AdminSidebar } from '$lib/components/admin/layout';
 
 // Client Components
