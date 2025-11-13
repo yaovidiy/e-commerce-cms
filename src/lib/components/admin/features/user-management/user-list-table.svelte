@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { getAllUsers, me, toggleAdminStatus } from '$lib/remotes/user.remote';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import EditUserDialog from './edit-user-dialog.svelte';
 	import DeleteUserDialog from './delete-user-dialog.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { MoreHorizontal, Pencil, Trash2, ShieldCheck, ShieldOff } from '@lucide/svelte';
+	import { MoreHorizontal, Pencil, Trash2, ShieldCheck, ShieldOff, Search } from '@lucide/svelte';
 
 	let currentUser = $derived(await me());
-	let users = $derived(await getAllUsers());
+	let searchQuery = $state('');
+	let users = $derived(await getAllUsers({ username: searchQuery }));
 	
 	// Filter out current user from the list
 	let filteredUsers = $derived(
@@ -39,7 +41,18 @@
 	}
 </script>
 
-<div class="rounded-md border">
+<div class="flex flex-col gap-4">
+	<div class="relative max-w-sm">
+		<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+		<Input
+			type="text"
+			placeholder={m.user_search_placeholder()}
+			bind:value={searchQuery}
+			class="pl-9"
+		/>
+	</div>
+
+	<div class="rounded-md border">
 	<div class="w-full">
 		<div class="border-b bg-muted/50 px-4 py-3">
 			<div class="grid grid-cols-6 gap-4 font-medium">
@@ -120,6 +133,7 @@
 			{/if}
 		</div>
 	</div>
+</div>
 </div>
 
 {#if editingUser}

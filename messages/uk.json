@@ -79,6 +79,7 @@
   "user_role_user": "Користувач",
   "user_role_admin": "Адміністратор",
   "user_grant_admin_privileges": "Надати права адміністратора",
+  "user_search_placeholder": "Пошук користувачів за ім'ям...",
   
   "common_cancel": "Скасувати",
   "common_create": "Створити",

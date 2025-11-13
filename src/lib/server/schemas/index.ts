@@ -87,3 +87,7 @@ export const DeleteUserSchema = v.object({
 export const GetUserByIdSchema = v.object({
     id: v.string()
 });
+
+export const FilterUsersSchema = v.object({
+    username: v.optional(v.string(), '')
+});

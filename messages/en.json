@@ -79,6 +79,7 @@
   "user_role_user": "User",
   "user_role_admin": "Admin",
   "user_grant_admin_privileges": "Grant admin privileges",
+  "user_search_placeholder": "Search users by username...",
   
   "common_cancel": "Cancel",
   "common_create": "Create",

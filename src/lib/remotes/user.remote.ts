@@ -8,9 +8,10 @@ import {
 	CreateUserSchema,
 	UpdateUserSchema,
 	DeleteUserSchema,
-	GetUserByIdSchema
+	GetUserByIdSchema,
+	FilterUsersSchema
 } from '$lib/server/schemas';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, like } from 'drizzle-orm';
 import { hash, verify } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import * as v from 'valibot';
@@ -40,10 +41,13 @@ export const me = query(async () => {
 	};
 });
 
-export const getAllUsers = query(async () => {
+export const getAllUsers = query(FilterUsersSchema, async (data) => {
     auth.requireAdminUser();
 
-	return await db
+	const { username } = data;
+
+	// Build the query
+	let query = db
 		.select({
 			id: tables.user.id,
 			username: tables.user.username,
@@ -53,6 +57,13 @@ export const getAllUsers = query(async () => {
 			createdAt: tables.user.createdAt
 		})
 		.from(tables.user);
+
+	// Apply username filter if provided
+	if (username && username.trim() !== '') {
+		query = query.where(like(tables.user.username, `%${username}%`)) as typeof query;
+	}
+
+	return await query;
 });
 
 export const getUserById = query(GetUserByIdSchema, async (data) => {
@@ -397,8 +408,8 @@ export const toggleAdminStatus = command(
 			.set({ isAdmin })
 			.where(eq(tables.user.id, id));
 
-		// Refresh the query
-		await getAllUsers().refresh();
+		// Refresh the query with empty filter
+		await getAllUsers({ username: '' }).refresh();
 
 		return { success: true };
 	}
