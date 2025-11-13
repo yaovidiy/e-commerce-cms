@@ -114,6 +114,14 @@ admin/features/product-management/
 - Group by feature domain
 - NO customer-facing UI code
 
+**Admin Layout Components:**
+- **`admin-sidebar.svelte`** - Admin panel navigation sidebar with blogs and users menu
+  - Uses same Sidebar component structure as main app
+  - Shows active route highlighting
+  - Displays admin user info in footer
+  - Menu items: Blogs (`/admin/blogs`), Users (`/admin/users`)
+  - Uses `me()` remote function to get current user
+
 #### 3. Client Components (`src/lib/components/client/`)
 Customer-facing e-commerce components organized by:
 - **`layout/`** - Site headers, footers, navigation
@@ -200,12 +208,17 @@ SvelteKit page components:
 **Key Files:**
 - `src/routes/+layout.svelte` - Root layout with i18n wrapper
 - `src/routes/+page.svelte` - Home page
+- `src/routes/admin/+layout.svelte` - Admin panel layout with sidebar
+- `src/routes/admin/+page.svelte` - Admin dashboard
+- `src/routes/admin/blogs/+page.svelte` - Blog management page
+- `src/routes/admin/users/+page.svelte` - User management page
 
 **Conventions:**
 - Import global CSS in root layout
 - Wrap app with `<ParaglideJS {i18n}>` for i18n
 - Use `$props()` to receive `children`
 - Render with `{@render children()}`
+- Admin routes use `AdminSidebar` from `$lib/components/admin/layout`
 
 ---
 

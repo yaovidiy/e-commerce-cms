@@ -49,5 +49,11 @@
   "nav_application": "Application",
   "nav_account": "Account",
   "nav_settings": "Settings",
-  "nav_profile": "Profile"
+  "nav_profile": "Profile",
+  
+  "admin_panel": "Admin Panel",
+  "admin_management": "Management",
+  "admin_blogs": "Blogs",
+  "admin_users": "Users",
+  "admin_role": "Administrator"
 }

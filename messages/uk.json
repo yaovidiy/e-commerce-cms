@@ -49,5 +49,11 @@
   "nav_application": "Додаток",
   "nav_account": "Обліковий запис",
   "nav_settings": "Налаштування",
-  "nav_profile": "Профіль"
+  "nav_profile": "Профіль",
+  
+  "admin_panel": "Адмін панель",
+  "admin_management": "Управління",
+  "admin_blogs": "Блоги",
+  "admin_users": "Користувачі",
+  "admin_role": "Адміністратор"
 }
