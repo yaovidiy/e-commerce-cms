@@ -3,7 +3,7 @@ import { db } from "$lib/server/db";
 import * as tables from "$lib/server/db/schema";
 import { eq, like } from "drizzle-orm";
 import * as v from 'valibot';
-import { CreateBlogSchema, UpdateBlogSchema } from "$lib/server/schemas";
+import { CreateBlogSchema, UpdateBlogSchema, DeleteBlogSchema } from "$lib/server/schemas";
 
 export const getAllBlogs = query(async () => {
     const blogs = await db.select().from(tables.blog);
@@ -46,4 +46,9 @@ export const updateBlog = form(UpdateBlogSchema, async ({ id, title, content, sl
     }).where(eq(tables.blog.id, id));
 
     return updatedBlog;
+})
+
+export const deleteBlog = form(DeleteBlogSchema, async ({ id }) => {
+    const deletedBlog = await db.delete(tables.blog).where(eq(tables.blog.id, id));
+    return deletedBlog;
 })

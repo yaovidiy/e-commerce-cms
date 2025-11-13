@@ -15,6 +15,10 @@ export const UpdateBlogSchema = v.object({
     slug: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
 });
 
+export const DeleteBlogSchema = v.object({
+    id: v.string()
+});
+
 // Auth schemas
 export const LoginSchema = v.object({
     username: v.pipe(
