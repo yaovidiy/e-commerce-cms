@@ -1699,9 +1699,323 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Use `getRequestEvent()` to access cookies** - Never use `params` or `url` for auth
 - **Implement single-flight mutations** - Use `refresh()` or `set()` to update queries
 - **Use `query.batch()` for N+1 problems** - Batch simultaneous queries
-- **Auto-refresh queries after mutations** - Use `$effect()` to detect `result` and call `query().refresh()`
+- **Auto-refresh queries after mutations** - Call `query().refresh()` inside `command()` handlers (server-side) or use `$effect()` for form-based mutations
 - **Handle submission states** - Check `form.pending`, `form.result` (use `invalid()` for errors)
 - **Call `form.reset()` when using enhance** - Forms don't auto-reset with custom enhancement
+
+**UI Component Data Interaction Pattern (MANDATORY):**
+This is the required approach for all admin/client feature components:
+
+1. **Direct `await` in Templates** - Use `{#await query() then data}` pattern for rendering data:
+   ```svelte
+   {#await getAllUsers({ username: searchQuery })}
+     <div>Loading...</div>
+   {:then users}
+     {#each users as user}
+       <!-- render user -->
+     {/each}
+   {:catch error}
+     <div>Error: {error.message}</div>
+   {/await}
+   ```
+
+2. **Reactive Query Parameters** - Queries re-execute when their parameters change:
+   ```svelte
+   <script lang="ts">
+     import { getAllUsers } from '$lib/remotes/user.remote';
+     
+     let searchQuery = $state('');  // Changes to this re-trigger query
+   </script>
+   
+   {#await getAllUsers({ username: searchQuery }) then users}
+     <!-- Data automatically refreshes when searchQuery changes -->
+   {/await}
+   ```
+
+3. **Command-Based Actions with Server-Side Refresh** - For quick actions without forms:
+   ```svelte
+   <script lang="ts">
+     import { toggleAdminStatus, getAllUsers } from '$lib/remotes/user.remote';
+     
+     async function handleToggleAdmin(user) {
+       await toggleAdminStatus({
+         id: user.id,
+         isAdmin: !user.isAdmin
+       });
+       // No client-side refresh needed - server handles it via query().refresh()
+     }
+   </script>
+   ```
+
+4. **Form-Based Mutations with Dialog State** - For complex edits via dialogs:
+   ```svelte
+   <script lang="ts">
+     import { updateUser } from '$lib/remotes/user.remote';
+     
+     let editingUser = $state(null);
+     let dialogOpen = $state(false);
+     
+     function openDialog(user) {
+       editingUser = user;
+       dialogOpen = true;
+     }
+     
+     // Use $effect to auto-refresh query after form submission
+     $effect(() => {
+       if (updateUser.result) {
+         dialogOpen = false;
+         getAllUsers({ username: '' }).refresh();
+       }
+     });
+   </script>
+   
+   <EditUserDialog user={editingUser} bind:open={dialogOpen} />
+   ```
+
+5. **No Manual State Management** - Never store query results in local state:
+   ```svelte
+   <!-- ❌ WRONG - Don't do this -->
+   <script lang="ts">
+     let users = $state([]);
+     
+     $effect(() => {
+       getAllUsers().then(data => users = data);  // NO!
+     });
+   </script>
+   
+   <!-- ✅ CORRECT - Use await directly -->
+   <script lang="ts">
+     let searchQuery = $state('');
+   </script>
+   
+   {#await getAllUsers({ username: searchQuery }) then users}
+     {#each users as user}
+       <!-- render -->
+     {/each}
+   {/await}
+   ```
+
+6. **Server-Side Query Refresh in Commands** - Commands should refresh related queries on server:
+   ```typescript
+   // In remote function file
+   export const toggleAdminStatus = command(schema, async (data) => {
+     auth.requireAdminUser();
+     
+     // Perform mutation
+     await db.update(tables.user)
+       .set({ isAdmin: data.isAdmin })
+       .where(eq(tables.user.id, data.id));
+     
+     // Refresh related query on server (critical!)
+     await getAllUsers({ username: '' }).refresh();
+     
+     return { success: true };
+   });
+   ```
+
+**Why This Approach:**
+- **Eliminates duplicate state** - Query results aren't copied to component state
+- **Automatic reactivity** - Parameter changes auto-trigger re-queries
+- **Server-side refresh** - Mutations refresh queries on server, reducing client logic
+- **Type safety** - Direct query calls maintain TypeScript inference
+- **Simpler code** - No manual useEffect-style patterns or state synchronization
+
+**Complete Example - User List Table:**
+
+Remote functions (`src/lib/remotes/user.remote.ts`):
+```typescript
+import { query, command, form } from '$app/server';
+import * as v from 'valibot';
+import { auth } from '$lib/server/auth';
+
+export const getAllUsers = query(
+  v.object({ username: v.optional(v.string(), '') }),
+  async (data) => {
+    auth.requireAdminUser();
+    
+    let query = db.select().from(tables.user);
+    
+    if (data.username) {
+      query = query.where(like(tables.user.username, `%${data.username}%`));
+    }
+    
+    return await query;
+  }
+);
+
+export const toggleAdminStatus = command(
+  v.object({ id: v.string(), isAdmin: v.boolean() }),
+  async (data) => {
+    auth.requireAdminUser();
+    
+    await db.update(tables.user)
+      .set({ isAdmin: data.isAdmin })
+      .where(eq(tables.user.id, data.id));
+    
+    // Critical: Refresh query on server
+    await getAllUsers({ username: '' }).refresh();
+    
+    return { success: true };
+  }
+);
+
+export const updateUser = form(UpdateUserSchema, async (data) => {
+  auth.requireAdminUser();
+  
+  const [updated] = await db.update(tables.user)
+    .set(data)
+    .where(eq(tables.user.id, data.id))
+    .returning();
+  
+  return updated;
+});
+
+export const deleteUser = form(DeleteUserSchema, async (data) => {
+  auth.requireAdminUser();
+  
+  await db.delete(tables.user)
+    .where(eq(tables.user.id, data.id));
+  
+  return { success: true };
+});
+```
+
+Component (`user-list-table.svelte`):
+```svelte
+<script lang="ts">
+  import { getAllUsers, toggleAdminStatus } from '$lib/remotes/user.remote';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import EditUserDialog from './edit-user-dialog.svelte';
+  import DeleteUserDialog from './delete-user-dialog.svelte';
+  
+  // Reactive search parameter
+  let searchQuery = $state('');
+  
+  // Dialog state
+  let editingUser = $state(null);
+  let deletingUser = $state(null);
+  let editDialogOpen = $state(false);
+  let deleteDialogOpen = $state(false);
+  
+  function openEditDialog(user) {
+    editingUser = user;
+    editDialogOpen = true;
+  }
+  
+  function openDeleteDialog(user) {
+    deletingUser = user;
+    deleteDialogOpen = true;
+  }
+  
+  async function handleToggleAdmin(user) {
+    await toggleAdminStatus({
+      id: user.id,
+      isAdmin: !user.isAdmin
+    });
+    // No client-side refresh - server handles it
+  }
+</script>
+
+<div class="flex flex-col gap-4">
+  <!-- Search input - changes trigger automatic re-query -->
+  <Input
+    type="text"
+    placeholder="Search users..."
+    bind:value={searchQuery}
+  />
+  
+  <!-- Direct await pattern - no manual state management -->
+  {#await getAllUsers({ username: searchQuery })}
+    <div>Loading...</div>
+  {:then users}
+    {#each users as user}
+      <div class="user-row">
+        <span>{user.username}</span>
+        <span>{user.email}</span>
+        
+        <Button onclick={() => openEditDialog(user)}>
+          Edit
+        </Button>
+        
+        <Button onclick={() => handleToggleAdmin(user)}>
+          {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+        </Button>
+        
+        <Button onclick={() => openDeleteDialog(user)}>
+          Delete
+        </Button>
+      </div>
+    {/each}
+  {:catch error}
+    <div>Error: {error.message}</div>
+  {/await}
+</div>
+
+<!-- Dialogs handle their own form submissions -->
+<EditUserDialog user={editingUser} bind:open={editDialogOpen} />
+<DeleteUserDialog user={deletingUser} bind:open={deleteDialogOpen} />
+```
+
+Edit User Dialog (`edit-user-dialog.svelte`):
+```svelte
+<script lang="ts">
+  import { updateUser, getAllUsers } from '$lib/remotes/user.remote';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Input } from '$lib/components/ui/input';
+  import { Button } from '$lib/components/ui/button';
+  
+  let { user, open = $bindable() } = $props();
+  
+  // Auto-refresh query and close dialog after successful submission
+  $effect(() => {
+    if (updateUser.result) {
+      open = false;
+      getAllUsers({ username: '' }).refresh();
+    }
+  });
+  
+  // Pre-populate form when dialog opens
+  $effect(() => {
+    if (open && user) {
+      updateUser.fields.set({
+        id: user.id,
+        username: user.username,
+        email: user.email || ''
+      });
+    }
+  });
+</script>
+
+<Dialog.Root bind:open>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Edit User</Dialog.Title>
+    </Dialog.Header>
+    
+    <form {...updateUser}>
+      <Input {...updateUser.fields.username.as('text')} />
+      {#each updateUser.fields.username.issues() as issue}
+        <p class="error">{issue.message}</p>
+      {/each}
+      
+      <Input {...updateUser.fields.email.as('email')} />
+      
+      <Button type="submit" disabled={!!updateUser.pending}>
+        {updateUser.pending ? 'Saving...' : 'Save Changes'}
+      </Button>
+    </form>
+  </Dialog.Content>
+</Dialog.Root>
+```
+
+**Key Patterns Demonstrated:**
+1. ✅ Direct `await` in template - no intermediate state
+2. ✅ Reactive query parameters - `searchQuery` changes auto-refresh
+3. ✅ Command with server-side refresh - `toggleAdminStatus()` calls `query().refresh()`
+4. ✅ Form submission detection - `$effect()` watches `updateUser.result`
+5. ✅ Dialog state management - `$bindable()` for two-way binding
+6. ✅ Form pre-population - `fields.set()` when dialog opens
 
 **Authentication in Remote Functions:**
 - **Use `getUser()` helper** - Call in remote functions to require authentication (redirects to `/auth/login` if not logged in)
