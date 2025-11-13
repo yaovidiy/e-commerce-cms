@@ -12,14 +12,19 @@ Complete asset management system with Cloudflare R2 storage, automatic image opt
 ## Remote Functions
 Location: `src/lib/remotes/asset.remote.ts`
 
-### Commands
-- `uploadAsset(data)` - Upload image file to R2
-  - Validates file type (JPEG, PNG, GIF, WebP, SVG)
+### Forms
+- `uploadAsset(data)` - Upload image file to R2 via form with multipart/form-data
+  - Validates file type (JPEG, PNG, GIF, WebP, SVG) with Valibot
   - Validates file size (max 10MB)
   - Optimizes image (max 1920x1080, 85% quality)
   - Generates thumbnail (200x200, 80% quality)
   - Uploads both versions to R2
   - Stores metadata in database
+  - Returns asset object on success
+- `deleteAsset(data)` - Deletes asset from R2 and database
+  - Removes original image from R2
+  - Removes thumbnail from R2
+  - Deletes database record
   - Auto-refreshes asset list
 
 ### Queries
@@ -28,13 +33,6 @@ Location: `src/lib/remotes/asset.remote.ts`
   - Optional MIME type filter
   - Ordered by creation date (newest first)
 - `getAssetById(id)` - Retrieves single asset by ID
-
-### Forms
-- `deleteAsset(data)` - Deletes asset from R2 and database
-  - Removes original image from R2
-  - Removes thumbnail from R2
-  - Deletes database record
-  - Auto-refreshes asset list
 
 ## Database Schema
 Table: `asset` in `src/lib/server/db/schema.ts`
@@ -56,6 +54,17 @@ Table: `asset` in `src/lib/server/db/schema.ts`
 ## Validation Schemas
 Location: `src/lib/server/schemas/index.ts`
 
+### UploadAssetSchema (inline in remote function)
+```typescript
+v.object({
+  file: v.pipe(
+    v.file(),
+    v.mimeType(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']),
+    v.maxSize(10 * 1024 * 1024, 'File size must be less than 10MB')
+  )
+})
+```
+
 ### DeleteAssetSchema
 ```typescript
 {
@@ -71,10 +80,7 @@ Location: `src/lib/server/schemas/index.ts`
 }
 ```
 
-### Upload Validation (in remote function)
-- File type: Must be one of `['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']`
-- File size: Maximum 10MB (10 * 1024 * 1024 bytes)
-- Image validity: Verified with Sharp
+**Important:** File uploads MUST use `form()` with `enctype="multipart/form-data"` - NEVER use `command()` for file uploads.
 
 ## Server Utilities
 
@@ -131,6 +137,24 @@ Drag-and-drop image uploader with preview and validation.
 - Upload progress state
 - Error messages
 - Keyboard accessible
+- **Form-based upload** - Always renders form and file input in DOM (not conditionally)
+- Validation errors displayed via `uploadAsset.fields.file.issues()`
+
+**Implementation Pattern:**
+```svelte
+<form {...uploadAsset} enctype="multipart/form-data">
+  <!-- File input always in form, never conditionally rendered -->
+  <input {...uploadAsset.fields.file.as('file')} class="hidden" />
+  
+  {#if !preview}
+    <!-- Upload area UI -->
+  {/if}
+  
+  {#if preview}
+    <!-- Preview and submit button UI -->
+  {/if}
+</form>
+```
 
 **Usage:**
 ```svelte
@@ -355,14 +379,21 @@ function handleAssetSelect(asset: { url: string }) {
 2. ImageUploader validates file (type, size)
 3. Image preview shown with file info
 4. User confirms upload
-5. `uploadAsset` command processes image:
-   - Validates it's a real image
+5. `uploadAsset` form submits with multipart/form-data:
+   - Form contains hidden file input (always in DOM)
+   - Valibot validates file type, size, MIME type
+   - Sharp validates it's a real image
    - Generates unique filename
    - Optimizes original image
    - Creates thumbnail
    - Uploads both to R2
    - Saves metadata to database
-6. Asset appears in grid immediately (auto-refresh)
+6. On success, `uploadAsset.result` contains asset data
+7. `$effect()` watches result and calls `onUploadComplete` callback
+8. Form resets and preview clears
+9. Asset appears in grid immediately (auto-refresh)
+
+**Critical:** File input must always be in the form element, never conditionally rendered. This ensures the file is properly included in form submission.
 
 ### Select Asset from Editor Flow
 1. User clicks image button in rich text editor
@@ -433,10 +464,13 @@ function handleAssetSelect(asset: { url: string }) {
 
 ### File Upload
 - Always validate file type and size client-side (better UX)
-- Re-validate server-side (security)
+- Re-validate server-side with Valibot (security)
 - Show preview before upload (confirmation)
 - Provide clear error messages
 - Limit file size (10MB is generous for web images)
+- **CRITICAL:** Use `form()` with `enctype="multipart/form-data"` for file uploads, NEVER `command()`
+- **CRITICAL:** Always keep form and file input in DOM, never conditionally render them
+- Only conditionally render the UI around the form (preview vs upload area)
 
 ### Image Optimization
 - Optimize on upload (one-time cost)

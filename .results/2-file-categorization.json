@@ -25,14 +25,18 @@
   "admin-components": [
     "./src/lib/components/admin/layout/admin-sidebar.svelte",
     "./src/lib/components/admin/features/user-management/",
-    "./src/lib/components/admin/features/blog-management/"
+    "./src/lib/components/admin/features/blog-management/",
+    "./src/lib/components/admin/features/asset-management/"
   ],
   "client-components": [
     "./src/lib/components/client/features/auth/"
   ],
   "common-components": [
     "./src/lib/components/common/layout/app-sidebar.svelte",
-    "./src/lib/components/common/forms/rich-text-editor.svelte"
+    "./src/lib/components/common/forms/rich-text-editor.svelte",
+    "./src/lib/components/common/forms/image-uploader.svelte",
+    "./src/lib/components/common/forms/asset-browser.svelte",
+    "./src/lib/components/common/data-display/pagination.svelte"
   ],
   "page-components": [
     "./src/routes/+layout.svelte",
@@ -44,6 +48,7 @@
     "./src/routes/admin/blogs/create/+page.svelte",
     "./src/routes/admin/blogs/edit/[id]/+page.svelte",
     "./src/routes/admin/users/+page.svelte",
+    "./src/routes/admin/assets/+page.svelte",
     "./src/routes/auth/login/+page.svelte",
     "./src/routes/auth/signup/+page.svelte"
   ],
@@ -52,7 +57,8 @@
   "remote-functions": [
     "./src/lib/remotes/blog.remote.ts",
     "./src/lib/remotes/product.remote.ts",
-    "./src/lib/remotes/user.remote.ts"
+    "./src/lib/remotes/user.remote.ts",
+    "./src/lib/remotes/asset.remote.ts"
   ],
   "database-schema": [
     "./src/lib/server/db/schema.ts"
@@ -71,7 +77,9 @@
     "./src/hooks.ts"
   ],
   "utilities": [
-    "./src/lib/utils.ts"
+    "./src/lib/utils.ts",
+    "./src/lib/server/r2.ts",
+    "./src/lib/server/image-optimizer.ts"
   ],
   "i18n": [
     "./src/lib/i18n.ts"

@@ -192,6 +192,35 @@
       "textarea-content": "Use textarea for content field (future: rich text editor)"
     }
   },
+  "asset-management": {
+    "required_patterns": {
+      "storage": "Cloudflare R2 (S3-compatible) for object storage with zero egress fees",
+      "image-optimization": "Sharp for server-side image processing (resize, compress, thumbnails)",
+      "remote-functions": "uploadAsset (form with multipart), getAllAssets (query), getAssetById (query), deleteAsset (form)",
+      "r2-client": "Custom R2 client in lib/server/r2.ts with uploadToR2, deleteFromR2, getFromR2",
+      "image-optimizer": "Server utility for processImage, optimizeImage, createThumbnail",
+      "drag-and-drop-upload": "ImageUploader component with preview and validation",
+      "asset-browser": "Dialog for browsing and selecting uploaded assets",
+      "grid-view": "AssetListGrid with responsive grid, thumbnails, search, actions",
+      "tiptap-integration": "Asset browser integrated into rich text editor for image insertion"
+    },
+    "architectural_constraints": {
+      "admin-only": "All asset operations require admin privileges via requireAdminUser()",
+      "file-upload-pattern": "MUST use form() with enctype='multipart/form-data' - NEVER command() for file uploads",
+      "form-always-in-dom": "Form and file input must always be in DOM, never conditionally rendered",
+      "file-validation": "Valibot validation: v.file(), v.mimeType(), v.maxSize() for type/size checks",
+      "image-types": "Allow JPEG, PNG, GIF, WebP, SVG only",
+      "max-file-size": "10MB maximum file size (10 * 1024 * 1024 bytes)",
+      "optimization": "Optimize original to 1920x1080 @ 85% JPEG, thumbnail 200x200 @ 80% JPEG",
+      "unique-filenames": "Generate unique names with timestamp + random string",
+      "r2-structure": "Store in images/ folder with pattern: {timestamp}-{random}.{ext}",
+      "metadata-storage": "Store asset metadata in database (filename, URL, size, MIME type, etc.)",
+      "environment-variables": "Require CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_URL",
+      "cost-optimization": "Free tier: 10GB storage, 10M writes/month, 100M reads/month, unlimited egress",
+      "cleanup-on-delete": "Delete both original and thumbnail from R2 when deleting asset",
+      "i18n-support": "35 translation keys for asset management UI"
+    }
+  },
   "build-tooling": {
     "required_patterns": {
       "build-tool": "Vite 5 as build tool and dev server",

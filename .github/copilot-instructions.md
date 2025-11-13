@@ -41,6 +41,12 @@ This file provides AI coding assistants with comprehensive guidance for generati
 - **Valibot v1.1** for schema validation
 - **@inlang/paraglide-sveltekit** for compile-time internationalization
 
+### Asset Management
+- **Cloudflare R2** - S3-compatible storage with zero egress fees
+- **Sharp 0.34.5** - Server-side image optimization (resize, compress, thumbnails)
+- **@aws-sdk/client-s3 3.930.0** - S3-compatible client for R2 operations
+- **mime-types 3.0.1** - MIME type detection and validation
+
 ### State Management
 - No centralized store (Redux/Zustand)
 - Server-first with SvelteKit load functions
@@ -1698,6 +1704,8 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Use `query()` for all read operations** - Never call DB directly from components
 - **Use `form()` for mutations via forms** - Prefer over `command()` for progressive enhancement
 - **Use `command()` for programmatic actions** - For simple state toggles, quick updates without form submission
+- **NEVER use `command()` for file uploads** - File uploads MUST use `form()` with `enctype="multipart/form-data"`
+- **Form with file input must always be in DOM** - Never conditionally render `<form>` or file `<input>` elements, only show/hide UI around them
 - **Spread form objects onto form elements** - `<form {...formFunction}>`
 - **Use fields API for inputs** - `<input {...form.fields.name.as('text')} />`
 - **Display validation errors** - `{#each form.fields.name.issues() as issue}`
