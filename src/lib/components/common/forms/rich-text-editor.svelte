@@ -8,6 +8,7 @@
 	import TextAlign from '@tiptap/extension-text-align';
 	import { cn } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
+	import { AssetBrowser } from '$lib/components/common/forms';
 	import {
 		Bold,
 		Italic,
@@ -45,6 +46,7 @@
 
 	let element: HTMLDivElement;
 	let editor = $state<Editor | null>(null);
+	let assetBrowserOpen = $state(false);
 
 	onMount(() => {
 		editor = new Editor({
@@ -123,9 +125,12 @@
 	}
 
 	function addImage() {
-		const url = window.prompt('Enter image URL:');
-		if (url && editor) {
-			editor.chain().focus().setImage({ src: url }).run();
+		assetBrowserOpen = true;
+	}
+
+	function handleAssetSelect(asset: { url: string }) {
+		if (editor) {
+			editor.chain().focus().setImage({ src: asset.url }).run();
 		}
 	}
 
@@ -352,6 +357,9 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Asset Browser Dialog -->
+<AssetBrowser bind:open={assetBrowserOpen} onSelect={handleAssetSelect} />
 
 <style>
 	:global(.ProseMirror) {

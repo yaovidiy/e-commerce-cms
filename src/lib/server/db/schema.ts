@@ -29,9 +29,26 @@ export const blog = sqliteTable('blog', {
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
+export const asset = sqliteTable('asset', {
+	id: text('id').primaryKey(),
+	filename: text('filename').notNull(),
+	originalFilename: text('original_filename').notNull(),
+	mimeType: text('mime_type').notNull(),
+	size: integer('size').notNull(),
+	url: text('url').notNull(),
+	thumbnailUrl: text('thumbnail_url'),
+	uploadedBy: text('uploaded_by')
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 export type InsertUser = typeof user.$inferInsert;
 
 export type Blog = typeof blog.$inferSelect;
+
+export type Asset = typeof asset.$inferSelect;
+export type InsertAsset = typeof asset.$inferInsert;

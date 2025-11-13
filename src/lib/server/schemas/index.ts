@@ -98,3 +98,13 @@ export const FilterUsersSchema = v.object({
     sortField: v.optional(v.picklist(['username', 'email', 'createdAt']), 'createdAt'),
     sortDirection: v.optional(v.picklist(['asc', 'desc']), 'desc')
 });
+
+// Asset schemas
+export const DeleteAssetSchema = v.object({
+    id: v.string()
+});
+
+export const FilterAssetsSchema = v.object({
+    filename: v.optional(v.string(), ''),
+    mimeType: v.optional(v.string(), '')
+});
