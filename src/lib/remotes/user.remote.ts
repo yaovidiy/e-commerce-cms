@@ -11,11 +11,12 @@ import {
 	GetUserByIdSchema,
 	FilterUsersSchema
 } from '$lib/server/schemas';
-import { eq, count, like } from 'drizzle-orm';
+import { eq, count, like, asc, desc } from 'drizzle-orm';
 import { hash, verify } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import * as v from 'valibot';
 import { redirect } from '@sveltejs/kit';
+import { applyOffsetPagination } from '$lib/server/pagination';
 
 // Helper function to generate user ID
 function generateUserId() {
@@ -27,7 +28,7 @@ function generateUserId() {
 // Query functions (read operations)
 export const me = query(async () => {
 	const event = getRequestEvent();
-	
+
 	if (!event?.locals?.user) {
 		return null;
 	}
@@ -42,12 +43,12 @@ export const me = query(async () => {
 });
 
 export const getAllUsers = query(FilterUsersSchema, async (data) => {
-    auth.requireAdminUser();
+	auth.requireAdminUser();
 
-	const { username } = data;
+	const { username, page, pageSize, sortField, sortDirection } = data;
 
-	// Build the query
-	let query = db
+	// Build base query
+	let baseQuery = db
 		.select({
 			id: tables.user.id,
 			username: tables.user.username,
@@ -58,16 +59,36 @@ export const getAllUsers = query(FilterUsersSchema, async (data) => {
 		})
 		.from(tables.user);
 
-	// Apply username filter if provided
+	// Build count query
+	let countQuery = db.select({ count: count() }).from(tables.user);
+
+	// Apply username filter to both queries
 	if (username && username.trim() !== '') {
-		query = query.where(like(tables.user.username, `%${username}%`)) as typeof query;
+		const filter = like(tables.user.username, `%${username}%`);
+		baseQuery = baseQuery.where(filter) as typeof baseQuery;
+		countQuery = countQuery.where(filter) as typeof countQuery;
 	}
 
-	return await query;
+	// Determine sort column
+	const sortColumn =
+		sortField === 'username'
+			? tables.user.username
+			: sortField === 'email'
+				? tables.user.email
+				: tables.user.createdAt;
+
+	// Apply pagination with sorting
+	return await applyOffsetPagination({
+		query: baseQuery,
+		countQuery,
+		orderBy: [sortDirection === 'asc' ? asc(sortColumn) : desc(sortColumn), desc(tables.user.id)],
+		page,
+		pageSize
+	});
 });
 
 export const getUserById = query(GetUserByIdSchema, async (data) => {
-    auth.requireAdminUser();
+	auth.requireAdminUser();
 
 	const [user] = await db
 		.select({
@@ -89,8 +110,8 @@ export const getUserById = query(GetUserByIdSchema, async (data) => {
 });
 
 export const getUserByUsername = query(v.string(), async (username) => {
-    auth.requireAdminUser();
-    
+	auth.requireAdminUser();
+
 	const [user] = await db
 		.select({
 			id: tables.user.id,
@@ -138,7 +159,7 @@ export const login = form(LoginSchema, async (data, invalid) => {
 	const session = await auth.createSession(sessionToken, existingUser.id);
 	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-    redirect(303, '/');
+	redirect(303, '/');
 });
 
 export const register = form(RegisterSchema, async (data, invalid) => {
@@ -204,7 +225,7 @@ export const register = form(RegisterSchema, async (data, invalid) => {
 
 export const logout = form(async () => {
 	const event = getRequestEvent();
-	
+
 	if (!event?.locals?.session) {
 		throw new Error('No active session');
 	}
@@ -217,7 +238,7 @@ export const logout = form(async () => {
 
 // Admin CRUD operations
 export const createUser = form(CreateUserSchema, async (data) => {
-    auth.requireAdminUser();
+	auth.requireAdminUser();
 
 	const event = getRequestEvent();
 	const { username, email, password, role, isAdmin } = data;
@@ -273,7 +294,7 @@ export const createUser = form(CreateUserSchema, async (data) => {
 });
 
 export const updateUser = form(UpdateUserSchema, async (data) => {
-    auth.requireAdminUser();
+	auth.requireAdminUser();
 
 	const event = getRequestEvent();
 	const { id, username, email, password, role, isAdmin } = data;
@@ -357,7 +378,7 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 });
 
 export const deleteUser = form(DeleteUserSchema, async (data) => {
-    auth.requireAdminUser();
+	auth.requireAdminUser();
 
 	const event = getRequestEvent();
 	const { id } = data;
@@ -408,8 +429,14 @@ export const toggleAdminStatus = command(
 			.set({ isAdmin })
 			.where(eq(tables.user.id, id));
 
-		// Refresh the query with empty filter
-		await getAllUsers({ username: '' }).refresh();
+		// Refresh the query with default parameters
+		await getAllUsers({
+			username: '',
+			page: 1,
+			pageSize: 20,
+			sortField: 'createdAt',
+			sortDirection: 'desc'
+		}).refresh();
 
 		return { success: true };
 	}

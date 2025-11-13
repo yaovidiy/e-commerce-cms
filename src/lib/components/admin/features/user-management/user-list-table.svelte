@@ -6,9 +6,11 @@
 	import EditUserDialog from './edit-user-dialog.svelte';
 	import DeleteUserDialog from './delete-user-dialog.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { MoreHorizontal, Pencil, Trash2, ShieldCheck, ShieldOff, Search } from '@lucide/svelte';
+	import { MoreHorizontal, Pencil, Trash2, ShieldCheck, ShieldOff, Search, ChevronLeft, ChevronRight } from '@lucide/svelte';
 
 	let searchQuery = $state('');
+	let currentPage = $state(1);
+	let pageSize = $state(5);
 
 	type User = {
 		id: string;
@@ -16,6 +18,7 @@
 		email: string | null;
 		role: string;
 		isAdmin: boolean;
+		createdAt: Date | null;
 	};
 
 	// Track which user is being edited/deleted
@@ -44,6 +47,11 @@
 			isAdmin: !user?.isAdmin
 		});
 	}
+
+	// Reset to page 1 when search changes
+	function handleSearchChange() {
+		currentPage = 1;
+	}
 </script>
 
 <div class="flex flex-col gap-4">
@@ -53,6 +61,7 @@
 			type="text"
 			placeholder={m.user_search_placeholder()}
 			bind:value={searchQuery}
+			oninput={handleSearchChange}
 			class="pl-9"
 		/>
 	</div>
@@ -70,10 +79,10 @@
 				</div>
 			</div>
 			<div>
-				{#await getAllUsers({ username: searchQuery })}
+				{#await getAllUsers({ username: searchQuery, page: currentPage, pageSize, sortField: 'createdAt', sortDirection: 'desc' })}
 					<div class="text-muted-foreground px-4 py-8 text-center text-sm">Loading ...</div>
-				{:then users}
-					{#each users as user}
+				{:then result}
+					{#each result.data as user (user.id)}
 						<div class="hover:bg-muted/50 border-b px-4 py-3 last:border-0">
 							<div class="grid grid-cols-6 items-center gap-4">
 								<div class="font-medium">{user.username}</div>
@@ -96,7 +105,13 @@
 									{/if}
 								</div>
 								<div class="text-muted-foreground text-sm">
-									{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+									{#if user.createdAt && user.createdAt instanceof Date}
+										{user.createdAt.toLocaleDateString()}
+									{:else if user.createdAt}
+										{new Date(user.createdAt as string | number).toLocaleDateString()}
+									{:else}
+										-
+									{/if}
 								</div>
 								<div class="flex items-center justify-end gap-2">
 									<DropdownMenu.Root>
@@ -107,7 +122,7 @@
 											</Button>
 										</DropdownMenu.Trigger>
 										<DropdownMenu.Content align="end">
-											<DropdownMenu.Item onclick={() => openEditDialog(user)}>
+											<DropdownMenu.Item onclick={() => openEditDialog(user as User)}>
 												<Pencil class="mr-2 h-4 w-4" />
 												{m.user_edit_user()}
 											</DropdownMenu.Item>
@@ -122,7 +137,7 @@
 											</DropdownMenu.Item>
 											<DropdownMenu.Separator />
 											<DropdownMenu.Item
-												onclick={() => openDeleteDialog(user)}
+												onclick={() => openDeleteDialog(user as User)}
 												class="text-destructive"
 											>
 												<Trash2 class="mr-2 h-4 w-4" />
@@ -138,6 +153,43 @@
 							{m.user_no_users()}
 						</div>
 					{/each}
+
+					<!-- Pagination Controls -->
+					{#if result.pagination.total > 0}
+						<div class="border-t px-4 py-3">
+							<div class="flex items-center justify-between">
+								<p class="text-sm text-muted-foreground">
+									Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, result.pagination.total)} of {result.pagination.total} users
+								</p>
+								
+								<div class="flex items-center gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										disabled={!result.pagination.hasPrev}
+										onclick={() => currentPage--}
+									>
+										<ChevronLeft class="h-4 w-4 mr-1" />
+										Previous
+									</Button>
+									
+									<span class="text-sm text-muted-foreground px-2">
+										Page {currentPage} of {result.pagination.totalPages}
+									</span>
+									
+									<Button
+										variant="outline"
+										size="sm"
+										disabled={!result.pagination.hasNext}
+										onclick={() => currentPage++}
+									>
+										Next
+										<ChevronRight class="h-4 w-4 ml-1" />
+									</Button>
+								</div>
+							</div>
+						</div>
+					{/if}
 				{/await}
 			</div>
 		</div>

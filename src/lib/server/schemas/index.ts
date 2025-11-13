@@ -89,5 +89,9 @@ export const GetUserByIdSchema = v.object({
 });
 
 export const FilterUsersSchema = v.object({
-    username: v.optional(v.string(), '')
+    username: v.optional(v.string(), ''),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+    sortField: v.optional(v.picklist(['username', 'email', 'createdAt']), 'createdAt'),
+    sortDirection: v.optional(v.picklist(['asc', 'desc']), 'desc')
 });
