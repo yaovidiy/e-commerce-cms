@@ -55,5 +55,30 @@
   "admin_management": "Управління",
   "admin_blogs": "Блоги",
   "admin_users": "Користувачі",
-  "admin_role": "Адміністратор"
+  "admin_role": "Адміністратор",
+  
+  "user_username": "Ім'я користувача",
+  "user_email": "Електронна пошта",
+  "user_role": "Роль",
+  "user_admin_status": "Адмін",
+  "user_created_at": "Створено",
+  "user_no_users": "Користувачів не знайдено",
+  "user_yes": "Так",
+  "user_no": "Ні",
+  "user_create_user": "Створити користувача",
+  "user_create_user_description": "Додати нового користувача до системи. Користувач не буде автоматично залогінений.",
+  "user_manage_description": "Управління користувачами та дозволами",
+  "user_role_user": "Користувач",
+  "user_role_admin": "Адміністратор",
+  "user_grant_admin_privileges": "Надати права адміністратора",
+  
+  "common_cancel": "Скасувати",
+  "common_create": "Створити",
+  "common_creating": "Створення...",
+  "common_save": "Зберегти",
+  "common_saving": "Збереження...",
+  "common_delete": "Видалити",
+  "common_deleting": "Видалення...",
+  "common_edit": "Редагувати",
+  "common_close": "Закрити"
 }

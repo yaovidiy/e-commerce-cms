@@ -55,5 +55,30 @@
   "admin_management": "Management",
   "admin_blogs": "Blogs",
   "admin_users": "Users",
-  "admin_role": "Administrator"
+  "admin_role": "Administrator",
+  
+  "user_username": "Username",
+  "user_email": "Email",
+  "user_role": "Role",
+  "user_admin_status": "Admin",
+  "user_created_at": "Created At",
+  "user_no_users": "No users found",
+  "user_yes": "Yes",
+  "user_no": "No",
+  "user_create_user": "Create User",
+  "user_create_user_description": "Add a new user to the system. The user will not be logged in automatically.",
+  "user_manage_description": "Manage users and permissions",
+  "user_role_user": "User",
+  "user_role_admin": "Admin",
+  "user_grant_admin_privileges": "Grant admin privileges",
+  
+  "common_cancel": "Cancel",
+  "common_create": "Create",
+  "common_creating": "Creating...",
+  "common_save": "Save",
+  "common_saving": "Saving...",
+  "common_delete": "Delete",
+  "common_deleting": "Deleting...",
+  "common_edit": "Edit",
+  "common_close": "Close"
 }
