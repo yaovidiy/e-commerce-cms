@@ -80,7 +80,8 @@ Location: `src/lib/components/admin/features/blog-management/`
 #### BlogForm
 - Form for creating new blog posts
 - Auto-generates slug from title (can be manually edited)
-- Fields: title, slug, content (textarea)
+- Uses RichTextEditor component for content (supports formatting, images, videos, links)
+- Fields: title, slug, content (rich text)
 - Redirects to `/admin/blogs` on successful creation
 - Form validation with error messages
 
@@ -196,8 +197,8 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 ## Future Enhancements
 Potential improvements for blog management:
 
-1. **Rich Text Editor** - Replace textarea with WYSIWYG editor
-2. **Image Upload** - Add featured image support
+1. ~~**Rich Text Editor**~~ ✅ **Implemented** - TipTap editor with formatting, images, videos, links
+2. **Image Upload** - Add featured image support with local storage/CDN
 3. **Categories/Tags** - Add taxonomy system
 4. **Draft Status** - Add published/draft status field
 5. **Pagination** - Add pagination for large blog lists
@@ -206,3 +207,52 @@ Potential improvements for blog management:
 8. **SEO Fields** - Add meta description, keywords
 9. **Scheduled Publishing** - Add future publish dates
 10. **Bulk Actions** - Select multiple blogs for batch operations
+
+## Rich Text Editor
+
+### Component
+Location: `src/lib/components/common/forms/rich-text-editor.svelte`
+
+### Features
+- **Text Formatting**: Bold, italic, strikethrough, inline code
+- **Headings**: H1, H2, H3 support
+- **Lists**: Bullet lists and numbered lists
+- **Blockquotes**: Quote formatting
+- **Links**: Add/edit hyperlinks
+- **Images**: Insert images via URL
+- **YouTube Videos**: Embed YouTube videos via URL
+- **Undo/Redo**: Full history support
+- **Clear Formatting**: Remove all formatting
+
+### Technology
+- Built with **TipTap v3** (headless rich text editor)
+- Extensions: StarterKit, Link, Image, Youtube
+- Fully reactive with Svelte 5 runes
+- Stores content as HTML
+
+### Usage
+```svelte
+<script>
+  import { RichTextEditor } from '$lib/components/common/forms';
+  let content = $state('');
+</script>
+
+<RichTextEditor 
+  bind:value={content} 
+  placeholder="Write something..." 
+/>
+```
+
+### Toolbar Actions
+- Text: Bold, Italic, Strikethrough, Code
+- Headings: H1, H2, H3
+- Lists: Bullet list, Ordered list, Blockquote
+- Media: Link, Image, YouTube video
+- History: Undo, Redo, Clear formatting
+
+### Styling
+- Uses Tailwind CSS for consistent styling
+- Prose styles for content rendering
+- Responsive toolbar layout
+- Active button highlighting
+- Disabled state support

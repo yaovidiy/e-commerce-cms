@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { RichTextEditor } from '$lib/components/common/forms';
 	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
 
@@ -44,11 +45,10 @@
 		manualSlugEdit = true;
 	}
 
-	function handleContentChange(e: Event) {
-		const target = e.target as HTMLTextAreaElement;
-		contentValue = target.value;
+	// Watch for content changes from RichTextEditor
+	$effect(() => {
 		createBlog.fields.content.set(contentValue);
-	}
+	});
 </script>
 
 <form
@@ -92,13 +92,8 @@
 
 	<div class="space-y-2">
 		<Label>{m.blog_content()}</Label>
-		<textarea
-			{...createBlog.fields.content.as('text')}
-			oninput={handleContentChange}
-			placeholder={m.blog_content_placeholder()}
-			rows="12"
-			class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[200px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-		></textarea>
+		<input type="hidden" name="content" value={contentValue} />
+		<RichTextEditor bind:value={contentValue} placeholder={m.blog_content_placeholder()} />
 		{#each createBlog.fields.content.issues() as issue}
 			<p class="text-destructive text-sm">{issue.message}</p>
 		{/each}

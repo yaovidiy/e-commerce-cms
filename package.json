@@ -51,6 +51,12 @@
 		"@node-rs/argon2": "^1.1.0",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
+		"@tiptap/core": "^3.10.7",
+		"@tiptap/extension-image": "^3.10.7",
+		"@tiptap/extension-link": "^3.10.7",
+		"@tiptap/extension-youtube": "^3.10.7",
+		"@tiptap/pm": "^3.10.7",
+		"@tiptap/starter-kit": "^3.10.7",
 		"better-sqlite3": "^11.1.2",
 		"drizzle-orm": "^0.33.0",
 		"valibot": "^1.1.0"

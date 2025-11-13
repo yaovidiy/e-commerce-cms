@@ -31,7 +31,8 @@
     "./src/lib/components/client/features/auth/"
   ],
   "common-components": [
-    "./src/lib/components/common/layout/app-sidebar.svelte"
+    "./src/lib/components/common/layout/app-sidebar.svelte",
+    "./src/lib/components/common/forms/rich-text-editor.svelte"
   ],
   "page-components": [
     "./src/routes/+layout.svelte",
