@@ -18,7 +18,7 @@
 			email: string | null;
 			role: string;
 			isAdmin: boolean;
-		};
+		} | null;
 		open?: boolean;
 	} = $props();
 

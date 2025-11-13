@@ -35,13 +35,13 @@
 					{#snippet child({ props })}
 						<a href="/" {...props} class="flex items-center gap-2 font-semibold">
 							<div
-								class="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+								class="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg"
 							>
 								<FileText class="size-4" />
 							</div>
 							<div class="flex flex-col gap-0.5 leading-none">
 								<span class="font-semibold">{m.nav_admin()}</span>
-								<span class="text-xs text-muted-foreground">{m.admin_panel()}</span>
+								<span class="text-muted-foreground text-xs">{m.admin_panel()}</span>
 							</div>
 						</a>
 					{/snippet}
@@ -77,20 +77,18 @@
 			{#if user}
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton>
-						{#snippet child({ props })}
-							<button {...props} class="w-full">
-								<div class="flex items-center gap-2">
-									<div
-										class="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground"
-									>
-										<Users class="size-4" />
-									</div>
-									<div class="flex flex-col items-start gap-0.5 leading-none">
-										<span class="font-semibold">{user.username}</span>
-										<span class="text-xs text-muted-foreground">{m.admin_role()}</span>
-									</div>
+						{#snippet child()}
+							<div class="flex items-center gap-2">
+								<div
+									class="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-lg"
+								>
+									<Users class="size-4" />
 								</div>
-							</button>
+								<div class="flex flex-col items-start gap-0.5 leading-none">
+									<span class="font-semibold">{user.username}</span>
+									<span class="text-muted-foreground text-xs">{m.admin_role()}</span>
+								</div>
+							</div>
 						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>

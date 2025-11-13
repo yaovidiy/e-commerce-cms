@@ -8,7 +8,7 @@
 		user: {
 			id: string;
 			username: string;
-		};
+		} | null;
 		open?: boolean;
 	}>();
 
