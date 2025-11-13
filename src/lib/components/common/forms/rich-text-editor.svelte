@@ -135,7 +135,7 @@
 	}
 </script>
 
-<div class={cn('rounded-md border bg-background', className)}>
+<div class={cn('rounded-md border bg-background relative', className)}>
 	{#if editor}
 		<div class="border-b bg-muted/50 p-2 flex flex-wrap gap-1">
 			<!-- Text Formatting -->
@@ -296,7 +296,7 @@
 	<div bind:this={element} class="min-h-[200px]"></div>
 
 	{#if !value || value === '<p></p>'}
-		<div class="pointer-events-none absolute top-[60px] left-6 text-muted-foreground text-sm">
+		<div class="pointer-events-none absolute top-17 left-4 text-muted-foreground text-sm">
 			{placeholder}
 		</div>
 	{/if}
