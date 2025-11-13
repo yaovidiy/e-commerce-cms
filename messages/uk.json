@@ -67,6 +67,14 @@
   "user_no": "Ні",
   "user_create_user": "Створити користувача",
   "user_create_user_description": "Додати нового користувача до системи. Користувач не буде автоматично залогінений.",
+  "user_edit_user": "Редагувати користувача",
+  "user_edit_user_description": "Оновити інформацію та дозволи користувача.",
+  "user_delete_user": "Видалити користувача",
+  "user_delete_user_description": "Цю дію неможливо скасувати.",
+  "user_delete_confirmation": "Ви впевнені, що хочете видалити {username}? Це назавжди видалить користувача та всі пов'язані дані.",
+  "user_make_admin": "Зробити адміністратором",
+  "user_remove_admin": "Забрати права адміністратора",
+  "user_leave_blank_to_keep": "Залиште порожнім, щоб зберегти поточний пароль",
   "user_manage_description": "Управління користувачами та дозволами",
   "user_role_user": "Користувач",
   "user_role_admin": "Адміністратор",
@@ -80,5 +88,6 @@
   "common_delete": "Видалити",
   "common_deleting": "Видалення...",
   "common_edit": "Редагувати",
-  "common_close": "Закрити"
+  "common_close": "Закрити",
+  "common_actions": "Дії"
 }

@@ -1,4 +1,4 @@
-import { form, query, getRequestEvent } from '$app/server';
+import { form, query, getRequestEvent, command } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import * as auth from '$lib/server/auth';
@@ -379,3 +379,27 @@ export const deleteUser = form(DeleteUserSchema, async (data) => {
 
 	return { success: true };
 });
+
+// Command to toggle admin status
+export const toggleAdminStatus = command(
+	v.object({
+		id: v.string(),
+		isAdmin: v.boolean()
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const { id, isAdmin } = data;
+
+		// Update user
+		await db
+			.update(tables.user)
+			.set({ isAdmin })
+			.where(eq(tables.user.id, id));
+
+		// Refresh the query
+		await getAllUsers().refresh();
+
+		return { success: true };
+	}
+);

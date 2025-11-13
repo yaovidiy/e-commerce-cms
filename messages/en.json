@@ -67,6 +67,14 @@
   "user_no": "No",
   "user_create_user": "Create User",
   "user_create_user_description": "Add a new user to the system. The user will not be logged in automatically.",
+  "user_edit_user": "Edit User",
+  "user_edit_user_description": "Update user information and permissions.",
+  "user_delete_user": "Delete User",
+  "user_delete_user_description": "This action cannot be undone.",
+  "user_delete_confirmation": "Are you sure you want to delete {username}? This will permanently remove the user and all associated data.",
+  "user_make_admin": "Make Admin",
+  "user_remove_admin": "Remove Admin",
+  "user_leave_blank_to_keep": "Leave blank to keep current password",
   "user_manage_description": "Manage users and permissions",
   "user_role_user": "User",
   "user_role_admin": "Admin",
@@ -80,5 +88,6 @@
   "common_delete": "Delete",
   "common_deleting": "Deleting...",
   "common_edit": "Edit",
-  "common_close": "Close"
+  "common_close": "Close",
+  "common_actions": "Actions"
 }

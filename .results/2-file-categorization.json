@@ -9,45 +9,46 @@
     "./src/lib/components/ui/button/button.svelte"
   ],
   "ui-components": [
-    "./src/lib/components/ui/button/button.svelte"
+    "./src/lib/components/ui/button/button.svelte",
+    "./src/lib/components/ui/dialog/",
+    "./src/lib/components/ui/dropdown-menu/",
+    "./src/lib/components/ui/select/",
+    "./src/lib/components/ui/switch/",
+    "./src/lib/components/ui/input/",
+    "./src/lib/components/ui/label/",
+    "./src/lib/components/ui/separator/",
+    "./src/lib/components/ui/sheet/",
+    "./src/lib/components/ui/sidebar/",
+    "./src/lib/components/ui/skeleton/",
+    "./src/lib/components/ui/tooltip/"
   ],
   "admin-components": [
-    "./src/lib/components/admin/layout/",
-    "./src/lib/components/admin/features/",
-    "./src/lib/components/admin/widgets/"
+    "./src/lib/components/admin/layout/admin-sidebar.svelte",
+    "./src/lib/components/admin/features/user-management/"
   ],
   "client-components": [
-    "./src/lib/components/client/layout/",
-    "./src/lib/components/client/features/",
-    "./src/lib/components/client/widgets/"
+    "./src/lib/components/client/features/auth/"
   ],
   "common-components": [
-    "./src/lib/components/common/layout/",
-    "./src/lib/components/common/data-display/",
-    "./src/lib/components/common/forms/",
-    "./src/lib/components/common/feedback/",
-    "./src/lib/components/common/navigation/",
-    "./src/lib/components/common/utility/"
+    "./src/lib/components/common/layout/app-sidebar.svelte"
   ],
   "page-components": [
     "./src/routes/+layout.svelte",
     "./src/routes/+page.svelte",
-    "./src/routes/demo/+page.svelte",
-    "./src/routes/demo/paraglide/+page.svelte",
-    "./src/routes/demo/lucia/+page.svelte",
-    "./src/routes/demo/lucia/login/+page.svelte"
+    "./src/routes/admin/+layout.svelte",
+    "./src/routes/admin/+layout@.svelte",
+    "./src/routes/admin/+page.svelte",
+    "./src/routes/admin/blogs/+page.svelte",
+    "./src/routes/admin/users/+page.svelte",
+    "./src/routes/auth/login/+page.svelte",
+    "./src/routes/auth/signup/+page.svelte"
   ],
-  "server-load-functions": [
-    "./src/routes/demo/lucia/+page.server.ts",
-    "./src/routes/demo/lucia/login/+page.server.ts"
-  ],
-  "server-actions": [
-    "./src/routes/demo/lucia/+page.server.ts",
-    "./src/routes/demo/lucia/login/+page.server.ts"
-  ],
+  "server-load-functions": [],
+  "server-actions": [],
   "remote-functions": [
     "./src/lib/remotes/blog.remote.ts",
-    "./src/lib/remotes/product.remote.ts"
+    "./src/lib/remotes/product.remote.ts",
+    "./src/lib/remotes/user.remote.ts"
   ],
   "database-schema": [
     "./src/lib/server/db/schema.ts"
@@ -101,7 +102,8 @@
     "./drizzle/0000_yellow_human_robot.sql"
   ],
   "test-files": [
-    "./e2e/demo.test.ts"
+    "./e2e/auth.test.ts",
+    "./e2e/user-management.test.ts"
   ],
   "documentation": [
     "./README.md"

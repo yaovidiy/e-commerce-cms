@@ -92,6 +92,8 @@ shadcn-svelte base primitives with:
 - Render children with `{@render children?.()}`
 - Polymorphic components (button/anchor based on `href`)
 - **NO business logic or API calls**
+- **Use shadcn-svelte CLI to add components**: `pnpm dlx shadcn-svelte@latest add <component-name>`
+- **Never create UI components manually** - always use the CLI to ensure consistency with shadcn-svelte patterns
 
 #### 2. Admin Components (`src/lib/components/admin/`)
 Admin dashboard/CMS components organized by:
@@ -1689,6 +1691,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 **Remote Functions Specific:**
 - **Use `query()` for all read operations** - Never call DB directly from components
 - **Use `form()` for mutations via forms** - Prefer over `command()` for progressive enhancement
+- **Use `command()` for programmatic actions** - For simple state toggles, quick updates without form submission
 - **Spread form objects onto form elements** - `<form {...formFunction}>`
 - **Use fields API for inputs** - `<input {...form.fields.name.as('text')} />`
 - **Display validation errors** - `{#each form.fields.name.issues() as issue}`
@@ -1696,6 +1699,7 @@ export const searchProducts = query(SearchProductsSchema, async ({ query, catego
 - **Use `getRequestEvent()` to access cookies** - Never use `params` or `url` for auth
 - **Implement single-flight mutations** - Use `refresh()` or `set()` to update queries
 - **Use `query.batch()` for N+1 problems** - Batch simultaneous queries
+- **Auto-refresh queries after mutations** - Use `$effect()` to detect `result` and call `query().refresh()`
 - **Handle submission states** - Check `form.pending`, `form.result` (use `invalid()` for errors)
 - **Call `form.reset()` when using enhance** - Forms don't auto-reset with custom enhancement
 
