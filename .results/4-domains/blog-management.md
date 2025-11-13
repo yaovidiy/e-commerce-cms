@@ -9,6 +9,7 @@ Location: `src/lib/remotes/blog.remote.ts`
 ### Queries
 - `getAllBlogs()` - Retrieves all blog posts
 - `getBlog(slug)` - Retrieves a single blog post by slug
+- `getBlogById(id)` - Retrieves a single blog post by ID (used for editing)
 - `getBlogsByAuthor(authorId)` - Retrieves blog posts by author ID
 - `searchBlogsByTitle(title)` - Searches blog posts by title
 
@@ -78,12 +79,15 @@ Location: `src/lib/components/admin/features/blog-management/`
 - Shows: title, slug, created date, and actions
 
 #### BlogForm
-- Form for creating new blog posts
-- Auto-generates slug from title (can be manually edited)
+- Form for creating and editing blog posts
+- Supports both create and edit modes via `blog` prop
+- Auto-generates slug from title (can be manually edited) - only in create mode
 - Uses RichTextEditor component for content (supports formatting, images, videos, links)
 - Fields: title, slug, content (rich text)
-- Redirects to `/admin/blogs` on successful creation
+- In edit mode: pre-populates fields with existing blog data
+- Redirects to `/admin/blogs` on successful creation/update
 - Form validation with error messages
+- Dynamic button text based on mode (Create/Save)
 
 #### DeleteBlogDialog
 - Confirmation dialog for deleting blogs
@@ -101,9 +105,20 @@ File: `src/routes/admin/blogs/+page.svelte`
 ### Blog Creation Page
 Path: `/admin/blogs/create`
 File: `src/routes/admin/blogs/create/+page.svelte`
-- Displays `BlogForm` component
+- Displays `BlogForm` component (create mode)
 - Back button returns to blogs list
 - Form submission creates blog and redirects to list
+
+### Blog Edit Page
+Path: `/admin/blogs/edit/[id]`
+File: `src/routes/admin/blogs/edit/[id]/+page.svelte`
+- Dynamic route using blog ID as parameter
+- Fetches blog data using `getBlogById(id)` query
+- Displays `BlogForm` component with blog data (edit mode)
+- Back button returns to blogs list
+- Shows loading state while fetching blog
+- Handles not found and error states
+- Form submission updates blog and redirects to list
 
 ## Authentication & Authorization
 - All blog management operations require admin privileges
@@ -161,7 +176,16 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 3. View title, slug, created date in table
 4. Click actions menu (three dots) for operations
 
-### Editing/Deleting Blogs
+### Editing Blogs
+1. In blogs list, click actions menu on desired blog
+2. Select "Edit" to navigate to `/admin/blogs/edit/{id}`
+3. Blog data is fetched and pre-populated in form
+4. Modify title, slug, or content as needed
+5. Click "Save" to update
+6. Redirected to blogs list with updated post
+7. List auto-refreshes after operation
+
+### Deleting Blogs
 1. In blogs list, click actions menu on desired blog
 2. Select "Edit" to modify (route: `/admin/blogs/edit/{id}`)
 3. Or select "Delete" to open confirmation dialog
@@ -198,11 +222,11 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 Potential improvements for blog management:
 
 1. ~~**Rich Text Editor**~~ ✅ **Implemented** - TipTap editor with formatting, images, videos, links
-2. **Image Upload** - Add featured image support with local storage/CDN
-3. **Categories/Tags** - Add taxonomy system
-4. **Draft Status** - Add published/draft status field
-5. **Pagination** - Add pagination for large blog lists
-6. **Edit Page** - Implement edit route at `/admin/blogs/edit/{id}`
+2. ~~**Edit Page**~~ ✅ **Implemented** - Edit route at `/admin/blogs/edit/[id]` with dynamic parameter
+3. **Image Upload** - Add featured image support with local storage/CDN
+4. **Categories/Tags** - Add taxonomy system
+5. **Draft Status** - Add published/draft status field
+6. **Pagination** - Add pagination for large blog lists
 7. **Preview** - Add blog preview before publishing
 8. **SEO Fields** - Add meta description, keywords
 9. **Scheduled Publishing** - Add future publish dates

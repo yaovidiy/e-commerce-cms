@@ -18,6 +18,12 @@ export const getBlog = query(v.string(), async (slug) => {
     return blog;
 });
 
+export const getBlogById = query(v.string(), async (id) => {
+    requireAdminUser();
+    const [blog] = await db.select().from(tables.blog).where(eq(tables.blog.id, id));
+    return blog;
+});
+
 export const getBlogsByAuthor = query(v.string(), async (authorId) => {
     requireAdminUser();
     const blogs = await db.select().from(tables.blog).where(eq(tables.blog.authorId, authorId));

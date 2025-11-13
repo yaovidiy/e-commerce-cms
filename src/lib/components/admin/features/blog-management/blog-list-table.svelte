@@ -6,6 +6,7 @@
 	import DeleteBlogDialog from './delete-blog-dialog.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { MoreHorizontal, Pencil, Trash2, Search, Eye } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
 
 	let searchQuery = $state('');
 
@@ -85,11 +86,11 @@
 											</Button>
 										</DropdownMenu.Trigger>
 										<DropdownMenu.Content align="end">
-											<DropdownMenu.Item onclick={() => window.location.href = `/blog/${blog.slug}`}>
+											<DropdownMenu.Item onclick={() => goto(`/blog/${blog.slug}`)}>
 												<Eye class="mr-2 h-4 w-4" />
 												{m.blog_view()}
 											</DropdownMenu.Item>
-											<DropdownMenu.Item onclick={() => window.location.href = `/admin/blogs/edit/${blog.id}`}>
+											<DropdownMenu.Item onclick={() => goto(`/admin/blogs/edit/${blog.id}`)}>
 												<Pencil class="mr-2 h-4 w-4" />
 												{m.blog_edit_blog()}
 											</DropdownMenu.Item>
