@@ -162,18 +162,18 @@ This document outlines the minimum viable product (MVP) features required for a 
 
 #### 4.1 Payment Gateway
 **Recommended Providers:**
-- Stripe (recommended for global)
-- PayPal
-- Square
-- LiqPay (for Ukraine market)
+- LiqPay (primary - for Ukraine market)
+- Stripe (optional for global expansion)
+- PayPal (optional)
 
 **Database Schema:**
 - `payment` table:
   - id, orderId
-  - provider (stripe, paypal, etc.)
+  - provider (liqpay, stripe, paypal, etc.)
   - transactionId
   - amount, currency
   - status (pending, completed, failed, refunded)
+  - liqpayData (JSON - payment_id, status, etc.)
   - metadata (JSON)
   - createdAt, updatedAt
 
@@ -183,6 +183,112 @@ This document outlines the minimum viable product (MVP) features required for a 
 - Payment status tracking
 - Refund processing
 - Payment history in admin
+
+---
+
+### 4.5 **Checkbox РРО Integration** (Priority: CRITICAL for Ukraine)
+
+#### 4.5.1 Fiscal Receipt System
+**About Checkbox:**
+- Leading cloud-based fiscal receipt system (програмний РРО) in Ukraine
+- Required by Ukrainian law for all businesses conducting sales (ФОП групи 2-4, юридичні особи)
+- Replaces traditional physical cash registers with cloud software
+- Official fiscal data transmission to State Tax Service (ДПС України)
+- Cost: 249 UAH/month per cash register (30-day free trial)
+
+**Database Schema:**
+- `checkbox_receipt` table:
+  - id, orderId
+  - receiptId (from Checkbox API)
+  - fiscalCode (фіскальний номер чека)
+  - receiptUrl (link to electronic receipt)
+  - status (created, sent, error, cancelled)
+  - checkboxData (JSON - full receipt data)
+  - shiftId (касова зміна ID)
+  - cashRegisterId (каса ID)
+  - createdAt, updatedAt
+
+- `checkbox_shift` table:
+  - id, shiftId
+  - cashRegisterId
+  - status (opened, closed)
+  - openedAt, closedAt
+  - balance (готівка, безготівка)
+
+**Integration Features:**
+- Automatic receipt generation on successful LiqPay payment only
+- Electronic receipt delivery (email, SMS, Viber)
+- Paper receipt printing via thermal printer (optional)
+- Real-time fiscal data transmission to ДПС
+- Shift management (відкриття/закриття зміни)
+- X-reports and Z-reports (денні звіти)
+- Refund receipt generation (for LiqPay refunds)
+- Multiple cash registers support
+- Offline mode support (queue receipts when internet lost)
+- Receipt history and search
+
+**Important Note:**
+Checkbox receipts are generated **only for orders paid via LiqPay**. Cash-on-delivery (COD) or other payment methods that don't involve immediate online payment will not trigger automatic receipt generation. This aligns with Ukrainian fiscal requirements where receipts must be issued at the moment of payment.
+
+**Admin Features:**
+- Configure Checkbox API credentials (login, password, license key)
+- Manage cash registers (торгові точки)
+- Manage cashiers (касири)
+- View receipt history
+- Generate reports (shift reports, daily reports)
+- Manual receipt creation
+- Receipt correction/cancellation
+- Tax rate configuration (ПДВ settings)
+- Shift opening/closing
+
+**API Integration:**
+Checkbox provides REST API for:
+- Authentication (login, token refresh)
+- Cash register management
+- Receipt creation (sale, return, service)
+- Shift operations (open, close)
+- Reports generation
+- Receipt search and retrieval
+
+**Receipt Types:**
+- **Sale receipt** (чек продажу) - standard purchase
+- **Return receipt** (чек повернення) - product return/refund
+- **Service receipt** (службовий чек) - cash in/out operations
+
+**Required Receipt Data:**
+- Goods/services list with prices
+- Payment type (готівка, картка, змішаний)
+- VAT information (if applicable)
+- Cashier information
+- Cash register information
+- Customer contact (email/phone for electronic receipt)
+
+**Implementation Steps:**
+1. Register on checkbox.ua and create account
+2. Configure cash register (каса) and add cashiers
+3. Obtain API credentials
+4. Implement API client in SvelteKit
+5. Listen for successful LiqPay payment webhook
+6. Create Checkbox receipt only when payment method is LiqPay and status is 'success'
+7. Send electronic receipt to customer
+8. Handle offline queue and retry logic
+9. Implement shift management
+10. Generate reports for admin
+
+**Legal Compliance:**
+- All online payment transactions (LiqPay) MUST generate fiscal receipt
+- Receipt must be issued immediately upon successful payment
+- Fiscal data transmitted to ДПС in real-time
+- Receipt must contain all legally required information
+- Z-reports must be generated at shift close
+- Receipt data stored for 3 years minimum
+- Cash-on-delivery orders require manual receipt generation upon actual payment delivery
+
+**Error Handling:**
+- Queue receipts when Checkbox API unavailable
+- Retry failed receipts automatically
+- Admin notification on receipt creation failure
+- Manual receipt creation option for edge cases
 
 ---
 
@@ -590,31 +696,32 @@ This document outlines the minimum viable product (MVP) features required for a 
 7. ✅ Basic checkout flow
 
 ### Phase 2: Transactions (Weeks 5-6)
-8. ✅ Payment integration (Stripe primary)
-9. ✅ Order management system
-10. ✅ Email notifications
-11. ✅ Order confirmation/tracking
+8. ✅ Payment integration (LiqPay primary)
+9. ✅ Checkbox РРО integration (fiscal receipts)
+10. ✅ Order management system
+11. ✅ Email notifications
+12. ✅ Order confirmation/tracking
 
 ### Phase 3: Customer Features (Weeks 7-8)
-12. ✅ Customer account management
-13. ✅ Address book
-14. ✅ Order history
-15. ✅ Shipping configuration
-16. ✅ Discount system
+13. ✅ Customer account management
+14. ✅ Address book
+15. ✅ Order history
+16. ✅ Shipping configuration
+17. ✅ Discount system
 
 ### Phase 4: CMS & Content (Weeks 9-10)
-17. ✅ Site settings management
-18. ✅ Banner management
-19. ✅ Page builder (basic)
-20. ✅ SEO optimization
+18. ✅ Site settings management
+19. ✅ Banner management
+20. ✅ Page builder (basic)
+21. ✅ SEO optimization
 
 ### Phase 5: Polish & Launch (Weeks 11-12)
-21. ✅ Search & filtering
-22. ✅ Analytics dashboard
-23. ✅ Performance optimization
-24. ✅ Security audit
-25. ✅ Testing (E2E, unit)
-26. ✅ Documentation
+22. ✅ Search & filtering
+23. ✅ Analytics dashboard
+24. ✅ Performance optimization
+25. ✅ Security audit
+26. ✅ Testing (E2E, unit)
+27. ✅ Documentation
 
 ---
 
@@ -641,6 +748,7 @@ src/lib/
 │   ├── cart.remote.ts
 │   ├── order.remote.ts
 │   ├── payment.remote.ts
+│   ├── checkbox.remote.ts
 │   ├── shipping.remote.ts
 │   ├── discount.remote.ts
 │   └── settings.remote.ts
@@ -652,6 +760,7 @@ src/lib/
 │   │       ├── customer-management/
 │   │       ├── discount-management/
 │   │       ├── banner-management/
+│   │       ├── checkbox-management/
 │   │       └── settings-management/
 │   └── client/
 │       └── features/
@@ -660,15 +769,18 @@ src/lib/
 │           ├── checkout/
 │           ├── account/
 │           └── search/
-└── server/
+├── server/
+│   ├── checkbox-client.ts (Checkbox API wrapper)
     ├── db/
     │   └── schema.ts (all tables)
-    └── schemas/
-        └── index.ts (validation schemas)
+    ├── schemas/
+    │   └── index.ts (validation schemas)
+    └── checkbox-client.ts (Checkbox API integration)
 ```
 
 ### Third-party Services
-- **Payment**: Stripe (primary), PayPal (optional)
+- **Payment**: LiqPay (primary), Stripe (optional for global), PayPal (optional)
+- **Fiscal Receipts**: Checkbox РРО (required for Ukraine)
 - **Email**: Resend or SendGrid
 - **Storage**: Cloudflare R2 (already implemented)
 - **Analytics**: Google Analytics 4
@@ -683,14 +795,18 @@ src/lib/
 - [ ] Customers can browse and search products
 - [ ] Customers can add products to cart
 - [ ] Customers can complete checkout (guest or registered)
-- [ ] Payment processing works (test + live mode)
+- [ ] Payment processing works (test + live mode with LiqPay)
+- [ ] Fiscal receipts generated automatically via Checkbox РРО
+- [ ] Electronic receipts sent to customers (email/SMS/Viber)
 - [ ] Orders are created and tracked
 - [ ] Email notifications are sent
 - [ ] Admin can manage orders
+- [ ] Admin can view/manage Checkbox receipts and shifts
 - [ ] Admin can configure site settings
 - [ ] Admin can create banners/promotions
 - [ ] Site is responsive (mobile, tablet, desktop)
 - [ ] Site passes basic security audit
+- [ ] Site complies with Ukrainian tax law (РРО requirement)
 - [ ] Page load time < 3 seconds
 - [ ] All E2E tests pass
 
