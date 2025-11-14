@@ -661,6 +661,7 @@ Checkbox provides REST API for:
 - HTTPS enforcement
 - CSRF protection (SvelteKit built-in)
 - Rate limiting
+- DDoS protection (Layer 3/4 and Layer 7)
 - PCI DSS compliance (payment gateway handles this)
 - GDPR compliance:
   - Cookie consent
@@ -668,6 +669,182 @@ Checkbox provides REST API for:
   - Data export/deletion
 - Session security
 - Input sanitization
+
+#### 19.1 DDoS Protection Strategy
+
+**Layer 3/4 Protection (Network/Transport Layer):**
+- SYN flood protection
+- UDP flood protection
+- ICMP flood protection
+- Connection rate limiting
+
+**Layer 7 Protection (Application Layer):**
+- HTTP flood protection
+- Slowloris attack mitigation
+- Request rate limiting per IP
+- Challenge-based verification (CAPTCHA)
+
+**Implementation Options:**
+
+**Option 1: Cloudflare (Recommended) - Free Tier ✅**
+- Automatic DDoS mitigation (up to millions of requests)
+- WAF (Web Application Firewall) with managed rulesets
+- Bot protection
+- Rate limiting (100 rules free)
+- SSL/TLS encryption
+- CDN with caching
+- Analytics and threat monitoring
+
+**Setup:**
+1. Add domain to Cloudflare
+2. Update DNS nameservers
+3. Enable "Under Attack Mode" when needed
+4. Configure firewall rules:
+   - Block known bad IPs
+   - Challenge suspicious traffic
+   - Rate limit API endpoints
+
+**Free Tier Limits:**
+- Unlimited DDoS mitigation
+- 5 page rules
+- 100 rate limiting rules
+- 5 WAF rules
+- Basic analytics
+
+**Option 2: Railway Built-in (Basic)**
+- Automatic DDoS detection
+- Traffic filtering
+- No additional configuration needed
+- Included in all plans
+
+**Option 3: Application-Level Rate Limiting**
+
+**Database Schema:**
+```typescript
+// src/lib/server/db/schema.ts
+export const rateLimitLog = sqliteTable('rate_limit_log', {
+  id: text('id').primaryKey(),
+  ip: text('ip').notNull(),
+  endpoint: text('endpoint').notNull(),
+  requestCount: integer('request_count').notNull().default(1),
+  windowStart: integer('window_start', { mode: 'timestamp' }).notNull(),
+  isBlocked: integer('is_blocked', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+```
+
+**Rate Limiting Middleware:**
+```typescript
+// src/lib/server/rate-limit.ts
+import { error } from '@sveltejs/kit';
+import { db } from '$lib/server/db';
+import * as tables from '$lib/server/db/schema';
+import { eq, and, gte } from 'drizzle-orm';
+
+const RATE_LIMITS = {
+  api: { requests: 100, window: 60 }, // 100 req/min
+  auth: { requests: 5, window: 60 },  // 5 req/min
+  checkout: { requests: 10, window: 60 } // 10 req/min
+};
+
+export async function checkRateLimit(
+  ip: string,
+  endpoint: string,
+  limitType: keyof typeof RATE_LIMITS = 'api'
+): Promise<boolean> {
+  const limit = RATE_LIMITS[limitType];
+  const windowStart = new Date(Date.now() - limit.window * 1000);
+  
+  // Get recent requests
+  const [recentLog] = await db.select()
+    .from(tables.rateLimitLog)
+    .where(
+      and(
+        eq(tables.rateLimitLog.ip, ip),
+        eq(tables.rateLimitLog.endpoint, endpoint),
+        gte(tables.rateLimitLog.windowStart, windowStart)
+      )
+    )
+    .limit(1);
+  
+  if (!recentLog) {
+    // First request in window
+    await db.insert(tables.rateLimitLog).values({
+      id: crypto.randomUUID(),
+      ip,
+      endpoint,
+      requestCount: 1,
+      windowStart: new Date(),
+      createdAt: new Date()
+    });
+    return true;
+  }
+  
+  if (recentLog.requestCount >= limit.requests) {
+    // Rate limit exceeded
+    await db.update(tables.rateLimitLog)
+      .set({ isBlocked: true })
+      .where(eq(tables.rateLimitLog.id, recentLog.id));
+    return false;
+  }
+  
+  // Increment counter
+  await db.update(tables.rateLimitLog)
+    .set({ requestCount: recentLog.requestCount + 1 })
+    .where(eq(tables.rateLimitLog.id, recentLog.id));
+  
+  return true;
+}
+```
+
+**Usage in hooks.server.ts:**
+```typescript
+// src/hooks.server.ts
+import type { Handle } from '@sveltejs/kit';
+import { checkRateLimit } from '$lib/server/rate-limit';
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const ip = event.getClientAddress();
+  const path = event.url.pathname;
+  
+  // Apply rate limiting to sensitive endpoints
+  if (path.startsWith('/api/')) {
+    const allowed = await checkRateLimit(ip, path, 'api');
+    if (!allowed) {
+      return new Response('Too Many Requests', { 
+        status: 429,
+        headers: { 'Retry-After': '60' }
+      });
+    }
+  }
+  
+  if (path.startsWith('/auth/')) {
+    const allowed = await checkRateLimit(ip, path, 'auth');
+    if (!allowed) {
+      return new Response('Too Many Requests', { 
+        status: 429,
+        headers: { 'Retry-After': '60' }
+      });
+    }
+  }
+  
+  return resolve(event);
+};
+```
+
+**Admin Features:**
+- View rate limit logs
+- Block/unblock IP addresses manually
+- Configure rate limit thresholds
+- Real-time DDoS attack monitoring
+- Email alerts on suspicious activity
+
+**Recommended Stack for MVP:**
+1. **Cloudflare Free Tier** (primary DDoS protection)
+2. **Application-level rate limiting** (secondary protection)
+3. **Railway built-in protection** (baseline)
+
+**This multi-layer approach provides enterprise-grade DDoS protection at zero additional cost!**
 
 ---
 
@@ -771,6 +948,7 @@ src/lib/
 │           └── search/
 ├── server/
 │   ├── checkbox-client.ts (Checkbox API wrapper)
+│   ├── rate-limit.ts (Rate limiting middleware)
     ├── db/
     │   └── schema.ts (all tables)
     ├── schemas/
@@ -783,6 +961,7 @@ src/lib/
 - **Fiscal Receipts**: Checkbox РРО (required for Ukraine)
 - **Email**: Resend or SendGrid
 - **Storage**: Cloudflare R2 (already implemented)
+- **DDoS Protection**: Cloudflare Free Tier (unlimited DDoS mitigation)
 - **Analytics**: Google Analytics 4
 - **Search**: SQLite FTS5 initially, Meilisearch for scale
 - **Monitoring**: Sentry (optional)
@@ -806,6 +985,8 @@ src/lib/
 - [ ] Admin can create banners/promotions
 - [ ] Site is responsive (mobile, tablet, desktop)
 - [ ] Site passes basic security audit
+- [ ] DDoS protection is enabled (Cloudflare + rate limiting)
+- [ ] Rate limiting works on sensitive endpoints
 - [ ] Site complies with Ukrainian tax law (РРО requirement)
 - [ ] Page load time < 3 seconds
 - [ ] All E2E tests pass
