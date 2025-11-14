@@ -812,6 +812,845 @@ src/lib/
 
 ---
 
+## Deployment & Hosting
+
+### Recommended Deployment Stack
+
+For an e-commerce CMS with the features outlined in this MVP, we need hosting that supports:
+- **Node.js runtime** (SvelteKit SSR)
+- **Persistent storage** (SQLite database file + volumes)
+- **Static asset serving** (via CDN)
+- **Environment variables** (API keys, secrets)
+- **Custom domains** with SSL
+- **Reasonable free tier** to start
+
+### Option 1: Railway (Recommended for MVP) ⭐
+
+**Why Railway:**
+- Best SQLite support with persistent volumes
+- Free tier: $5 credit/month (renewable trial)
+- Pay-as-you-go after credits ($0.000772/vCPU-sec)
+- Perfect for Node.js + SvelteKit
+- Easy deployment from GitHub
+- Built-in environment variables
+- Custom domains included
+
+**Free Tier Details:**
+- 30-day trial with $5 credits
+- After trial: $1/month minimum
+- Up to 0.5 GB RAM, 1 vCPU
+- 0.5 GB volume storage (perfect for SQLite)
+- Global regions
+- Community support
+
+**Deployment Structure:**
+```
+Railway Project:
+├── SvelteKit App (Node.js service)
+│   ├── Volume: /data (for local.db SQLite file)
+│   ├── Environment Variables:
+│   │   ├── DATABASE_URL=file:/data/local.db
+│   │   ├── R2_ACCOUNT_ID
+│   │   ├── R2_ACCESS_KEY_ID
+│   │   ├── R2_SECRET_ACCESS_KEY
+│   │   ├── LIQPAY_PUBLIC_KEY
+│   │   ├── LIQPAY_PRIVATE_KEY
+│   │   ├── CHECKBOX_LOGIN
+│   │   ├── CHECKBOX_PASSWORD
+│   │   └── CHECKBOX_LICENSE_KEY
+│   └── Custom domain: yourdomain.com
+```
+
+**Estimated Monthly Cost (after free tier):**
+- Small store (< 1000 orders/month): ~$5-10/month
+- Medium store (1000-5000 orders/month): ~$15-25/month
+- Large store (5000+ orders/month): ~$30-50/month
+
+**Deployment Steps:**
+1. Push code to GitHub repository
+2. Create Railway account (free)
+3. Click "Deploy from GitHub"
+4. Add environment variables
+5. Attach persistent volume for database
+6. Deploy!
+
+**Railway.app URL:** https://railway.app/
+
+---
+
+### Option 2: Render
+
+**Why Render:**
+- Excellent SvelteKit support
+- Free tier available (with limitations)
+- PostgreSQL database (would need to migrate from SQLite)
+- Auto-deploy from Git
+- Custom domains with SSL
+
+**Free Tier Details:**
+- Free web service (512 MB RAM, 0.1 CPU)
+- Services spin down after 15 mins of inactivity
+- Free PostgreSQL database (expires after 90 days)
+- 100 GB bandwidth/month
+- 500 build minutes/month
+
+**Important Notes:**
+- Free tier services sleep after inactivity (not ideal for e-commerce)
+- Would require SQLite → PostgreSQL migration
+- Better for paid plan ($25/month Standard plan minimum)
+
+**Not recommended for free tier** due to sleep behavior and database limitations.
+
+**Render URL:** https://render.com/
+
+---
+
+### Option 3: Vercel (Not Recommended)
+
+**Why NOT Vercel:**
+- Serverless architecture incompatible with SQLite
+- No persistent storage for databases
+- Would require PostgreSQL/external database
+- Free tier is generous but not suitable for this architecture
+
+Vercel is excellent for static/JAMstack sites but not ideal for SQLite-based e-commerce with server-side state.
+
+---
+
+### Option 4: Netlify (Not Recommended)
+
+**Why NOT Netlify:**
+- Primarily for static sites and serverless functions
+- No persistent storage support
+- Would require complete architecture change
+- Not suitable for SQLite-based applications
+
+---
+
+### Required External Services (All Free Tier Available)
+
+#### 1. Cloudflare R2 (Already Implemented)
+**Free Tier:**
+- 10 GB storage/month
+- 10 million Class A operations/month
+- 100 million Class B operations/month
+- **Zero egress fees** (unlimited bandwidth)
+
+**Perfect for:**
+- Product images
+- Asset storage
+- User uploads
+- Blog images
+
+**Cost after free tier:** ~$0.015/GB storage
+
+---
+
+#### 2. LiqPay (Payment Gateway)
+**Costs:**
+- No monthly fee
+- Transaction fees: 2.8% + 5 UAH per transaction
+- Instant settlement to bank account
+
+**Required:**
+- Business bank account (ФОП or ТОВ)
+- Verified merchant account
+
+---
+
+#### 3. Checkbox РРО
+**Costs:**
+- 249 UAH/month per cash register
+- 30-day free trial
+- First cash register only (additional registers +249 UAH each)
+
+**Required:**
+- Registered business (ФОП/ТОВ)
+- Digital signature (ЕЦП)
+
+---
+
+#### 4. Email Service (Transactional Emails)
+
+**Option A: Resend (Recommended)**
+**Free Tier:**
+- 3,000 emails/month
+- 1 custom domain
+- API access
+- Email analytics
+
+**Cost after free tier:** $20/month (50K emails)
+
+**Resend URL:** https://resend.com/
+
+**Option B: SendGrid**
+**Free Tier:**
+- 100 emails/day (3,000/month)
+- Email API
+- Basic analytics
+
+**Cost after free tier:** $19.95/month (50K emails)
+
+---
+
+#### 5. Domain Name
+
+**Registrars:**
+- **Cloudflare Registrar** (recommended) - At-cost pricing (~$10/year for .com)
+- **Namecheap** - Competitive pricing
+- **Hostinger** - Budget-friendly
+
+**Cost:** $8-15/year for .com/.ua domain
+
+---
+
+### Complete Free Tier Budget Breakdown
+
+**Month 1-2 (Using Free Tiers):**
+| Service | Cost | Notes |
+|---------|------|-------|
+| Railway (trial) | $0 | $5 credits included |
+| Cloudflare R2 | $0 | 10 GB free forever |
+| LiqPay | Transaction fees only | 2.8% + 5 UAH per sale |
+| Checkbox РРО (trial) | $0 | 30-day free trial |
+| Resend (email) | $0 | 3,000 emails/month |
+| Domain | $10/year | One-time annual cost |
+| **TOTAL** | ~$0-10 | (domain only) |
+
+**Month 3+ (Post-Trial):**
+| Service | Cost | Notes |
+|---------|------|-------|
+| Railway | $5-10 | Pay-as-you-go |
+| Cloudflare R2 | $0-5 | Depends on storage |
+| LiqPay | Transaction fees | 2.8% + 5 UAH per sale |
+| Checkbox РРО | 249 UAH (~$6) | Required by law |
+| Resend | $0-20 | Free up to 3K emails |
+| **TOTAL** | ~$11-41/month | + transaction fees |
+
+---
+
+### Production Deployment Checklist
+
+**Before Launch:**
+- [ ] Set up Railway account and link GitHub repo
+- [ ] Configure environment variables (all API keys)
+- [ ] Attach persistent volume for SQLite database
+- [ ] Set up custom domain with SSL
+- [ ] Configure Cloudflare R2 bucket
+- [ ] Set up LiqPay merchant account
+- [ ] Register Checkbox РРО account and cash register
+- [ ] Configure email service (Resend/SendGrid)
+- [ ] Set up monitoring/error tracking (optional: Sentry free tier)
+- [ ] Run production build test
+- [ ] Perform security audit
+- [ ] Set up automated database backups
+
+**Post-Launch:**
+- [ ] Monitor Railway usage dashboard
+- [ ] Set up billing alerts
+- [ ] Configure daily database backups
+- [ ] Enable Cloudflare CDN (optional)
+- [ ] Set up uptime monitoring (optional: UptimeRobot free tier)
+
+---
+
+### Database Backup Strategy
+
+**Railway Volumes:**
+- Automatic snapshots available
+- Manual backup via Railway CLI:
+  ```bash
+  railway run sqlite3 /data/local.db ".backup /data/backup.db"
+  ```
+
+**Recommended Backup Schedule:**
+- **Daily:** Automated backup to external storage
+- **Weekly:** Full database export
+- **Monthly:** Archive backups
+
+**Backup Destination Options:**
+- Cloudflare R2 (encrypted)
+- GitHub private repository
+- External cloud storage (Google Drive, Dropbox)
+
+---
+
+### Scaling Path (Future Growth)
+
+**When to Upgrade:**
+
+1. **Railway → Railway Pro ($20/month)**
+   - > 5,000 visitors/month
+   - > 1,000 orders/month
+   - Need for horizontal scaling
+
+2. **SQLite → PostgreSQL**
+   - > 10,000 orders/month
+   - Multiple concurrent write operations
+   - Need for read replicas
+
+3. **Consider Dedicated Infrastructure**
+   - > 50,000 visitors/month
+   - > 10,000 orders/month
+   - Move to VPS (DigitalOcean, Linode)
+
+---
+
+### Future Migration: Ultra-Cheap High-Load Solution
+
+**Target Use Case:**
+- High traffic (> 100,000 visitors/month)
+- Limited budget (< $20/month)
+- Willing to manage infrastructure
+
+---
+
+#### Option 1: Hetzner VPS + PostgreSQL (Best Value) ⭐
+
+**Infrastructure:**
+```
+Hetzner Cloud VPS
+├── CPX11: €4.49/month (~$5)
+│   ├── 2 vCPU (AMD)
+│   ├── 2 GB RAM
+│   ├── 40 GB SSD
+│   ├── 20 TB traffic
+│   └── Location: Germany/Finland
+├── PostgreSQL (installed locally)
+├── Nginx (reverse proxy + static files)
+├── PM2 (process manager)
+└── Cloudflare (free CDN + DDoS protection)
+```
+
+**Cost Breakdown:**
+| Item | Cost |
+|------|------|
+| Hetzner VPS | €4.49/month (~$5) |
+| Cloudflare R2 | $0-5 (storage) |
+| Domain | $10/year (~$1/month) |
+| Checkbox РРО | 249 UAH (~$6) |
+| Email (Resend) | $0-20 |
+| **TOTAL** | **$12-37/month** |
+
+**Why This Works:**
+- ✅ PostgreSQL handles high concurrency better than SQLite
+- ✅ Hetzner has best price-to-performance in Europe
+- ✅ Full control over infrastructure
+- ✅ Can handle 100K+ visitors easily
+- ✅ 20 TB bandwidth included (no overage fees)
+- ✅ SSD storage for fast DB queries
+
+**Migration Steps:**
+
+**Phase 1: Database Migration (SQLite → PostgreSQL)**
+1. Update Drizzle ORM configuration:
+   ```typescript
+   // drizzle.config.ts
+   import { defineConfig } from 'drizzle-kit';
+   
+   export default defineConfig({
+     schema: './src/lib/server/db/schema.ts',
+     out: './drizzle',
+     dialect: 'postgresql', // Changed from 'sqlite'
+     dbCredentials: {
+       url: process.env.DATABASE_URL!
+     }
+   });
+   ```
+
+2. Update schema.ts for PostgreSQL compatibility:
+   ```typescript
+   // Replace sqliteTable with pgTable
+   import { pgTable, text, integer, timestamp } from 'drizzle-orm/pg-core';
+   
+   export const user = pgTable('user', {
+     id: text('id').primaryKey(),
+     username: text('username').notNull().unique(),
+     // Change integer timestamps to timestamp type
+     createdAt: timestamp('created_at').notNull().defaultNow()
+   });
+   ```
+
+3. Export SQLite data:
+   ```bash
+   # Dump data from Railway SQLite
+   sqlite3 local.db .dump > backup.sql
+   ```
+
+4. Convert and import to PostgreSQL:
+   ```bash
+   # Install pgloader for conversion
+   brew install pgloader  # or apt-get install pgloader
+   
+   # Convert SQLite to PostgreSQL
+   pgloader backup.sql postgresql://localhost/ecommerce
+   ```
+
+**Phase 2: VPS Setup**
+1. Create Hetzner account (https://www.hetzner.com/cloud)
+2. Launch CPX11 server (Ubuntu 24.04)
+3. SSH into server and run setup script:
+
+```bash
+#!/bin/bash
+# setup.sh - Automated VPS configuration
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Install PostgreSQL 16
+sudo apt install -y postgresql postgresql-contrib
+
+# Install Nginx
+sudo apt install -y nginx
+
+# Install PM2
+sudo npm install -g pm2
+
+# Configure PostgreSQL
+sudo -u postgres psql -c "CREATE DATABASE ecommerce;"
+sudo -u postgres psql -c "CREATE USER ecommerceuser WITH PASSWORD 'your_password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ecommerce TO ecommerceuser;"
+
+# Configure firewall
+sudo ufw allow 22    # SSH
+sudo ufw allow 80    # HTTP
+sudo ufw allow 443   # HTTPS
+sudo ufw enable
+
+# Install Certbot for SSL
+sudo apt install -y certbot python3-certbot-nginx
+```
+
+4. Deploy application:
+```bash
+# Clone repository
+git clone https://github.com/yourusername/ecommerce-cms.git
+cd ecommerce-cms
+
+# Install dependencies
+npm install
+
+# Build production bundle
+npm run build
+
+# Start with PM2
+pm2 start build/index.js --name ecommerce
+pm2 save
+pm2 startup
+```
+
+5. Configure Nginx reverse proxy:
+```nginx
+# /etc/nginx/sites-available/ecommerce
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+6. Enable HTTPS:
+```bash
+sudo certbot --nginx -d yourdomain.com
+```
+
+**Phase 3: Migration Execution**
+1. Schedule maintenance window (2-4 hours)
+2. Enable read-only mode on Railway app
+3. Export final SQLite data
+4. Import to Hetzner PostgreSQL
+5. Update DNS to point to Hetzner IP
+6. Test all functionality
+7. Monitor for 24-48 hours
+
+**Automated Backup Script:**
+```bash
+#!/bin/bash
+# backup.sh - Daily database backup to R2
+
+# Backup PostgreSQL
+pg_dump ecommerce | gzip > /tmp/backup-$(date +%Y%m%d).sql.gz
+
+# Upload to Cloudflare R2
+aws s3 cp /tmp/backup-$(date +%Y%m%d).sql.gz \
+  s3://your-bucket/backups/ \
+  --endpoint-url https://your-account.r2.cloudflarestorage.com
+
+# Cleanup old backups (keep last 30 days)
+find /tmp -name "backup-*.sql.gz" -mtime +30 -delete
+```
+
+Add to crontab:
+```bash
+0 2 * * * /home/user/backup.sh
+```
+
+---
+
+#### Option 2: Contabo VPS (Even Cheaper, Europe/US)
+
+**Infrastructure:**
+- VPS S: €4.50/month (~$5)
+- 4 vCPU cores
+- 6 GB RAM
+- 100 GB SSD
+- Unlimited traffic
+
+**Same setup as Hetzner, slightly more resources for same price.**
+
+**Contabo URL:** https://contabo.com/
+
+---
+
+#### Option 3: Oracle Cloud Free Tier (100% Free!) 🎁
+
+**Extremely Budget-Friendly Option:**
+
+**Free Forever Resources:**
+- 2 AMD-based VMs (1/8 OCPU, 1 GB RAM each) OR
+- 1 Arm-based VM (4 OCPUs, 24 GB RAM) ⭐
+- 200 GB total storage
+- 10 TB outbound data transfer/month
+- Oracle Autonomous Database (2 instances)
+
+**Why This is Amazing:**
+- ✅ 100% free forever (not trial)
+- ✅ 24 GB RAM Arm VM is incredibly powerful
+- ✅ Can run PostgreSQL + app on same VM
+- ✅ 10 TB bandwidth (more than enough)
+- ✅ No credit card required for free tier
+
+**Caveats:**
+- ⚠️ Free tier can be reclaimed if unused for 90 days
+- ⚠️ Arm architecture (may need Node.js recompilation)
+- ⚠️ Oracle Cloud UI is complex
+- ⚠️ Account approval can be slow
+
+**Perfect for:**
+- Side projects
+- Testing scalability
+- Zero-budget startups
+
+**Oracle Cloud URL:** https://www.oracle.com/cloud/free/
+
+---
+
+#### Option 4: Fly.io (Balanced Approach)
+
+**Infrastructure:**
+- 3 GB persistent volumes (free)
+- Shared CPU VMs
+- Global edge deployment
+- Auto-scaling
+
+**Free Tier:**
+- 3 shared-cpu-1x VMs (256 MB RAM each)
+- 3 GB persistent volumes
+- 160 GB outbound data transfer
+
+**Cost After Free Tier:**
+- ~$10-15/month for small e-commerce
+- PostgreSQL via Supabase free tier
+
+**Why Consider:**
+- ✅ Better than Railway for PostgreSQL
+- ✅ Global edge deployment
+- ✅ Easy scaling
+- ✅ Good free tier
+
+**Not as cheap as VPS but easier to manage.**
+
+**Fly.io URL:** https://fly.io/
+
+---
+
+### Complete Migration Cost Comparison
+
+| Solution | Monthly Cost | Setup Complexity | Performance | Scalability |
+|----------|--------------|------------------|-------------|-------------|
+| **Railway + SQLite** | $11-41 | ⭐ Easy | Good | Limited |
+| **Hetzner + PostgreSQL** | $12-37 | ⭐⭐⭐ Advanced | Excellent | High |
+| **Contabo + PostgreSQL** | $12-37 | ⭐⭐⭐ Advanced | Excellent | High |
+| **Oracle Free + PostgreSQL** | $6-11 (Checkbox only) | ⭐⭐⭐⭐ Expert | Excellent | Very High |
+| **Fly.io + PostgreSQL** | $15-30 | ⭐⭐ Moderate | Excellent | Very High |
+
+---
+
+### Recommended Migration Timeline
+
+**Stage 1: MVP Launch (Months 0-3)**
+- Use Railway + SQLite
+- Focus on product validation
+- Cost: $0-20/month
+
+**Stage 2: Early Growth (Months 3-12)**
+- Stay on Railway, upgrade to Pro if needed
+- Add PostgreSQL if concurrent writes increase
+- Cost: $20-50/month
+
+**Stage 3: Scale & Optimize (Year 2+)**
+- Migrate to Hetzner/Contabo VPS
+- Self-host PostgreSQL
+- Implement caching (Redis)
+- Cost: $12-37/month (save 40-70%)
+
+---
+
+### Database Migration Considerations
+
+**SQLite → PostgreSQL Compatibility Issues:**
+
+1. **Data Types:**
+   ```typescript
+   // SQLite
+   createdAt: integer('created_at', { mode: 'timestamp' })
+   
+   // PostgreSQL
+   createdAt: timestamp('created_at').notNull().defaultNow()
+   ```
+
+2. **Auto-increment:**
+   ```typescript
+   // SQLite
+   id: integer('id').primaryKey({ autoIncrement: true })
+   
+   // PostgreSQL
+   id: serial('id').primaryKey()
+   ```
+
+3. **Full-text Search:**
+   ```typescript
+   // SQLite
+   db.run("CREATE VIRTUAL TABLE products_fts USING fts5(name, description)");
+   
+   // PostgreSQL
+   db.execute(`
+     CREATE INDEX products_search_idx ON products 
+     USING GIN (to_tsvector('english', name || ' ' || description))
+   `);
+   ```
+
+4. **JSON Columns:**
+   ```typescript
+   // SQLite (stored as text)
+   metadata: text('metadata')
+   
+   // PostgreSQL (native JSON)
+   metadata: jsonb('metadata')
+   ```
+
+**Migration Script Template:**
+```typescript
+// migrate-to-postgres.ts
+import { drizzle as sqliteDrizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle as pgDrizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import Database from 'better-sqlite3';
+
+const sqliteDb = new Database('local.db');
+const sqlite = sqliteDrizzle(sqliteDb);
+
+const connectionString = process.env.DATABASE_URL!;
+const client = postgres(connectionString);
+const pg = pgDrizzle(client);
+
+async function migrate() {
+  console.log('Starting migration...');
+  
+  // Migrate users
+  const users = await sqlite.select().from(sqliteTables.user);
+  await pg.insert(pgTables.user).values(users);
+  
+  // Migrate products
+  const products = await sqlite.select().from(sqliteTables.product);
+  await pg.insert(pgTables.product).values(products);
+  
+  // ... migrate other tables
+  
+  console.log('Migration complete!');
+}
+
+migrate();
+```
+
+---
+
+### Performance Optimization for High Load
+
+**When Running on Budget VPS:**
+
+1. **Enable Connection Pooling:**
+   ```typescript
+   // src/lib/server/db/index.ts
+   import { Pool } from 'pg';
+   
+   const pool = new Pool({
+     connectionString: process.env.DATABASE_URL,
+     max: 20, // max connections
+     idleTimeoutMillis: 30000,
+     connectionTimeoutMillis: 2000,
+   });
+   ```
+
+2. **Add Redis for Caching:**
+   ```bash
+   # Install Redis
+   sudo apt install redis-server
+   
+   # Configure in app
+   npm install ioredis
+   ```
+   
+   ```typescript
+   import Redis from 'ioredis';
+   
+   const redis = new Redis({
+     host: 'localhost',
+     port: 6379,
+   });
+   
+   // Cache product catalog
+   export async function getProducts() {
+     const cached = await redis.get('products:all');
+     if (cached) return JSON.parse(cached);
+     
+     const products = await db.select().from(tables.product);
+     await redis.setex('products:all', 300, JSON.stringify(products)); // 5 min cache
+     return products;
+   }
+   ```
+
+3. **Database Indexing:**
+   ```sql
+   -- Add indexes for common queries
+   CREATE INDEX idx_product_slug ON product(slug);
+   CREATE INDEX idx_product_category ON product(category_id);
+   CREATE INDEX idx_order_user ON "order"(user_id);
+   CREATE INDEX idx_order_status ON "order"(status);
+   CREATE INDEX idx_order_created ON "order"(created_at DESC);
+   ```
+
+4. **Static Asset CDN:**
+   - Use Cloudflare (free tier)
+   - Cache product images aggressively
+   - Enable Brotli/Gzip compression
+
+5. **Nginx Caching:**
+   ```nginx
+   # Cache static assets
+   location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|webp)$ {
+       expires 365d;
+       add_header Cache-Control "public, immutable";
+   }
+   ```
+
+---
+
+### Monitoring & Maintenance (Free Tools)
+
+**Essential Monitoring:**
+1. **UptimeRobot** (free) - 50 monitors, 5-min checks
+   - https://uptimerobot.com/
+   
+2. **Netdata** (open-source) - Real-time performance monitoring
+   ```bash
+   bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+   ```
+   
+3. **Grafana + Prometheus** (open-source) - Advanced metrics
+   - Self-hosted on same VPS
+
+4. **Sentry** (free tier) - Error tracking
+   - 5K errors/month free
+   - https://sentry.io/
+
+**Backup Strategy:**
+- Daily automated backups to R2 (free tier)
+- Weekly full database dumps
+- 30-day retention policy
+
+---
+
+### Final Recommendation: Migration Path
+
+**For Most Users:**
+```
+Start: Railway ($11-41/mo) 
+  ↓ [after 6-12 months or 10K orders/month]
+Migrate: Hetzner VPS + PostgreSQL ($12-37/mo)
+  ↓ [if costs are still concern]
+Optimize: Oracle Cloud Free Tier ($6/mo - Checkbox only)
+```
+
+**Best Value at Scale:**
+- **Hetzner VPS €4.49/month** = Professional infrastructure at hobby prices
+- Handles 100K+ visitors/month easily
+- Full control, no vendor lock-in
+- Save $15-30/month vs managed platforms
+
+---
+
+### Alternative: Self-Hosted VPS (Advanced)
+
+**For Budget-Conscious Developers:**
+
+**DigitalOcean Droplet:**
+- $6/month (1 GB RAM, 1 vCPU, 25 GB SSD)
+- Full control over infrastructure
+- Manual setup required (Nginx, Node.js, PM2, SSL)
+
+**Hetzner Cloud:**
+- €4.49/month (~$5) (2 GB RAM, 1 vCPU, 20 GB SSD)
+- European data centers
+- Best price-to-performance ratio
+
+**Setup Required:**
+- Ubuntu server configuration
+- Nginx reverse proxy
+- PM2 process manager
+- Let's Encrypt SSL
+- Automated backups
+- Security hardening
+
+**Not recommended for MVP** - focus on shipping product first!
+
+---
+
+## Recommended MVP Deployment: Railway + External Services
+
+**Why This Stack:**
+1. ✅ **Lowest initial cost** - $0-10 for first month
+2. ✅ **Best SQLite support** - persistent volumes
+3. ✅ **Easy deployment** - GitHub integration
+4. ✅ **Scalable** - pay-as-you-grow model
+5. ✅ **Production-ready** - used by thousands of apps
+6. ✅ **Developer-friendly** - simple UI, great DX
+
+**Total Estimated Cost for First 6 Months:**
+- Months 1-2: ~$10 (domain only)
+- Months 3-6: ~$17-47/month (Railway + Checkbox + domain)
+- **Average: ~$30/month** for full e-commerce infrastructure
+
+This is **dramatically cheaper** than alternatives:
+- Shopify: $39-399/month
+- WooCommerce hosting: $25-100/month
+- Custom hosting: $50-200/month
+
+---
+
 ## Post-MVP Enhancements
 
 - Customer reviews & ratings
