@@ -1,12 +1,17 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 
 	// Navigation items for admin panel
 	const navItems = [
+		{
+			title: () => m.product_products(),
+			url: '/admin/products',
+			icon: Package
+		},
 		{
 			title: () => m.admin_blogs(),
 			url: '/admin/blogs',

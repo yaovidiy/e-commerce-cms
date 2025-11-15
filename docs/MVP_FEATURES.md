@@ -589,7 +589,42 @@ Checkbox provides REST API for:
 
 ---
 
-### 15. **Customer Reviews & Ratings** (Priority: LOW - Post-MVP)
+### 15. **Wishlist / Favorites** (Priority: MEDIUM)
+
+**Database Schema:**
+- `wishlist` table:
+  - id, userId
+  - items (JSON array of product IDs with metadata)
+  - createdAt, updatedAt
+
+- `wishlist_item` table (alternative normalized approach):
+  - id, wishlistId, productId
+  - addedAt
+
+**Features:**
+- Add/remove products to wishlist
+- Wishlist page with product grid
+- Wishlist counter in header
+- Move items from wishlist to cart
+- Share wishlist (public link)
+- Email wishlist to self
+- Wishlist persistence (user-based for logged in, localStorage for guests)
+- Convert guest wishlist to user wishlist on login
+
+**Admin Features:**
+- View popular wishlisted products
+- Track wishlist-to-purchase conversion rate
+- Send promotional emails for wishlisted items
+
+**Customer Benefits:**
+- Save products for later
+- Track price changes (optional)
+- Quick access to favorite items
+- Share gift ideas with friends/family
+
+---
+
+### 16. **Customer Reviews & Ratings** (Priority: LOW - Post-MVP)
 
 **Database Schema:**
 - `review` table:
@@ -605,22 +640,6 @@ Checkbox provides REST API for:
 - Admin moderation
 - Display on product pages
 - Average rating calculation
-
----
-
-### 16. **Wishlist** (Priority: LOW - Post-MVP)
-
-**Database Schema:**
-- `wishlist` table:
-  - id, userId
-  - items (JSON array of product IDs)
-  - createdAt, updatedAt
-
-**Features:**
-- Add/remove products
-- Wishlist page
-- Share wishlist
-- Move to cart
 
 ---
 
@@ -885,20 +904,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 15. ✅ Order history
 16. ✅ Shipping configuration
 17. ✅ Discount system
+18. ✅ Wishlist/Favorites functionality
 
 ### Phase 4: CMS & Content (Weeks 9-10)
-18. ✅ Site settings management
-19. ✅ Banner management
-20. ✅ Page builder (basic)
-21. ✅ SEO optimization
+19. ✅ Site settings management
+20. ✅ Banner management
+21. ✅ Page builder (basic)
+22. ✅ SEO optimization
 
 ### Phase 5: Polish & Launch (Weeks 11-12)
-22. ✅ Search & filtering
-23. ✅ Analytics dashboard
-24. ✅ Performance optimization
-25. ✅ Security audit
-26. ✅ Testing (E2E, unit)
-27. ✅ Documentation
+23. ✅ Search & filtering
+24. ✅ Analytics dashboard
+25. ✅ Performance optimization
+26. ✅ Security audit
+27. ✅ Testing (E2E, unit)
+28. ✅ Documentation
 
 ---
 
@@ -923,6 +943,7 @@ src/lib/
 │   ├── product.remote.ts
 │   ├── category.remote.ts
 │   ├── cart.remote.ts
+│   ├── wishlist.remote.ts
 │   ├── order.remote.ts
 │   ├── payment.remote.ts
 │   ├── checkbox.remote.ts
@@ -943,6 +964,7 @@ src/lib/
 │       └── features/
 │           ├── product-catalog/
 │           ├── cart/
+│           ├── wishlist/
 │           ├── checkout/
 │           ├── account/
 │           └── search/
@@ -1835,7 +1857,6 @@ This is **dramatically cheaper** than alternatives:
 ## Post-MVP Enhancements
 
 - Customer reviews & ratings
-- Wishlist functionality
 - Advanced analytics (Google Analytics integration)
 - Abandoned cart recovery
 - Product recommendations

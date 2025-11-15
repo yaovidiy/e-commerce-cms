@@ -148,9 +148,9 @@
 	}
 </script>
 
-<div class={cn('rounded-md border bg-background relative', className)}>
+<div class={cn('bg-background relative rounded-md border', className)}>
 	{#if editor}
-		<div class="border-b bg-muted/50 p-2 flex flex-wrap gap-1">
+		<div class="bg-muted/50 flex flex-wrap gap-1 border-b p-2">
 			<!-- Text Formatting -->
 			<Button
 				type="button"
@@ -196,7 +196,7 @@
 				<Code class="h-4 w-4" />
 			</Button>
 
-			<div class="w-px h-8 bg-border mx-1"></div>
+			<div class="bg-border mx-1 h-8 w-px"></div>
 
 			<!-- Text Alignment -->
 			<Button
@@ -239,7 +239,7 @@
 				<AlignJustify class="h-4 w-4" />
 			</Button>
 
-			<div class="w-px h-8 bg-border mx-1"></div>
+			<div class="bg-border mx-1 h-8 w-px"></div>
 
 			<!-- Headings -->
 			<Button
@@ -272,7 +272,7 @@
 				<Heading3 class="h-4 w-4" />
 			</Button>
 
-			<div class="w-px h-8 bg-border mx-1"></div>
+			<div class="bg-border mx-1 h-8 w-px"></div>
 
 			<!-- Lists -->
 			<Button
@@ -305,7 +305,7 @@
 				<Quote class="h-4 w-4" />
 			</Button>
 
-			<div class="w-px h-8 bg-border mx-1"></div>
+			<div class="bg-border mx-1 h-8 w-px"></div>
 
 			<!-- Media -->
 			<Button type="button" variant="ghost" size="sm" onclick={addLink}>
@@ -320,7 +320,7 @@
 				<YoutubeIcon class="h-4 w-4" />
 			</Button>
 
-			<div class="w-px h-8 bg-border mx-1"></div>
+			<div class="bg-border mx-1 h-8 w-px"></div>
 
 			<!-- Undo/Redo -->
 			<Button
@@ -349,13 +349,15 @@
 		</div>
 	{/if}
 
-	<div bind:this={element} class="min-h-[200px]"></div>
+	<div class="relative">
+		<div bind:this={element} class="min-h-[200px]"></div>
 
-	{#if !value || value === '<p></p>'}
-		<div class="pointer-events-none absolute top-17 left-4 text-muted-foreground text-sm">
-			{placeholder}
-		</div>
-	{/if}
+		{#if !value || value === '<p></p>'}
+			<div class="text-muted-foreground pointer-events-none absolute top-4 left-4 text-sm">
+				{placeholder}
+			</div>
+		{/if}
+	</div>
 </div>
 
 <!-- Asset Browser Dialog -->

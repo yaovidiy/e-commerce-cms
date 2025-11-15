@@ -108,3 +108,112 @@ export const FilterAssetsSchema = v.object({
     filename: v.optional(v.string(), ''),
     mimeType: v.optional(v.string(), '')
 });
+
+// Category schemas
+export const CreateCategorySchema = v.object({
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    slug: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    description: v.optional(v.string()),
+    parentId: v.optional(v.string()),
+    image: v.optional(v.string()),
+    displayOrder: v.optional(v.number(), 0),
+    isVisible: v.optional(v.boolean(), true),
+    seoTitle: v.optional(v.string()),
+    seoDescription: v.optional(v.string())
+});
+
+export const UpdateCategorySchema = v.object({
+    id: v.string(),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    slug: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    description: v.optional(v.string()),
+    parentId: v.optional(v.string()),
+    image: v.optional(v.string()),
+    displayOrder: v.optional(v.number()),
+    isVisible: v.optional(v.boolean()),
+    seoTitle: v.optional(v.string()),
+    seoDescription: v.optional(v.string())
+});
+
+export const DeleteCategorySchema = v.object({
+    id: v.string()
+});
+
+// Brand schemas
+export const CreateBrandSchema = v.object({
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    slug: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    description: v.optional(v.string()),
+    logo: v.optional(v.string()),
+    isVisible: v.optional(v.boolean(), true)
+});
+
+export const UpdateBrandSchema = v.object({
+    id: v.string(),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    slug: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    description: v.optional(v.string()),
+    logo: v.optional(v.string()),
+    isVisible: v.optional(v.boolean())
+});
+
+export const DeleteBrandSchema = v.object({
+    id: v.string()
+});
+
+// Product schemas
+export const CreateProductSchema = v.object({
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    slug: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    description: v.optional(v.string()),
+    price: v.pipe(v.number(), v.minValue(0)), // in cents
+    compareAtPrice: v.optional(v.pipe(v.number(), v.minValue(0))),
+    sku: v.optional(v.string()),
+    barcode: v.optional(v.string()),
+    quantity: v.optional(v.number(), 0),
+    trackInventory: v.optional(v.boolean(), true),
+    lowStockThreshold: v.optional(v.number(), 10),
+    allowBackorders: v.optional(v.boolean(), false),
+    status: v.optional(v.picklist(['draft', 'active', 'archived']), 'draft'),
+    categoryId: v.optional(v.string()),
+    brandId: v.optional(v.string()),
+    images: v.optional(v.string()), // JSON string
+    variants: v.optional(v.string()), // JSON string
+    seoTitle: v.optional(v.string()),
+    seoDescription: v.optional(v.string())
+});
+
+export const UpdateProductSchema = v.object({
+    id: v.string(),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    slug: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    description: v.optional(v.string()),
+    price: v.optional(v.pipe(v.number(), v.minValue(0))),
+    compareAtPrice: v.optional(v.pipe(v.number(), v.minValue(0))),
+    sku: v.optional(v.string()),
+    barcode: v.optional(v.string()),
+    quantity: v.optional(v.number()),
+    trackInventory: v.optional(v.boolean()),
+    lowStockThreshold: v.optional(v.number()),
+    allowBackorders: v.optional(v.boolean()),
+    status: v.optional(v.picklist(['draft', 'active', 'archived'])),
+    categoryId: v.optional(v.string()),
+    brandId: v.optional(v.string()),
+    images: v.optional(v.string()),
+    variants: v.optional(v.string()),
+    seoTitle: v.optional(v.string()),
+    seoDescription: v.optional(v.string())
+});
+
+export const DeleteProductSchema = v.object({
+    id: v.string()
+});
+
+export const FilterProductsSchema = v.object({
+    name: v.optional(v.string(), ''),
+    status: v.optional(v.picklist(['draft', 'active', 'archived', 'all']), 'all'),
+    categoryId: v.optional(v.string()),
+    brandId: v.optional(v.string()),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
+});
