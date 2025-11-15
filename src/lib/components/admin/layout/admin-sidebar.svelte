@@ -4,6 +4,7 @@
 	import { FileText, Users, Image, Package, FolderTree, Tag } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
+	import { goto } from '$app/navigation';
 
 	// Navigation items for admin panel
 	const navItems = [
@@ -75,13 +76,14 @@
 				<Sidebar.Menu>
 					{#each navItems as item}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={isActive(item.url)}>
-								{#snippet child({ props })}
-									<a href={item.url} {...props}>
-										<item.icon class="size-4" />
-										<span>{item.title()}</span>
-									</a>
-								{/snippet}
+							<Sidebar.MenuButton
+								onclick={() => {
+									goto(item.url);
+								}}
+								isActive={isActive(item.url)}
+							>
+								<item.icon class="size-4" />
+								<span>{item.title()}</span>
 							</Sidebar.MenuButton>
 						</Sidebar.MenuItem>
 					{/each}
