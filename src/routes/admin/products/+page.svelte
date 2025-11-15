@@ -1,13 +1,31 @@
 <script lang="ts">
-	import { getAllProducts } from '$lib/remotes/product.remote';
+	import { getAllProducts, deleteProduct } from '$lib/remotes/product.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
+	import { DeleteProductDialog } from '$lib/components/admin/features/product-management';
 	import * as m from '$lib/paraglide/messages';
 	import { Plus, Pencil, Trash2 } from '@lucide/svelte/icons';
+	import type { Product } from '$lib/server/db/schema';
 
 	let searchQuery = $state('');
 	let statusFilter = $state<'all' | 'draft' | 'active' | 'archived'>('all');
+	
+	// Delete dialog state
+	let deletingProduct = $state<Product | null>(null);
+	let deleteDialogOpen = $state(false);
+
+	function openDeleteDialog(product: Product) {
+		deletingProduct = product;
+		deleteDialogOpen = true;
+	}
+
+	// Auto-refresh list after successful deletion
+	$effect(() => {
+		if (deleteProduct.result) {
+			getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize: 20 }).refresh();
+		}
+	});
 
 	// Helper to format price from cents
 	function formatPrice(cents: number) {
@@ -127,7 +145,12 @@
 										<Button href="/admin/products/{product.id}/edit" variant="ghost" size="sm">
 											<Pencil class="size-4" />
 										</Button>
-										<Button variant="ghost" size="sm" class="text-destructive">
+										<Button
+											variant="ghost"
+											size="sm"
+											class="text-destructive"
+											onclick={() => openDeleteDialog(product)}
+										>
 											<Trash2 class="size-4" />
 										</Button>
 									</div>
@@ -144,3 +167,6 @@
 		{/await}
 	</div>
 </div>
+
+<!-- Delete Product Dialog -->
+<DeleteProductDialog bind:product={deletingProduct} bind:open={deleteDialogOpen} />
