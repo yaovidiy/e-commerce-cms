@@ -104,7 +104,11 @@ export function requireAdminUser() {
 
 	const user = locals?.user || null;
 
-	if (!user?.isAdmin) {
+	if (!user) {
+		redirect(302, '/auth/login');
+	}
+
+	if (!user.isAdmin) {
 		redirect(302, '/auth/login');
 	}
 

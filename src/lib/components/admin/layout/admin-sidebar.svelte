@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 
@@ -11,6 +11,16 @@
 			title: () => m.product_products(),
 			url: '/admin/products',
 			icon: Package
+		},
+		{
+			title: () => m.category_categories(),
+			url: '/admin/categories',
+			icon: FolderTree
+		},
+		{
+			title: () => m.brand_brands(),
+			url: '/admin/brands',
+			icon: Tag
 		},
 		{
 			title: () => m.admin_blogs(),

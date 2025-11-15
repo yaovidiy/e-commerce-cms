@@ -11,7 +11,7 @@
 	<AdminSidebar />
 	<SidebarInset>
 		<header
-			class="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
+			class="bg-background sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4"
 		>
 			<SidebarTrigger class="-ml-1" />
 			<Separator orientation="vertical" class="mr-2 h-4" />
@@ -20,8 +20,9 @@
 			</div>
 		</header>
 		<div class="flex flex-1 flex-col gap-4 p-4">
-			{@render children()}
+			{#key children}
+				{@render children()}
+			{/key}
 		</div>
 	</SidebarInset>
 </SidebarProvider>
-	
