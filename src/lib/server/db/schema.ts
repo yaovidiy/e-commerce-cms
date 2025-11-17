@@ -7,6 +7,11 @@ export const user = sqliteTable('user', {
 	passwordHash: text('password_hash').notNull(),
 	role: text('role', { enum: ['admin', 'user'] }).notNull().default('user'),
 	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+	firstName: text('first_name'),
+	lastName: text('last_name'),
+	phone: text('phone'),
+	marketingOptIn: integer('marketing_opt_in', { mode: 'boolean' }).default(false),
+	lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
@@ -258,3 +263,26 @@ export type InsertCheckboxShift = typeof checkboxShift.$inferInsert;
 
 export type EmailSettings = typeof emailSettings.$inferSelect;
 export type InsertEmailSettings = typeof emailSettings.$inferInsert;
+
+export const address = sqliteTable('address', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id),
+	firstName: text('first_name').notNull(),
+	lastName: text('last_name').notNull(),
+	company: text('company'),
+	address1: text('address_1').notNull(),
+	address2: text('address_2'),
+	city: text('city').notNull(),
+	state: text('state').notNull(),
+	postalCode: text('postal_code').notNull(),
+	country: text('country').notNull().default('Ukraine'),
+	phone: text('phone').notNull(),
+	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Address = typeof address.$inferSelect;
+export type InsertAddress = typeof address.$inferInsert;

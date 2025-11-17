@@ -295,3 +295,50 @@ export const UpdateEmailSettingsSchema = v.object({
 export const TestEmailSchema = v.object({
     toEmail: v.pipe(v.string(), v.email('Invalid email address'))
 });
+
+// Customer profile schemas
+export const UpdateProfileSchema = v.object({
+    firstName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    lastName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    email: v.optional(v.pipe(v.string(), v.email('Invalid email address'))),
+    phone: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(20))),
+    marketingOptIn: v.optional(v.boolean(), false)
+});
+
+// Customer address schemas
+export const CreateAddressSchema = v.object({
+    firstName: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    lastName: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    company: v.optional(v.string()),
+    address1: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    address2: v.optional(v.string()),
+    city: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    state: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    postalCode: v.pipe(v.string(), v.minLength(1), v.maxLength(20)),
+    country: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    phone: v.pipe(v.string(), v.minLength(1), v.maxLength(20)),
+    isDefault: v.optional(v.boolean(), false)
+});
+
+export const UpdateAddressSchema = v.object({
+    id: v.string(),
+    firstName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    lastName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    company: v.optional(v.string()),
+    address1: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    address2: v.optional(v.string()),
+    city: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    state: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    postalCode: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(20))),
+    country: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+    phone: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(20))),
+    isDefault: v.optional(v.boolean())
+});
+
+export const DeleteAddressSchema = v.object({
+    id: v.string()
+});
+
+export const SetDefaultAddressSchema = v.object({
+    id: v.string()
+});
