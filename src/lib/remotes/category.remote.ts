@@ -5,15 +5,18 @@ import * as auth from '$lib/server/auth';
 import * as v from 'valibot';
 import { CreateCategorySchema, UpdateCategorySchema, DeleteCategorySchema } from '$lib/server/schemas';
 import { eq, isNull, desc } from 'drizzle-orm';
+import { categoryCache, withCache, invalidateCategoryCaches } from '$lib/server/cache';
 
 // Get all categories (including nested structure)
 export const getAllCategories = query(async () => {
-	const categories = await db
-		.select()
-		.from(tables.category)
-		.orderBy(desc(tables.category.displayOrder), tables.category.name);
+	return await withCache(categoryCache, 'all-categories', async () => {
+		const categories = await db
+			.select()
+			.from(tables.category)
+			.orderBy(desc(tables.category.displayOrder), tables.category.name);
 
-	return categories;
+		return categories;
+	});
 });
 
 // Get root categories (no parent)
@@ -47,9 +50,11 @@ export const getCategoryById = query(v.string(), async (id) => {
 
 // Get single category by slug
 export const getCategoryBySlug = query(v.string(), async (slug) => {
-	const [category] = await db.select().from(tables.category).where(eq(tables.category.slug, slug));
+	return await withCache(categoryCache, `category-slug-${slug}`, async () => {
+		const [category] = await db.select().from(tables.category).where(eq(tables.category.slug, slug));
 
-	return category;
+		return category;
+	});
 });
 
 // Create new category
@@ -67,6 +72,9 @@ export const createCategory = form(CreateCategorySchema, async (data) => {
 			updatedAt: now
 		})
 		.returning();
+
+	// Invalidate category caches (also clears product caches)
+	invalidateCategoryCaches();
 
 	// Refresh category list
 	await getAllCategories().refresh();
@@ -88,6 +96,9 @@ export const updateCategory = form(UpdateCategorySchema, async (data) => {
 		})
 		.where(eq(tables.category.id, id))
 		.returning();
+
+	// Invalidate category caches (also clears product caches)
+	invalidateCategoryCaches();
 
 	// Refresh category list
 	await getAllCategories().refresh();
@@ -117,6 +128,9 @@ export const deleteCategory = form(DeleteCategorySchema, async (data) => {
 	}
 
 	await db.delete(tables.category).where(eq(tables.category.id, data.id));
+
+	// Invalidate category caches (also clears product caches)
+	invalidateCategoryCaches();
 
 	// Refresh category list
 	await getAllCategories().refresh();

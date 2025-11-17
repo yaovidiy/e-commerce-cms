@@ -6,6 +6,7 @@
 	import { AppSidebar } from '$lib/components/common/layout';
 	import { CartButton, CartDrawer } from '$lib/components/client/features/cart';
 	import { WishlistHeaderButton } from '$lib/components/client/features/wishlist';
+	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
 	import '../app.css';
 	let { children } = $props();
 	
@@ -49,4 +50,7 @@
 			<CartDrawer bind:open={cartDrawerOpen} />
 		{/if}
 	{/if}
+	
+	<!-- Web Vitals Tracker (shows in dev mode only) -->
+	<WebVitalsTracker />
 </ParaglideJS>

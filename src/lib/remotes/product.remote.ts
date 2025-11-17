@@ -10,6 +10,7 @@ import {
 	FilterProductsSchema
 } from '$lib/server/schemas';
 import { eq, like, and, desc } from 'drizzle-orm';
+import { productCache, withCache, invalidateProductCaches } from '$lib/server/cache';
 
 // Get all products with filters
 export const getAllProducts = query(FilterProductsSchema, async (data) => {
@@ -62,12 +63,14 @@ export const getProductById = query(v.string(), async (id) => {
 
 // Get single product by slug (for customer-facing pages)
 export const getProductBySlug = query(v.string(), async (slug) => {
-	const [product] = await db
-		.select()
-		.from(tables.product)
-		.where(and(eq(tables.product.slug, slug), eq(tables.product.status, 'active')));
+	return await withCache(productCache, `product-slug-${slug}`, async () => {
+		const [product] = await db
+			.select()
+			.from(tables.product)
+			.where(and(eq(tables.product.slug, slug), eq(tables.product.status, 'active')));
 
-	return product;
+		return product;
+	});
 });
 
 // Create new product
@@ -85,6 +88,9 @@ export const createProduct = form(CreateProductSchema, async (data) => {
 			updatedAt: now
 		})
 		.returning();
+
+	// Invalidate product caches
+	invalidateProductCaches();
 
 	// Refresh product list
 	await getAllProducts({
@@ -112,6 +118,9 @@ export const updateProduct = form(UpdateProductSchema, async (data) => {
 		.where(eq(tables.product.id, id))
 		.returning();
 
+	// Invalidate product caches
+	invalidateProductCaches();
+
 	// Refresh product list
 	await getAllProducts({
 		name: '',
@@ -128,6 +137,9 @@ export const deleteProduct = form(DeleteProductSchema, async (data) => {
 	auth.requireAdminUser();
 
 	await db.delete(tables.product).where(eq(tables.product.id, data.id));
+
+	// Invalidate product caches
+	invalidateProductCaches();
 
 	// Refresh product list
 	await getAllProducts({
