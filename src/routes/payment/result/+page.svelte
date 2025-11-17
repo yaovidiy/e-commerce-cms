@@ -30,10 +30,20 @@
 		isLoading = false;
 	});
 
-	function goToOrderConfirmation() {
+	async function goToOrderConfirmation() {
 		if (paymentData?.order_id) {
-			// Find order by order number
-			goto(`/order-confirmation?orderNumber=${paymentData.order_id}`);
+			// Import the function dynamically
+			const { getOrderByOrderNumber } = await import('$lib/remotes/order.remote');
+			
+			try {
+				// Get order by order number
+				const order = await getOrderByOrderNumber(paymentData.order_id);
+				goto(`/order-confirmation/${order.id}`);
+			} catch (err) {
+				console.error('Failed to find order:', err);
+				// Fallback to track order page
+				goto('/track-order');
+			}
 		} else {
 			goto('/');
 		}

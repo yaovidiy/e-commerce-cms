@@ -95,6 +95,43 @@ export const getOrder = query(v.string(), async (id: string) => {
 	return order;
 });
 
+// Get order by order number and email (public access for tracking)
+export const getOrderByNumber = query(
+	v.object({
+		orderNumber: v.string(),
+		email: v.pipe(v.string(), v.email())
+	}),
+	async (data) => {
+		const [order] = await db.select()
+			.from(tables.order)
+			.where(
+				and(
+					eq(tables.order.orderNumber, data.orderNumber),
+					eq(tables.order.customerEmail, data.email)
+				)
+			);
+
+		if (!order) {
+			throw new Error('Order not found');
+		}
+
+		return order;
+	}
+);
+
+// Get order by order number only (for payment redirect)
+export const getOrderByOrderNumber = query(v.string(), async (orderNumber: string) => {
+	const [order] = await db.select()
+		.from(tables.order)
+		.where(eq(tables.order.orderNumber, orderNumber));
+
+	if (!order) {
+		throw new Error('Order not found');
+	}
+
+	return order;
+});
+
 // Get user's orders
 export const getMyOrders = query(async () => {
 	const user = auth.getUser();
