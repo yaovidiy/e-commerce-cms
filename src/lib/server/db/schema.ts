@@ -195,6 +195,33 @@ export const checkboxShift = sqliteTable('checkbox_shift', {
 	closedAt: integer('closed_at', { mode: 'timestamp' })
 });
 
+// Email settings table - stores email configuration
+export const emailSettings = sqliteTable('email_settings', {
+	id: text('id').primaryKey(),
+	fromEmail: text('from_email').notNull(), // Sender email address
+	fromName: text('from_name').notNull(), // Sender name
+	replyToEmail: text('reply_to_email'), // Reply-to address (optional)
+	
+	// Email type toggles
+	enableOrderConfirmation: integer('enable_order_confirmation', { mode: 'boolean' }).notNull().default(true),
+	enableOrderShipped: integer('enable_order_shipped', { mode: 'boolean' }).notNull().default(true),
+	enableOrderDelivered: integer('enable_order_delivered', { mode: 'boolean' }).notNull().default(true),
+	enableOrderCancelled: integer('enable_order_cancelled', { mode: 'boolean' }).notNull().default(true),
+	enablePasswordReset: integer('enable_password_reset', { mode: 'boolean' }).notNull().default(true),
+	enableWelcome: integer('enable_welcome', { mode: 'boolean' }).notNull().default(true),
+	
+	// SMTP/API settings (optional - for future use)
+	provider: text('provider').default('resend'), // resend, sendgrid, smtp
+	apiKey: text('api_key'), // Encrypted API key
+	smtpHost: text('smtp_host'),
+	smtpPort: integer('smtp_port'),
+	smtpUsername: text('smtp_username'),
+	smtpPassword: text('smtp_password'), // Encrypted
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -228,3 +255,6 @@ export type InsertCheckboxReceipt = typeof checkboxReceipt.$inferInsert;
 
 export type CheckboxShift = typeof checkboxShift.$inferSelect;
 export type InsertCheckboxShift = typeof checkboxShift.$inferInsert;
+
+export type EmailSettings = typeof emailSettings.$inferSelect;
+export type InsertEmailSettings = typeof emailSettings.$inferInsert;

@@ -277,3 +277,21 @@ export const FilterOrdersSchema = v.object({
     page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
     pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
 });
+
+// Email settings schemas
+export const UpdateEmailSettingsSchema = v.object({
+    fromEmail: v.pipe(v.string(), v.email('Invalid email address')),
+    fromName: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    replyToEmail: v.optional(v.pipe(v.string(), v.email('Invalid email address'))),
+    
+    enableOrderConfirmation: v.boolean(),
+    enableOrderShipped: v.boolean(),
+    enableOrderDelivered: v.boolean(),
+    enableOrderCancelled: v.boolean(),
+    enablePasswordReset: v.boolean(),
+    enableWelcome: v.boolean()
+});
+
+export const TestEmailSchema = v.object({
+    toEmail: v.pipe(v.string(), v.email('Invalid email address'))
+});
