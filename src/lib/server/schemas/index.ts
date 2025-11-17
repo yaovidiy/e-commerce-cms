@@ -467,3 +467,107 @@ export const MoveToCartSchema = v.object({
     productId: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
     quantity: v.optional(v.pipe(v.number(), v.minValue(1)), 1)
 });
+
+// Site Settings schemas
+export const GetSettingSchema = v.object({
+    key: v.pipe(v.string(), v.minLength(1))
+});
+
+export const GetSettingsByCategorySchema = v.object({
+    category: v.picklist(['general', 'store', 'checkout', 'email', 'seo', 'advanced'])
+});
+
+export const UpdateSettingSchema = v.object({
+    key: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    value: v.string(), // Always string, parsed based on type
+    type: v.optional(v.picklist(['string', 'number', 'boolean', 'json']), 'string'),
+    category: v.optional(v.picklist(['general', 'store', 'checkout', 'email', 'seo', 'advanced']), 'general'),
+    label: v.optional(v.string()),
+    description: v.optional(v.string())
+});
+
+export const UpdateMultipleSettingsSchema = v.object({
+    settings: v.array(v.object({
+        key: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+        value: v.string()
+    }))
+});
+
+export const DeleteSettingSchema = v.object({
+    key: v.pipe(v.string(), v.minLength(1))
+});
+
+// General Settings specific schemas
+export const UpdateGeneralSettingsSchema = v.object({
+    storeName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    storeLogo: v.optional(v.string()), // Asset ID or URL
+    storeFavicon: v.optional(v.string()), // Asset ID or URL
+    storeEmail: v.optional(v.pipe(v.string(), v.email())),
+    storePhone: v.optional(v.string()),
+    timezone: v.optional(v.string()), // e.g. "America/New_York"
+    currency: v.optional(v.string()), // e.g. "USD"
+    currencySymbol: v.optional(v.string()), // e.g. "$"
+    defaultLanguage: v.optional(v.string()) // e.g. "en"
+});
+
+// Store Info Settings specific schemas
+export const UpdateStoreInfoSettingsSchema = v.object({
+    storeAddress1: v.optional(v.string()),
+    storeAddress2: v.optional(v.string()),
+    storeCity: v.optional(v.string()),
+    storeState: v.optional(v.string()),
+    storePostalCode: v.optional(v.string()),
+    storeCountry: v.optional(v.string()),
+    facebookUrl: v.optional(v.string()),
+    instagramUrl: v.optional(v.string()),
+    twitterUrl: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string())
+});
+
+// SEO Settings specific schemas
+export const UpdateSeoSettingsSchema = v.object({
+    seoDefaultTitle: v.optional(v.pipe(v.string(), v.maxLength(60))),
+    seoDefaultDescription: v.optional(v.pipe(v.string(), v.maxLength(160))),
+    seoDefaultKeywords: v.optional(v.string()),
+    seoDefaultOgImage: v.optional(v.string()), // Asset ID or URL
+    seoGoogleAnalyticsId: v.optional(v.string()),
+    seoGoogleSearchConsoleId: v.optional(v.string()),
+    seoFacebookPixelId: v.optional(v.string()),
+    enableStructuredData: v.optional(v.boolean()),
+    enableSitemap: v.optional(v.boolean())
+});
+
+// Checkout Settings specific schemas
+export const UpdateCheckoutSettingsSchema = v.object({
+    enableGuestCheckout: v.optional(v.boolean()),
+    requirePhoneNumber: v.optional(v.boolean()),
+    enableOrderNotes: v.optional(v.boolean()),
+    termsAndConditionsUrl: v.optional(v.string()),
+    privacyPolicyUrl: v.optional(v.string()),
+    returnPolicyUrl: v.optional(v.string()),
+    enableNewsletterSignup: v.optional(v.boolean())
+});
+
+// Email Settings specific schemas (extended from existing UpdateEmailSettingsSchema)
+export const UpdateEmailConfigSettingsSchema = v.object({
+    emailSmtpHost: v.optional(v.string()),
+    emailSmtpPort: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(65535))),
+    emailSmtpUsername: v.optional(v.string()),
+    emailSmtpPassword: v.optional(v.string()),
+    emailSmtpSecure: v.optional(v.boolean()),
+    emailFromName: v.optional(v.pipe(v.string(), v.minLength(1))),
+    emailFromAddress: v.optional(v.pipe(v.string(), v.email())),
+    emailReplyToAddress: v.optional(v.pipe(v.string(), v.email()))
+});
+
+// Advanced Settings specific schemas
+export const UpdateAdvancedSettingsSchema = v.object({
+    maintenanceMode: v.optional(v.boolean()),
+    maintenanceMessage: v.optional(v.string()),
+    customHeadScripts: v.optional(v.string()), // HTML/JS to inject in <head>
+    customBodyScripts: v.optional(v.string()), // HTML/JS to inject before </body>
+    enableDebugMode: v.optional(v.boolean()),
+    enableCaching: v.optional(v.boolean()),
+    cacheDuration: v.optional(v.pipe(v.number(), v.minValue(0))) // in seconds
+});

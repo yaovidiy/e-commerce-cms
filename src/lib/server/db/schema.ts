@@ -354,3 +354,22 @@ export const wishlist = sqliteTable('wishlist', {
 
 export type Wishlist = typeof wishlist.$inferSelect;
 export type InsertWishlist = typeof wishlist.$inferInsert;
+
+export const siteSetting = sqliteTable('site_setting', {
+	key: text('key').primaryKey(), // unique key like 'store_name', 'store_logo', etc.
+	value: text('value').notNull(), // stored as string, parse based on type
+	type: text('type', { enum: ['string', 'number', 'boolean', 'json'] })
+		.notNull()
+		.default('string'), // data type for proper parsing
+	category: text('category', {
+		enum: ['general', 'store', 'checkout', 'email', 'seo', 'advanced']
+	})
+		.notNull()
+		.default('general'), // grouping for admin UI
+	label: text('label'), // human-readable label
+	description: text('description'), // help text
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type SiteSetting = typeof siteSetting.$inferSelect;
+export type InsertSiteSetting = typeof siteSetting.$inferInsert;
