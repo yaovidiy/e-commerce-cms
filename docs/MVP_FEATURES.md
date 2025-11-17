@@ -160,6 +160,39 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Previous/Continue/Place Order button navigation
 - [ ] **Tested**: Integration with checkout() remote function
 
+#### 15. **Customer Account Management** ✅
+- [ ] **Tested**: Extended user schema with profile fields (firstName, lastName, phone, marketingOptIn, lastLoginAt)
+- [ ] **Tested**: Address table with full address management (14 fields)
+- [ ] **Tested**: Profile remote functions (getMyProfile, updateProfile)
+- [ ] **Tested**: Address remote functions (getMyAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress)
+- [ ] **Tested**: 5 validation schemas (UpdateProfileSchema, CreateAddressSchema, UpdateAddressSchema, DeleteAddressSchema, SetDefaultAddressSchema)
+- [ ] **Tested**: CustomerSidebar navigation component with logout
+- [ ] **Tested**: Dashboard layout with responsive sidebar
+- [ ] **Tested**: Profile management page at /dashboard with form
+- [ ] **Tested**: Address book page at /dashboard/addresses with CRUD dialogs
+- [ ] **Tested**: Order history page at /dashboard/orders with order display
+- [ ] **Tested**: Default address logic (auto-set for first address, promote on delete)
+- [ ] **Tested**: Marketing opt-in checkbox functionality
+- [ ] **Tested**: Auto-refresh pattern using $effect() watching form.result
+- [ ] **Tested**: 40+ translation keys added (English + Ukrainian)
+
+#### 16. **Shipping Configuration** ✅
+- [ ] **Tested**: Database schema with shipping_zone and shipping_rate tables
+- [ ] **Tested**: ShippingZone table (id, name, countries JSON, timestamps)
+- [ ] **Tested**: ShippingRate table (id, zoneId, name, description, price, minOrderAmount, maxOrderAmount, estimatedDays, isActive, timestamps)
+- [ ] **Tested**: Shipping zone remote functions (getAllZones, createZone, updateZone, deleteZone)
+- [ ] **Tested**: Shipping rate remote functions (getAllRates, getRatesByZone, createRate, updateRate, deleteRate, getApplicableRates)
+- [ ] **Tested**: 6 validation schemas (CreateShippingZoneSchema, UpdateShippingZoneSchema, DeleteShippingZoneSchema, CreateShippingRateSchema, UpdateShippingRateSchema, GetApplicableRatesSchema)
+- [ ] **Tested**: Admin shipping zones page at /admin/shipping/zones with CRUD
+- [ ] **Tested**: Admin shipping rates page at /admin/shipping/rates with CRUD
+- [ ] **Tested**: Multi-country selection with checkboxes (26 European countries)
+- [ ] **Tested**: Zone-based rate configuration with price, min/max order amounts
+- [ ] **Tested**: Estimated delivery days field
+- [ ] **Tested**: Active/inactive rate toggle
+- [ ] **Tested**: Shipping menu item in AdminSidebar with Truck icon
+- [ ] **Tested**: 40+ shipping translation keys (English + Ukrainian)
+- [ ] **Tested**: Rate applicability based on country and order amount
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1035,12 +1068,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 12. ✅ Order confirmation/tracking pages - **IMPLEMENTED**
 
 ### Phase 3: Customer Features (Weeks 7-8)
-13. ❌ Customer account management - **TODO**
-14. ❌ Address book - **TODO**
-15. ❌ Order history - **TODO**
-16. ❌ Shipping configuration - **TODO**
-17. ❌ Discount system - **TODO**
-18. ❌ Wishlist/Favorites functionality - **TODO**
+13. ✅ Customer account management - **COMPLETED** (includes profile, address book, and order history)
+    - ✅ Profile management page with form
+    - ✅ Address book with full CRUD operations
+    - ✅ Order history with order details
+    - ✅ CustomerSidebar navigation component
+    - ✅ Dashboard layout with responsive sidebar
+14. ✅ Shipping configuration - **COMPLETED**
+    - ✅ Shipping zones with multi-country selection
+    - ✅ Shipping rates with price and conditions
+    - ✅ Admin pages for zones and rates management
+    - ✅ Rate applicability logic for checkout
+15. ❌ Discount system - **TODO**
+16. ❌ Wishlist/Favorites functionality - **TODO**
 
 ### Phase 4: CMS & Content (Weeks 9-10)
 19. ❌ Site settings management - **TODO**

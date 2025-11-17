@@ -286,3 +286,33 @@ export const address = sqliteTable('address', {
 
 export type Address = typeof address.$inferSelect;
 export type InsertAddress = typeof address.$inferInsert;
+
+export const shippingZone = sqliteTable('shipping_zone', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	countries: text('countries').notNull(), // JSON array of country codes
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const shippingRate = sqliteTable('shipping_rate', {
+	id: text('id').primaryKey(),
+	zoneId: text('zone_id')
+		.notNull()
+		.references(() => shippingZone.id),
+	name: text('name').notNull(),
+	description: text('description'),
+	price: integer('price').notNull(), // stored in cents
+	minOrderAmount: integer('min_order_amount'), // stored in cents, null = no minimum
+	maxOrderAmount: integer('max_order_amount'), // stored in cents, null = no maximum
+	estimatedDays: text('estimated_days'), // e.g. "3-5" or "1-2"
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type ShippingZone = typeof shippingZone.$inferSelect;
+export type InsertShippingZone = typeof shippingZone.$inferInsert;
+
+export type ShippingRate = typeof shippingRate.$inferSelect;
+export type InsertShippingRate = typeof shippingRate.$inferInsert;

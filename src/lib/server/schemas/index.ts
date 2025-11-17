@@ -342,3 +342,52 @@ export const DeleteAddressSchema = v.object({
 export const SetDefaultAddressSchema = v.object({
     id: v.string()
 });
+
+// Shipping Zone schemas
+export const CreateShippingZoneSchema = v.object({
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    countries: v.array(v.string()) // array of country codes
+});
+
+export const UpdateShippingZoneSchema = v.object({
+    id: v.string(),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    countries: v.optional(v.array(v.string()))
+});
+
+export const DeleteShippingZoneSchema = v.object({
+    id: v.string()
+});
+
+// Shipping Rate schemas
+export const CreateShippingRateSchema = v.object({
+    zoneId: v.string(),
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+    description: v.optional(v.string()),
+    price: v.pipe(v.number(), v.minValue(0)), // in cents
+    minOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))), // in cents
+    maxOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))), // in cents
+    estimatedDays: v.optional(v.string()), // e.g. "3-5" or "1-2"
+    isActive: v.optional(v.boolean(), true)
+});
+
+export const UpdateShippingRateSchema = v.object({
+    id: v.string(),
+    zoneId: v.optional(v.string()),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    description: v.optional(v.string()),
+    price: v.optional(v.pipe(v.number(), v.minValue(0))),
+    minOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))),
+    maxOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))),
+    estimatedDays: v.optional(v.string()),
+    isActive: v.optional(v.boolean())
+});
+
+export const DeleteShippingRateSchema = v.object({
+    id: v.string()
+});
+
+export const GetApplicableRatesSchema = v.object({
+    country: v.string(),
+    orderAmount: v.pipe(v.number(), v.minValue(0)) // in cents
+});
