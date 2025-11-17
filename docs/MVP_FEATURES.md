@@ -262,6 +262,34 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Accessibility (ARIA labels, keyboard navigation)
 - [ ] **Tested**: Responsive design (mobile, tablet, desktop)
 
+#### 21. **Site Settings Management** ✅
+- [ ] **Tested**: Database schema with siteSetting table (key-value store with type information)
+- [ ] **Tested**: SiteSetting table (key PK, value, type, category, label, description, updatedAt)
+- [ ] **Tested**: 6 setting categories (general, store, checkout, email, seo, advanced)
+- [ ] **Tested**: 11 validation schemas (GetSettingSchema, UpdateSettingSchema, 6 category-specific schemas, etc.)
+- [ ] **Tested**: 15 remote functions (queries, forms, commands, helpers)
+- [ ] **Tested**: 53 default settings with sensible defaults across all categories
+- [ ] **Tested**: General settings (9): store name, logo, favicon, email, phone, timezone, currency, symbol, language
+- [ ] **Tested**: Store info settings (11): address fields, social media URLs (Facebook, Instagram, Twitter, YouTube, LinkedIn)
+- [ ] **Tested**: Checkout settings (7): guest checkout toggle, phone requirement, order notes, policy URLs, newsletter
+- [ ] **Tested**: Email settings (8): SMTP configuration (host, port, username, password, secure), from/reply-to addresses
+- [ ] **Tested**: SEO settings (9): meta tags (title, description, keywords), OG image, analytics IDs (GA, Search Console, FB Pixel), structured data/sitemap toggles
+- [ ] **Tested**: Advanced settings (7): maintenance mode and message, custom scripts (head/body), debug mode, caching settings
+- [ ] **Tested**: Admin settings page at /admin/settings with comprehensive tabbed interface
+- [ ] **Tested**: 6 tabbed sections matching categories with complete forms
+- [ ] **Tested**: Initialize button for first-time setup (seeds 53 default settings)
+- [ ] **Tested**: Form validation with error display for all fields
+- [ ] **Tested**: Help text for every field using translation keys
+- [ ] **Tested**: Loading states on submit buttons
+- [ ] **Tested**: Responsive grid layouts (2-column where appropriate)
+- [ ] **Tested**: State management with $state and $effect
+- [ ] **Tested**: Settings menu item in AdminSidebar with Settings icon
+- [ ] **Tested**: 67 settings translation keys (English + Ukrainian)
+- [ ] **Tested**: TypeScript compilation (no errors)
+- [ ] **Tested**: Form submission handlers with proper validation
+- [ ] **Tested**: Helper functions (parseSettingValue, stringifySettingValue)
+- [ ] **Tested**: Empty state handling with initialize functionality
+
 ---
 
 ## 🚧 Required MVP Features
@@ -667,30 +695,33 @@ Checkbox provides REST API for:
 
 ### 10. **Site Configuration & CMS** (Priority: HIGH)
 
-#### 10.1 Site Settings
+#### 10.1 Site Settings ✅ **COMPLETED**
 **Database Schema:**
-- `site_setting` table:
-  - key (unique)
+- ✅ `site_setting` table:
+  - key (unique, primary key)
   - value (text)
   - type (string, number, boolean, json)
-  - category (general, store, checkout, etc.)
+  - category (general, store, checkout, email, seo, advanced)
+  - label, description
   - updatedAt
 
-**Configurable Settings:**
-- Store name, logo, favicon
-- Contact information
-- Social media links
-- Currency settings
-- Tax settings
-- Email templates
-- Store policies (privacy, terms, returns)
-- Meta tags (default SEO)
+**Configurable Settings:** (53 total)
+- ✅ **General** (9): Store name, logo, favicon, email, phone, timezone, currency, currency symbol, language
+- ✅ **Store Info** (11): Address fields (address1, address2, city, state, postal code, country), social media URLs (Facebook, Instagram, Twitter, YouTube, LinkedIn)
+- ✅ **Checkout** (7): Guest checkout toggle, phone requirement, order notes, policy URLs (terms, privacy, returns), newsletter signup
+- ✅ **Email** (8): SMTP configuration (host, port, username, password, secure toggle), from name, from address, reply-to address
+- ✅ **SEO** (9): Default title, description, keywords, OG image, Google Analytics ID, Search Console ID, Facebook Pixel ID, structured data toggle, sitemap toggle
+- ✅ **Advanced** (7): Maintenance mode toggle and message, custom head scripts, custom body scripts, debug mode toggle, caching toggle, cache duration
 
 **Admin Features:**
-- Settings management interface
-- Logo/favicon upload
-- Email template editor
-- Policy page editor
+- ✅ Settings management interface at /admin/settings
+- ✅ Tabbed UI with 6 categories
+- ✅ Logo/favicon URL configuration
+- ✅ Initialize button for default settings setup
+- ✅ Form validation with error display
+- ✅ Help text for all fields
+- ✅ Loading states on save
+- ✅ Settings menu in AdminSidebar
 
 #### 10.2 Page Builder (Content Management)
 **Database Schema:**
@@ -1181,7 +1212,16 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Responsive design and accessibility
 
 ### Phase 4: CMS & Content (Weeks 9-10)
-19. ❌ Site settings management - **TODO**
+19. ✅ Site settings management - **COMPLETED**
+    - ✅ Database schema with siteSetting table (8 fields)
+    - ✅ 6 categories: general, store, checkout, email, seo, advanced
+    - ✅ 11 validation schemas covering all operations
+    - ✅ 15 remote functions (queries, forms, commands)
+    - ✅ 53 default settings with sensible values
+    - ✅ Admin UI with tabbed interface at /admin/settings
+    - ✅ Form integration with validation and error display
+    - ✅ 67 translation keys (English + Ukrainian)
+    - ✅ Settings menu in AdminSidebar
 20. ❌ Banner management - **TODO**
 21. ❌ Page builder (basic) - **TODO**
 22. ❌ SEO optimization - **TODO**
