@@ -396,3 +396,23 @@ export const banner = sqliteTable('banner', {
 
 export type Banner = typeof banner.$inferSelect;
 export type InsertBanner = typeof banner.$inferInsert;
+
+// Page table for custom page builder
+export const page = sqliteTable('page', {
+	id: text('id').primaryKey(),
+	title: text('title').notNull(),
+	slug: text('slug').notNull().unique(),
+	content: text('content'), // JSON string of content blocks
+	template: text('template').notNull().default('default'), // page template type
+	status: text('status', { enum: ['draft', 'published'] })
+		.notNull()
+		.default('draft'),
+	seoTitle: text('seo_title'),
+	seoDescription: text('seo_description'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	publishedAt: integer('published_at', { mode: 'timestamp' })
+});
+
+export type Page = typeof page.$inferSelect;
+export type InsertPage = typeof page.$inferInsert;

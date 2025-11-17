@@ -20,7 +20,7 @@ The main navigation component that displays:
 - Mobile-first design using shadcn-svelte Sidebar primitives
 - Conditional rendering based on authentication state
 - Active route highlighting
-- Icon-based navigation with lucide-svelte
+- Icon-based navigation with @lucide/svelte
 - Internationalized labels via Paraglide
 - Keyboard shortcuts (`cmd+b` / `ctrl+b` to toggle)
 
@@ -302,8 +302,8 @@ For role-based or feature-specific items:
 **Fix**: Verify layout structure matches the documented hierarchy
 
 ### Icons not rendering
-**Cause**: Missing lucide-svelte icon imports
-**Fix**: Import icons from `lucide-svelte/icons/*` and use as components
+**Cause**: Missing @lucide/svelte icon imports
+**Fix**: Import icons from `@lucide/svelte` and use as components
 
 ## Dependencies
 

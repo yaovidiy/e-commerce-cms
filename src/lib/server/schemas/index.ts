@@ -647,3 +647,43 @@ export const FilterBannersSchema = v.object({
     sortField: v.optional(v.picklist(['title', 'position', 'displayOrder', 'createdAt']), 'displayOrder'),
     sortDirection: v.optional(v.picklist(['asc', 'desc']), 'asc')
 });
+
+// Page schemas
+export const CreatePageSchema = v.object({
+    title: v.pipe(v.string(), v.minLength(1, 'Title is required'), v.maxLength(200, 'Title must be at most 200 characters')),
+    slug: v.pipe(v.string(), v.minLength(1, 'Slug is required'), v.maxLength(200, 'Slug must be at most 200 characters'), v.regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens')),
+    content: v.optional(v.string(), ''), // JSON string
+    template: v.optional(v.string(), 'default'),
+    status: v.optional(v.picklist(['draft', 'published']), 'draft'),
+    seoTitle: v.optional(v.pipe(v.string(), v.maxLength(60, 'SEO title must be at most 60 characters'))),
+    seoDescription: v.optional(v.pipe(v.string(), v.maxLength(160, 'SEO description must be at most 160 characters')))
+});
+
+export const UpdatePageSchema = v.object({
+    id: v.string(),
+    title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    slug: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200), v.regex(/^[a-z0-9-]+$/))),
+    content: v.optional(v.string()),
+    template: v.optional(v.string()),
+    status: v.optional(v.picklist(['draft', 'published'])),
+    seoTitle: v.optional(v.pipe(v.string(), v.maxLength(60))),
+    seoDescription: v.optional(v.pipe(v.string(), v.maxLength(160)))
+});
+
+export const DeletePageSchema = v.object({
+    id: v.string()
+});
+
+export const PublishPageSchema = v.object({
+    id: v.string(),
+    publish: v.boolean() // true = publish, false = unpublish
+});
+
+export const FilterPagesSchema = v.object({
+    title: v.optional(v.string(), ''),
+    status: v.optional(v.picklist(['draft', 'published', 'all']), 'all'),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+    sortField: v.optional(v.picklist(['title', 'status', 'createdAt', 'updatedAt', 'publishedAt']), 'updatedAt'),
+    sortDirection: v.optional(v.picklist(['asc', 'desc']), 'desc')
+});

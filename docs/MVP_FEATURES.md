@@ -192,7 +192,7 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Shipping menu item in AdminSidebar with Truck icon
 - [ ] **Tested**: 40+ shipping translation keys (English + Ukrainian)
 - [ ] **Tested**: Rate applicability based on country and order amount
-- [ ] **Tested**: TypeScript compilation (lucide-svelte/icons imports, type safety)
+- [ ] **Tested**: TypeScript compilation (@lucide/svelte imports, type safety)
 - [ ] **Tested**: Form submission handlers with proper type assertions
 - [ ] **Tested**: Select component with proper value binding
 
@@ -321,6 +321,45 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Image URL validation
 - [ ] **Tested**: Date validation (startsAt < endsAt)
 - [ ] **Tested**: Image requirement check (imageId OR imageUrl required)
+
+#### 23. **Page Builder (Content Management)** ✅
+- [ ] **Tested**: Database schema with page table (10 fields: id, title, slug, content JSON, template, status, seoTitle, seoDescription, timestamps)
+- [ ] **Tested**: 5 validation schemas (CreatePageSchema, UpdatePageSchema, DeletePageSchema, PublishPageSchema, FilterPagesSchema)
+- [ ] **Tested**: 7 remote functions (getAllPages with pagination, getPageById, getPageBySlug, createPage, updatePage, deletePage, togglePageStatus)
+- [ ] **Tested**: 60+ page builder translation keys (English + Ukrainian)
+- [ ] **Tested**: Admin page management at /admin/pages with full CRUD
+- [ ] **Tested**: PageListTable with search, status filter, template filter, pagination
+- [ ] **Tested**: CreatePageDialog with 3 sections (Basic Info, Content Blocks, SEO Settings)
+- [ ] **Tested**: EditPageDialog with pre-population and 3 sections
+- [ ] **Tested**: DeletePageDialog with confirmation
+- [ ] **Tested**: Publish/Unpublish toggle functionality
+- [ ] **Tested**: ContentBlockEditor component with add/edit/delete/reorder
+- [ ] **Tested**: BlockTypeSelector dialog for choosing block types
+- [ ] **Tested**: 6 block editor components (Hero, Text, Image, Gallery, Video, HTML)
+- [ ] **Tested**: Hero block editor with background image, heading, subheading, CTA
+- [ ] **Tested**: Text block editor with rich text HTML support
+- [ ] **Tested**: Image block editor with alt text and caption
+- [ ] **Tested**: Gallery block editor with multiple images and individual alt texts
+- [ ] **Tested**: Video block editor with YouTube/Vimeo embed URL parsing
+- [ ] **Tested**: HTML block editor for custom code
+- [ ] **Tested**: AssetBrowser integration in block editors
+- [ ] **Tested**: Inline block editing with save/cancel
+- [ ] **Tested**: Block reordering (move up/down buttons)
+- [ ] **Tested**: Block deletion with confirmation
+- [ ] **Tested**: JSON serialization/deserialization for content storage
+- [ ] **Tested**: Customer-facing page renderer at /pages/[slug]
+- [ ] **Tested**: 6 client-side block renderers (HeroBlock, TextBlock, ImageBlock, GalleryBlock, VideoBlock, HtmlBlock)
+- [ ] **Tested**: Dynamic block rendering based on type
+- [ ] **Tested**: SEO meta tags (title, description, Open Graph)
+- [ ] **Tested**: 404 handling for unpublished/missing pages
+- [ ] **Tested**: Loading states with spinner
+- [ ] **Tested**: Error boundaries with friendly messages
+- [ ] **Tested**: Empty state for pages without content blocks
+- [ ] **Tested**: Responsive design (mobile, tablet, desktop)
+- [ ] **Tested**: Pages menu item in AdminSidebar with Layout icon
+- [ ] **Tested**: TypeScript compilation (all errors fixed)
+- [ ] **Tested**: lucide-svelte icon imports corrected
+- [ ] **Tested**: Asset schema compatibility (altText handling)
 
 ---
 
@@ -1263,7 +1302,30 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Customer-facing components (BannerHero, BannerSecondary)
     - ✅ Banners menu item in AdminSidebar
     - ✅ Database migration applied
-21. ❌ Page builder (basic) - **TODO**
+21. ✅ Page builder (basic) - **COMPLETED**
+    - ✅ Page database schema (10 fields: id, title, slug, content JSON, template, status, seoTitle, seoDescription, timestamps)
+    - ✅ 5 validation schemas (CreatePageSchema, UpdatePageSchema, DeletePageSchema, PublishPageSchema, FilterPagesSchema)
+    - ✅ 7 remote functions (getAllPages with pagination, getPageById, getPageBySlug, createPage, updatePage, deletePage, togglePageStatus)
+    - ✅ 60+ page builder translation keys (English + Ukrainian)
+    - ✅ Admin UI at /admin/pages with full CRUD operations
+    - ✅ PageListTable with search, status/template filters, pagination
+    - ✅ CreatePageDialog and EditPageDialog with 3 sections (Basic Info, Content, SEO)
+    - ✅ DeletePageDialog with confirmation
+    - ✅ ContentBlockEditor with 6 block types (Hero, Text, Image, Gallery, Video, HTML)
+    - ✅ Block type selector dialog for adding blocks
+    - ✅ Inline block editing with save/cancel
+    - ✅ Block reordering (move up/down)
+    - ✅ Block deletion with confirmation
+    - ✅ JSON serialization/deserialization for content storage
+    - ✅ Customer-facing page renderer at /pages/[slug]
+    - ✅ 6 client-side block renderers (HeroBlock, TextBlock, ImageBlock, GalleryBlock, VideoBlock, HtmlBlock)
+    - ✅ Dynamic block rendering based on type
+    - ✅ SEO meta tags (title, description, Open Graph)
+    - ✅ 404 handling for unpublished/missing pages
+    - ✅ Loading states and error boundaries
+    - ✅ Empty state for pages without content
+    - ✅ Pages menu item in AdminSidebar with Layout icon
+    - ✅ All TypeScript compilation errors fixed
 22. ❌ SEO optimization - **TODO**
 
 ### Phase 5: Polish & Launch (Weeks 11-12)
