@@ -159,6 +159,42 @@ export const payment = sqliteTable('payment', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
 
+export const checkboxReceipt = sqliteTable('checkbox_receipt', {
+	id: text('id').primaryKey(),
+	orderId: text('order_id')
+		.notNull()
+		.references(() => order.id),
+	paymentId: text('payment_id').references(() => payment.id),
+	receiptId: text('receipt_id'), // from Checkbox API
+	fiscalCode: text('fiscal_code'), // фіскальний номер чека
+	receiptUrl: text('receipt_url'), // link to electronic receipt
+	status: text('status', { enum: ['created', 'sent', 'error', 'cancelled'] })
+		.notNull()
+		.default('created'),
+	checkboxData: text('checkbox_data'), // JSON - full receipt data
+	shiftId: text('shift_id'), // касова зміна ID
+	cashRegisterId: text('cash_register_id'), // каса ID
+	errorMessage: text('error_message'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const checkboxShift = sqliteTable('checkbox_shift', {
+	id: text('id').primaryKey(),
+	shiftId: text('shift_id').notNull(), // from Checkbox API
+	cashRegisterId: text('cash_register_id').notNull(),
+	status: text('status', { enum: ['opened', 'closed'] })
+		.notNull()
+		.default('opened'),
+	openedBy: text('opened_by')
+		.notNull()
+		.references(() => user.id),
+	closedBy: text('closed_by').references(() => user.id),
+	balance: text('balance'), // JSON - готівка, безготівка
+	openedAt: integer('opened_at', { mode: 'timestamp' }).notNull(),
+	closedAt: integer('closed_at', { mode: 'timestamp' })
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -186,3 +222,9 @@ export type InsertOrder = typeof order.$inferInsert;
 
 export type Payment = typeof payment.$inferSelect;
 export type InsertPayment = typeof payment.$inferInsert;
+
+export type CheckboxReceipt = typeof checkboxReceipt.$inferSelect;
+export type InsertCheckboxReceipt = typeof checkboxReceipt.$inferInsert;
+
+export type CheckboxShift = typeof checkboxShift.$inferSelect;
+export type InsertCheckboxShift = typeof checkboxShift.$inferInsert;

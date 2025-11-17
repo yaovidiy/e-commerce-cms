@@ -257,6 +257,86 @@ export async function handlePaymentWebhook(data: string, signature: string) {
 		})
 		.where(eq(tables.order.id, order.id));
 
+	// Auto-generate Checkbox receipt for successful LiqPay payment
+	if (paymentStatus === 'completed' && payment.provider === 'liqpay') {
+		try {
+			const { getCheckboxClient } = await import('$lib/server/checkbox-client');
+			
+			const checkbox = getCheckboxClient();
+
+			// Parse order items
+			const orderItems = JSON.parse(order.items) as Array<{
+				productId: string;
+				name: string;
+				price: number;
+				quantity: number;
+			}>;
+
+			// Prepare receipt items
+			const goods = orderItems.map((item) => ({
+				code: item.productId,
+				name: item.name,
+				price: item.price, // Already in kopiykas (cents)
+				quantity: item.quantity,
+				cost: item.price * item.quantity,
+				tax: [20] // 20% VAT
+			}));
+
+			// Create receipt
+			const receiptData = await checkbox.createSaleReceipt({
+				goods,
+				payments: [
+					{
+						type: 'CASHLESS',
+						value: order.total
+					}
+				],
+				delivery: {
+					email: order.customerEmail,
+					phone: order.customerPhone || undefined
+				},
+				order_id: order.orderNumber
+			});
+
+			// Get current shift
+			const shift = await checkbox.getCurrentShift();
+
+			// Save receipt to database
+			await db
+				.insert(tables.checkboxReceipt)
+				.values({
+					id: crypto.randomUUID(),
+					orderId: order.id,
+					paymentId: payment.id,
+					receiptId: receiptData.id,
+					fiscalCode: receiptData.fiscal_code,
+					receiptUrl: receiptData.receipt_url || null,
+					status: order.customerEmail || order.customerPhone ? 'sent' : 'created',
+					checkboxData: JSON.stringify(receiptData),
+					shiftId: shift?.id || null,
+					cashRegisterId: shift?.cash_register_id || null,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				});
+		} catch (checkboxError) {
+			// Log error but don't fail the webhook
+			console.error('Failed to create Checkbox receipt:', checkboxError);
+			
+			// Save error receipt for later retry
+			await db
+				.insert(tables.checkboxReceipt)
+				.values({
+					id: crypto.randomUUID(),
+					orderId: order.id,
+					paymentId: payment.id,
+					status: 'error',
+					errorMessage: checkboxError instanceof Error ? checkboxError.message : 'Unknown error',
+					createdAt: new Date(),
+					updatedAt: new Date()
+				});
+		}
+	}
+
 	return {
 		success: true,
 		paymentStatus,
