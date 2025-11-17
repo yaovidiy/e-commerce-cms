@@ -113,7 +113,7 @@
 								<div class="text-right">
 									<div class="text-2xl font-bold">{formatCurrency(order.total)}</div>
 									<div class="text-muted-foreground text-xs">
-										{order.paymentStatus === 'paid' ? 'Paid' : 'Pending payment'}
+										{order.paymentStatus === 'completed' ? 'Paid' : order.paymentStatus === 'failed' ? 'Failed' : order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending payment'}
 									</div>
 								</div>
 							</div>

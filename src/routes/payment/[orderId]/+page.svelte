@@ -8,6 +8,10 @@
 
 	const orderId = $page.params.orderId;
 	
+	if (!orderId) {
+		throw new Error('Order ID is required');
+	}
+	
 	let isCreatingPayment = $state(false);
 	let error = $state<string | null>(null);
 
@@ -17,7 +21,7 @@
 
 		try {
 			const result = await createPayment({
-				orderId,
+				orderId: orderId!,
 				paymentMethod: 'liqpay'
 			});
 

@@ -391,3 +391,65 @@ export const GetApplicableRatesSchema = v.object({
     country: v.string(),
     orderAmount: v.pipe(v.number(), v.minValue(0)) // in cents
 });
+
+// Discount schemas
+export const CreateDiscountSchema = v.object({
+    code: v.pipe(
+        v.string(),
+        v.minLength(1, 'Discount code is required'),
+        v.maxLength(50, 'Discount code must be at most 50 characters'),
+        v.regex(/^[A-Z0-9_-]+$/, 'Discount code must contain only uppercase letters, numbers, dashes, and underscores')
+    ),
+    type: v.picklist(['percentage', 'fixed', 'free_shipping'], 'Invalid discount type'),
+    value: v.pipe(v.number(), v.minValue(0, 'Value must be non-negative')),
+    minOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))), // in cents
+    maxUsesTotal: v.optional(v.pipe(v.number(), v.minValue(1))),
+    maxUsesPerCustomer: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    startsAt: v.pipe(v.string(), v.isoDateTime()),
+    endsAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+    isActive: v.optional(v.boolean(), true),
+    applicableProducts: v.optional(v.string()), // JSON string of product IDs
+    applicableCategories: v.optional(v.string()), // JSON string of category IDs
+    description: v.optional(v.string())
+});
+
+export const UpdateDiscountSchema = v.object({
+    id: v.string(),
+    code: v.optional(v.pipe(
+        v.string(),
+        v.minLength(1),
+        v.maxLength(50),
+        v.regex(/^[A-Z0-9_-]+$/)
+    )),
+    type: v.optional(v.picklist(['percentage', 'fixed', 'free_shipping'])),
+    value: v.optional(v.pipe(v.number(), v.minValue(0))),
+    minOrderAmount: v.optional(v.pipe(v.number(), v.minValue(0))),
+    maxUsesTotal: v.optional(v.pipe(v.number(), v.minValue(1))),
+    maxUsesPerCustomer: v.optional(v.pipe(v.number(), v.minValue(1))),
+    startsAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+    endsAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+    isActive: v.optional(v.boolean()),
+    applicableProducts: v.optional(v.string()), // JSON string
+    applicableCategories: v.optional(v.string()), // JSON string
+    description: v.optional(v.string())
+});
+
+export const DeleteDiscountSchema = v.object({
+    id: v.string()
+});
+
+export const ValidateDiscountSchema = v.object({
+    code: v.pipe(v.string(), v.minLength(1)),
+    cartTotal: v.pipe(v.number(), v.minValue(0)), // in cents
+    userId: v.optional(v.string()), // for tracking per-customer usage
+    cartItems: v.optional(v.array(v.object({
+        productId: v.string(),
+        categoryId: v.optional(v.string())
+    })))
+});
+
+export const ApplyDiscountSchema = v.object({
+    code: v.pipe(v.string(), v.minLength(1)),
+    cartTotal: v.pipe(v.number(), v.minValue(0)),
+    userId: v.optional(v.string())
+});

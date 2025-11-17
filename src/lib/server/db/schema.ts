@@ -316,3 +316,27 @@ export type InsertShippingZone = typeof shippingZone.$inferInsert;
 
 export type ShippingRate = typeof shippingRate.$inferSelect;
 export type InsertShippingRate = typeof shippingRate.$inferInsert;
+
+export const discount = sqliteTable('discount', {
+	id: text('id').primaryKey(),
+	code: text('code').notNull().unique(),
+	type: text('type', { enum: ['percentage', 'fixed', 'free_shipping'] })
+		.notNull()
+		.default('percentage'),
+	value: integer('value').notNull(), // percentage (0-100) or fixed amount in cents
+	minOrderAmount: integer('min_order_amount'), // stored in cents, null = no minimum
+	maxUsesTotal: integer('max_uses_total'), // null = unlimited
+	maxUsesPerCustomer: integer('max_uses_per_customer').default(1), // null = unlimited
+	currentUses: integer('current_uses').notNull().default(0),
+	startsAt: integer('starts_at', { mode: 'timestamp' }).notNull(),
+	endsAt: integer('ends_at', { mode: 'timestamp' }), // null = no expiration
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	applicableProducts: text('applicable_products'), // JSON array of product IDs, null = all products
+	applicableCategories: text('applicable_categories'), // JSON array of category IDs, null = all categories
+	description: text('description'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Discount = typeof discount.$inferSelect;
+export type InsertDiscount = typeof discount.$inferInsert;

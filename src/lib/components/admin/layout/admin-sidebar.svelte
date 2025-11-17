@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -27,6 +27,11 @@
 			title: () => m.shipping(),
 			url: '/admin/shipping/zones',
 			icon: Truck
+		},
+		{
+			title: () => m.discounts(),
+			url: '/admin/discounts',
+			icon: Percent
 		},
 		{
 			title: () => m.admin_blogs(),

@@ -74,8 +74,8 @@
 			<div class="space-y-2">
 				<Label>{m.user_role()}</Label>
 				<Select.Root
-					{...createUser.fields.role.as('select')}
 					type="single"
+					value={createUser.fields.role.value()}
 					onValueChange={(value) => createUser.fields.role.set(value as 'admin' | 'user')}
 				>
 					<Select.Trigger>

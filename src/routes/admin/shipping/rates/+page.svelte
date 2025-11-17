@@ -281,7 +281,7 @@
 				{/await}
 
 				<div>
-					<Label for={createRate.fields.name.name}>{m.shipping_rate_name()}</Label>
+					<Label>{m.shipping_rate_name()}</Label>
 					<Input
 						{...createRate.fields.name.as('text')}
 						placeholder="Standard Shipping, Express Delivery, etc."
@@ -292,7 +292,7 @@
 				</div>
 
 				<div>
-					<Label for={createRate.fields.description.name}>{m.shipping_rate_description()}</Label>
+					<Label>{m.shipping_rate_description()}</Label>
 					<Textarea
 						{...createRate.fields.description.as('text')}
 						placeholder="Delivery within 3-5 business days"
@@ -306,7 +306,7 @@
 					</div>
 
 					<div>
-						<Label for={createRate.fields.estimatedDays.name}>
+						<Label>
 							{m.shipping_rate_estimated_days()}
 						</Label>
 						<Input
@@ -403,7 +403,7 @@
 				{/await}
 
 				<div>
-					<Label for={updateRate.fields.name.name}>{m.shipping_rate_name()}</Label>
+					<Label>{m.shipping_rate_name()}</Label>
 					<Input {...updateRate.fields.name.as('text')} />
 					{#each updateRate.fields.name.issues() as issue}
 						<p class="text-destructive text-sm">{issue.message}</p>
@@ -411,7 +411,7 @@
 				</div>
 
 				<div>
-					<Label for={updateRate.fields.description.name}>{m.shipping_rate_description()}</Label>
+					<Label>{m.shipping_rate_description()}</Label>
 					<Textarea {...updateRate.fields.description.as('text')} />
 				</div>
 
@@ -428,7 +428,7 @@
 					</div>
 
 					<div>
-						<Label for={updateRate.fields.estimatedDays.name}>
+						<Label>
 							{m.shipping_rate_estimated_days()}
 						</Label>
 						<Input

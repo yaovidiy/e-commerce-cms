@@ -39,7 +39,7 @@
 				<form {...updateProfile} class="space-y-6">
 					<div class="grid gap-6 md:grid-cols-2">
 						<div class="space-y-2">
-							<Label for={updateProfile.fields.firstName.name}>
+							<Label>
 								{m.profile_first_name()}
 							</Label>
 							<Input
@@ -53,7 +53,7 @@
 						</div>
 
 						<div class="space-y-2">
-							<Label for={updateProfile.fields.lastName.name}>
+							<Label>
 								{m.profile_last_name()}
 							</Label>
 							<Input
@@ -68,7 +68,7 @@
 					</div>
 
 					<div class="space-y-2">
-						<Label for={updateProfile.fields.email.name}>
+						<Label>
 							{m.auth_email()}
 						</Label>
 						<Input
@@ -82,7 +82,7 @@
 					</div>
 
 					<div class="space-y-2">
-						<Label for={updateProfile.fields.phone.name}>
+						<Label>
 							{m.profile_phone()}
 						</Label>
 						<Input
@@ -97,11 +97,12 @@
 
 					<div class="flex items-center space-x-2">
 						<Checkbox
-							{...updateProfile.fields.marketingOptIn.as('checkbox')}
 							checked={profile.marketingOptIn || false}
-							id={updateProfile.fields.marketingOptIn.name}
+							onCheckedChange={(checked) => {
+								updateProfile.fields.marketingOptIn.set(checked as boolean);
+							}}
 						/>
-						<Label for={updateProfile.fields.marketingOptIn.name} class="cursor-pointer font-normal">
+						<Label class="cursor-pointer font-normal">
 							{m.profile_marketing_opt_in()}
 						</Label>
 					</div>

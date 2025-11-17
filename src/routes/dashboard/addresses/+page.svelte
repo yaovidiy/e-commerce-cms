@@ -226,7 +226,7 @@
 		<form {...createAddress} class="space-y-4">
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={createAddress.fields.firstName.name}>
+					<Label>
 						{m.address_first_name()}
 					</Label>
 					<Input {...createAddress.fields.firstName.as('text')} />
@@ -236,7 +236,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={createAddress.fields.lastName.name}>
+					<Label>
 						{m.address_last_name()}
 					</Label>
 					<Input {...createAddress.fields.lastName.as('text')} />
@@ -247,14 +247,14 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={createAddress.fields.company.name}>
+				<Label>
 					{m.address_company()}
 				</Label>
 				<Input {...createAddress.fields.company.as('text')} />
 			</div>
 
 			<div class="space-y-2">
-				<Label for={createAddress.fields.address1.name}>
+				<Label>
 					{m.address_address_line_1()}
 				</Label>
 				<Input {...createAddress.fields.address1.as('text')} />
@@ -264,7 +264,7 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={createAddress.fields.address2.name}>
+				<Label>
 					{m.address_address_line_2()}
 				</Label>
 				<Input {...createAddress.fields.address2.as('text')} />
@@ -272,7 +272,7 @@
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={createAddress.fields.city.name}>
+					<Label>
 						{m.address_city()}
 					</Label>
 					<Input {...createAddress.fields.city.as('text')} />
@@ -282,7 +282,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={createAddress.fields.state.name}>
+					<Label>
 						{m.address_state()}
 					</Label>
 					<Input {...createAddress.fields.state.as('text')} />
@@ -294,7 +294,7 @@
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={createAddress.fields.postalCode.name}>
+					<Label>
 						{m.address_postal_code()}
 					</Label>
 					<Input {...createAddress.fields.postalCode.as('text')} />
@@ -304,7 +304,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={createAddress.fields.country.name}>
+					<Label>
 						{m.address_country()}
 					</Label>
 					<Input {...createAddress.fields.country.as('text')} value="Ukraine" />
@@ -315,7 +315,7 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={createAddress.fields.phone.name}>
+				<Label>
 					{m.address_phone()}
 				</Label>
 				<Input {...createAddress.fields.phone.as('text')} />
@@ -326,10 +326,12 @@
 
 			<div class="flex items-center space-x-2">
 				<Checkbox
-					{...createAddress.fields.isDefault.as('checkbox')}
-					id={createAddress.fields.isDefault.name}
+					checked={false}
+					onCheckedChange={(checked) => {
+						createAddress.fields.isDefault.set(checked as boolean);
+					}}
 				/>
-				<Label for={createAddress.fields.isDefault.name} class="cursor-pointer font-normal">
+				<Label class="cursor-pointer font-normal">
 					{m.address_set_default()}
 				</Label>
 			</div>
@@ -357,7 +359,7 @@
 		<form {...updateAddress} class="space-y-4">
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.firstName.name}>
+					<Label>
 						{m.address_first_name()}
 					</Label>
 					<Input {...updateAddress.fields.firstName.as('text')} />
@@ -367,7 +369,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.lastName.name}>
+					<Label>
 						{m.address_last_name()}
 					</Label>
 					<Input {...updateAddress.fields.lastName.as('text')} />
@@ -378,14 +380,14 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={updateAddress.fields.company.name}>
+				<Label>
 					{m.address_company()}
 				</Label>
 				<Input {...updateAddress.fields.company.as('text')} />
 			</div>
 
 			<div class="space-y-2">
-				<Label for={updateAddress.fields.address1.name}>
+				<Label>
 					{m.address_address_line_1()}
 				</Label>
 				<Input {...updateAddress.fields.address1.as('text')} />
@@ -395,7 +397,7 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={updateAddress.fields.address2.name}>
+				<Label>
 					{m.address_address_line_2()}
 				</Label>
 				<Input {...updateAddress.fields.address2.as('text')} />
@@ -403,7 +405,7 @@
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.city.name}>
+					<Label>
 						{m.address_city()}
 					</Label>
 					<Input {...updateAddress.fields.city.as('text')} />
@@ -413,7 +415,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.state.name}>
+					<Label>
 						{m.address_state()}
 					</Label>
 					<Input {...updateAddress.fields.state.as('text')} />
@@ -425,7 +427,7 @@
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.postalCode.name}>
+					<Label>
 						{m.address_postal_code()}
 					</Label>
 					<Input {...updateAddress.fields.postalCode.as('text')} />
@@ -435,7 +437,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for={updateAddress.fields.country.name}>
+					<Label>
 						{m.address_country()}
 					</Label>
 					<Input {...updateAddress.fields.country.as('text')} />
@@ -446,7 +448,7 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label for={updateAddress.fields.phone.name}>
+				<Label>
 					{m.address_phone()}
 				</Label>
 				<Input {...updateAddress.fields.phone.as('text')} />
@@ -457,10 +459,12 @@
 
 			<div class="flex items-center space-x-2">
 				<Checkbox
-					{...updateAddress.fields.isDefault.as('checkbox')}
-					id={updateAddress.fields.isDefault.name}
+					checked={editingAddress?.isDefault || false}
+					onCheckedChange={(checked) => {
+						updateAddress.fields.isDefault.set(checked as boolean);
+					}}
 				/>
-				<Label for={updateAddress.fields.isDefault.name} class="cursor-pointer font-normal">
+				<Label class="cursor-pointer font-normal">
 					{m.address_set_default()}
 				</Label>
 			</div>
