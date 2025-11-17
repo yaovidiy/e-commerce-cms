@@ -7,89 +7,123 @@ This document outlines the minimum viable product (MVP) features required for a 
 
 ## Current Implementation Status
 
-### ✅ Completed Features
-1. **User Authentication & Management**
-   - User registration/login
-   - Session management (SHA-256 hashed tokens)
-   - Admin/user roles
-   - User CRUD operations in admin panel
-   - Password hashing with Argon2
-   - Session auto-renewal (15 days threshold)
+> **⚠️ IMPORTANT REMINDER**: After implementing each feature, it MUST be tested thoroughly before marking the testing checkbox. All features should be manually tested in both development and production-like environments.
 
-2. **Blog Management**
-   - Blog post creation/editing/deletion
-   - Rich text editor
-   - Admin panel for blog management
-   - Slug generation
-   - Author tracking
+### ✅ Completed Features (⚠️ Testing Required)
 
-3. **Asset Management**
-   - Image upload to Cloudflare R2
-   - Image optimization with Sharp
-   - Thumbnail generation (300x300)
-   - Asset library in admin panel
-   - MIME type validation
-   - File size tracking
+#### 1. **User Authentication & Management**
+- [ ] **Tested**: User registration/login
+- [ ] **Tested**: Session management (SHA-256 hashed tokens)
+- [ ] **Tested**: Admin/user roles
+- [ ] **Tested**: User CRUD operations in admin panel
+- [ ] **Tested**: Password hashing with Argon2
+- [ ] **Tested**: Session auto-renewal (15 days threshold)
 
-4. **Internationalization (i18n)**
-   - Multi-language support (English, Ukrainian)
-   - Compile-time translations with Paraglide
-   - Route localization
+#### 2. **Blog Management**
+- [ ] **Tested**: Blog post creation/editing/deletion
+- [ ] **Tested**: Rich text editor
+- [ ] **Tested**: Admin panel for blog management
+- [ ] **Tested**: Slug generation
+- [ ] **Tested**: Author tracking
 
-5. **Product Management** ✅
-   - Product database schema with full fields
-   - Product CRUD operations
-   - Admin panel for product management
-   - Product listing with search/filter/pagination
-   - Image gallery support (JSON array)
-   - Product variants support (JSON)
-   - Inventory tracking
-   - SKU/barcode management
-   - SEO fields (title, description)
-   - Status management (draft, active, archived)
-   - Price and compare-at-price (sale pricing)
+#### 3. **Asset Management**
+- [ ] **Tested**: Image upload to Cloudflare R2
+- [ ] **Tested**: Image optimization with Sharp
+- [ ] **Tested**: Thumbnail generation (300x300)
+- [ ] **Tested**: Asset library in admin panel
+- [ ] **Tested**: MIME type validation
+- [ ] **Tested**: File size tracking
 
-6. **Category Management** ✅
-   - Category database schema
-   - Category CRUD operations
-   - Admin panel for category management
-   - Hierarchical categories (parent-child)
-   - Category images
-   - Display order management
-   - Visibility toggle
-   - SEO optimization fields
-   - Slug generation
+#### 4. **Internationalization (i18n)**
+- [ ] **Tested**: Multi-language support (English, Ukrainian)
+- [ ] **Tested**: Compile-time translations with Paraglide
+- [ ] **Tested**: Route localization
 
-7. **Brand Management** ✅
-   - Brand database schema
-   - Brand CRUD operations
-   - Admin panel for brand management
-   - Brand logo upload
-   - Visibility toggle
-   - Slug generation
+#### 5. **Product Management** ✅
+- [ ] **Tested**: Product database schema with full fields
+- [ ] **Tested**: Product CRUD operations
+- [ ] **Tested**: Admin panel for product management
+- [ ] **Tested**: Product listing with search/filter/pagination
+- [ ] **Tested**: Image gallery support (JSON array)
+- [ ] **Tested**: Product variants support (JSON)
+- [ ] **Tested**: Inventory tracking
+- [ ] **Tested**: SKU/barcode management
+- [ ] **Tested**: SEO fields (title, description)
+- [ ] **Tested**: Status management (draft, active, archived)
+- [ ] **Tested**: Price and compare-at-price (sale pricing)
 
-8. **Shopping Cart System** ✅
-   - Cart database schema with session/user support
-   - Cart remote functions (getCart, addToCart, updateCartItem, removeFromCart, clearCart)
-   - Session-based cart for guest users
-   - User-based cart for logged-in users
-   - Cart item management with product details
-   - Inventory checking on add-to-cart
-   - Real-time cart totals calculation
-   - Cart item count tracking
+#### 6. **Category Management** ✅
+- [ ] **Tested**: Category database schema
+- [ ] **Tested**: Category CRUD operations
+- [ ] **Tested**: Admin panel for category management
+- [ ] **Tested**: Hierarchical categories (parent-child)
+- [ ] **Tested**: Category images
+- [ ] **Tested**: Display order management
+- [ ] **Tested**: Visibility toggle
+- [ ] **Tested**: SEO optimization fields
+- [ ] **Tested**: Slug generation
 
-9. **Order Management System** ✅
-   - Order database schema with full order lifecycle
-   - Order remote functions (getAllOrders, getOrder, getMyOrders, checkout)
-   - Order number generation (ORD-TIMESTAMP-RANDOM)
-   - Guest checkout support
-   - Customer information capture
-   - Shipping and billing address management
-   - Order status tracking (pending, processing, shipped, delivered, cancelled, refunded)
-   - Inventory deduction on order creation
-   - Order cancellation with inventory restoration
-   - Admin order management
-   - Customer order history
+#### 7. **Brand Management** ✅
+- [ ] **Tested**: Brand database schema
+- [ ] **Tested**: Brand CRUD operations
+- [ ] **Tested**: Admin panel for brand management
+- [ ] **Tested**: Brand logo upload
+- [ ] **Tested**: Visibility toggle
+- [ ] **Tested**: Slug generation
+
+#### 8. **Shopping Cart System** ✅
+- [ ] **Tested**: Cart database schema with session/user support
+- [ ] **Tested**: Cart remote functions (getCart, addToCart, updateCartItem, removeFromCart, clearCart)
+- [ ] **Tested**: Session-based cart for guest users
+- [ ] **Tested**: User-based cart for logged-in users
+- [ ] **Tested**: Cart item management with product details
+- [ ] **Tested**: Inventory checking on add-to-cart
+- [ ] **Tested**: Real-time cart totals calculation
+- [ ] **Tested**: Cart item count tracking
+
+#### 9. **Order Management System** ✅
+- [ ] **Tested**: Order database schema with full order lifecycle
+- [ ] **Tested**: Order remote functions (getAllOrders, getOrder, getMyOrders, checkout)
+- [ ] **Tested**: Order number generation (ORD-TIMESTAMP-RANDOM)
+- [ ] **Tested**: Guest checkout support
+- [ ] **Tested**: Customer information capture
+- [ ] **Tested**: Shipping and billing address management
+- [ ] **Tested**: Order status tracking (pending, processing, shipped, delivered, cancelled, refunded)
+- [ ] **Tested**: Inventory deduction on order creation
+- [ ] **Tested**: Order cancellation with inventory restoration
+- [ ] **Tested**: Admin order management
+- [ ] **Tested**: Customer order history
+
+#### 10. **Customer Product Browsing** ✅
+- [ ] **Tested**: Customer-facing product browsing query with filters
+- [ ] **Tested**: Search by product name
+- [ ] **Tested**: Filter by category and brand
+- [ ] **Tested**: Sort by newest, price (asc/desc), name
+- [ ] **Tested**: Pagination support
+- [ ] **Tested**: Only shows active products
+
+#### 11. **Product Listing Page** ✅
+- [ ] **Tested**: Customer-facing product grid at `/products`
+- [ ] **Tested**: Search functionality
+- [ ] **Tested**: Sort dropdown (newest, price, name)
+- [ ] **Tested**: Responsive grid layout (1-4 columns)
+- [ ] **Tested**: Product cards with images, name, description, price
+- [ ] **Tested**: Sale badge for discounted products
+- [ ] **Tested**: Stock status indicators
+- [ ] **Tested**: Loading skeletons
+- [ ] **Tested**: Empty state messaging
+
+#### 12. **Product Detail Page** ✅
+- [ ] **Tested**: Dynamic product detail page at `/products/[slug]`
+- [ ] **Tested**: Product image gallery with thumbnails
+- [ ] **Tested**: Product name, description, price display
+- [ ] **Tested**: Sale pricing with compare-at-price
+- [ ] **Tested**: Stock status warnings
+- [ ] **Tested**: Quantity selector with +/- buttons
+- [ ] **Tested**: Add to cart functionality
+- [ ] **Tested**: Product metadata (SKU, barcode)
+- [ ] **Tested**: Loading and error states
+- [ ] **Tested**: Out-of-stock prevention
 
 ---
 
@@ -1049,6 +1083,149 @@ src/lib/
 - **Analytics**: Google Analytics 4
 - **Search**: SQLite FTS5 initially, Meilisearch for scale
 - **Monitoring**: Sentry (optional)
+
+---
+
+## 🧪 FEATURE TESTING CHECKLIST
+
+> **⚠️ CRITICAL**: Each feature MUST be tested before checking the box in the "Completed Features" section above. Testing should include both manual testing and automated tests where applicable.
+
+### Testing Categories
+
+#### 1. **Functional Testing**
+- [ ] Feature works as designed
+- [ ] All user interactions function correctly
+- [ ] Data is saved/retrieved correctly
+- [ ] Error handling works properly
+
+#### 2. **UI/UX Testing**
+- [ ] Responsive design (mobile, tablet, desktop)
+- [ ] Loading states display correctly
+- [ ] Error messages are clear and helpful
+- [ ] Success feedback is shown
+- [ ] Accessibility (keyboard navigation, screen readers)
+
+#### 3. **Integration Testing**
+- [ ] Feature integrates with existing features
+- [ ] Database operations work correctly
+- [ ] API calls succeed
+- [ ] External services (R2, email, etc.) work
+
+#### 4. **Security Testing**
+- [ ] Authentication/authorization checks work
+- [ ] Input validation prevents malicious data
+- [ ] SQL injection protection
+- [ ] XSS protection
+- [ ] CSRF protection (SvelteKit built-in)
+
+#### 5. **Performance Testing**
+- [ ] Page loads in < 3 seconds
+- [ ] No memory leaks
+- [ ] Database queries are optimized
+- [ ] Large datasets handled efficiently
+
+### Testing Process for Each Feature
+
+**Before marking as "Tested":**
+
+1. **Manual Testing**
+   - [ ] Test happy path (expected user flow)
+   - [ ] Test edge cases (boundary conditions)
+   - [ ] Test error scenarios (invalid input, network errors)
+   - [ ] Test on multiple browsers (Chrome, Firefox, Safari)
+   - [ ] Test on multiple devices (mobile, tablet, desktop)
+
+2. **Automated Testing** (if applicable)
+   - [ ] Unit tests pass
+   - [ ] Integration tests pass
+   - [ ] E2E tests pass
+
+3. **User Acceptance Testing**
+   - [ ] Feature reviewed by product owner
+   - [ ] Feedback addressed
+   - [ ] Documentation updated
+
+4. **Production Readiness**
+   - [ ] No console errors
+   - [ ] No console warnings
+   - [ ] Performance metrics meet targets
+   - [ ] Security audit passed
+
+### Feature-Specific Testing Guidelines
+
+#### Authentication & User Management
+- [ ] Can register new user
+- [ ] Can login with valid credentials
+- [ ] Cannot login with invalid credentials
+- [ ] Session persists across page reloads
+- [ ] Can logout successfully
+- [ ] Admin users have elevated permissions
+- [ ] Regular users cannot access admin routes
+
+#### Product Management
+- [ ] Can create product with all fields
+- [ ] Can edit product
+- [ ] Can delete product
+- [ ] Product images upload correctly
+- [ ] Product variants work
+- [ ] Inventory tracking accurate
+- [ ] Price formatting correct
+
+#### Shopping Cart
+- [ ] Can add product to cart
+- [ ] Cart persists for guest users
+- [ ] Cart persists for logged-in users
+- [ ] Can update quantity
+- [ ] Can remove items
+- [ ] Cart totals calculate correctly
+- [ ] Stock validation works
+
+#### Checkout & Orders
+- [ ] Can complete guest checkout
+- [ ] Can complete logged-in checkout
+- [ ] Order created successfully
+- [ ] Inventory deducted correctly
+- [ ] Order confirmation email sent
+- [ ] Admin can view orders
+- [ ] Customer can view order history
+
+#### Product Browsing
+- [ ] Product listing loads
+- [ ] Search works
+- [ ] Filters work
+- [ ] Sorting works
+- [ ] Pagination works
+- [ ] Product detail page loads
+- [ ] Add to cart from detail page works
+
+### Test Data Requirements
+
+**For testing, create:**
+- [ ] At least 3 test users (admin, regular user, guest)
+- [ ] At least 10 test products (various categories/brands)
+- [ ] At least 3 test categories
+- [ ] At least 3 test brands
+- [ ] Test product images
+- [ ] Test orders in various states
+- [ ] Test with out-of-stock products
+- [ ] Test with sale pricing
+- [ ] Test with low stock warnings
+
+### Bug Tracking
+
+**When bugs are found:**
+1. Document bug details (steps to reproduce, expected vs actual)
+2. Assign priority (critical, high, medium, low)
+3. Fix bug
+4. Retest
+5. Update testing checklist
+
+### Regression Testing
+
+**After fixing bugs or adding features:**
+- [ ] Rerun all tests for affected features
+- [ ] Verify related features still work
+- [ ] Check for unintended side effects
 
 ---
 

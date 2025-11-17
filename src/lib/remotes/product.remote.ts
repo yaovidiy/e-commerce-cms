@@ -139,3 +139,64 @@ export const deleteProduct = form(DeleteProductSchema, async (data) => {
 
 	return { success: true };
 });
+
+// Customer-facing: Browse active products with filters
+export const browseProducts = query(
+	v.object({
+		search: v.optional(v.string(), ''),
+		categoryId: v.optional(v.string()),
+		brandId: v.optional(v.string()),
+		sortBy: v.optional(v.picklist(['newest', 'price-asc', 'price-desc', 'name']), 'newest'),
+		page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+		pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(48)), 12)
+	}),
+	async (data) => {
+		let productQuery = db.select().from(tables.product);
+
+		const conditions = [eq(tables.product.status, 'active')];
+
+		// Search by name or description
+		if (data.search) {
+			conditions.push(like(tables.product.name, `%${data.search}%`));
+		}
+
+		// Filter by category
+		if (data.categoryId) {
+			conditions.push(eq(tables.product.categoryId, data.categoryId));
+		}
+
+		// Filter by brand
+		if (data.brandId) {
+			conditions.push(eq(tables.product.brandId, data.brandId));
+		}
+
+		if (conditions.length > 0) {
+			productQuery = productQuery.where(and(...conditions)) as typeof productQuery;
+		}
+
+		// Sorting
+		switch (data.sortBy) {
+			case 'price-asc':
+				productQuery = productQuery.orderBy(tables.product.price) as typeof productQuery;
+				break;
+			case 'price-desc':
+				productQuery = productQuery.orderBy(desc(tables.product.price)) as typeof productQuery;
+				break;
+			case 'name':
+				productQuery = productQuery.orderBy(tables.product.name) as typeof productQuery;
+				break;
+			case 'newest':
+			default:
+				productQuery = productQuery.orderBy(
+					desc(tables.product.createdAt)
+				) as typeof productQuery;
+				break;
+		}
+
+		// Pagination
+		const offset = (data.page - 1) * data.pageSize;
+		productQuery = productQuery.limit(data.pageSize).offset(offset) as typeof productQuery;
+
+		return await productQuery;
+	}
+);
