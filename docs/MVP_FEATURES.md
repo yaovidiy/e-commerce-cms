@@ -192,6 +192,27 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Shipping menu item in AdminSidebar with Truck icon
 - [ ] **Tested**: 40+ shipping translation keys (English + Ukrainian)
 - [ ] **Tested**: Rate applicability based on country and order amount
+- [ ] **Tested**: TypeScript compilation (lucide-svelte/icons imports, type safety)
+- [ ] **Tested**: Form submission handlers with proper type assertions
+- [ ] **Tested**: Select component with proper value binding
+
+#### 17. **Email Settings Management** ✅
+- [ ] **Tested**: Email configuration page at /admin/email-settings
+- [ ] **Tested**: Configure sender information (from email, from name, reply-to)
+- [ ] **Tested**: Toggle email notifications (order confirmation, shipped, delivered, cancelled, password reset, welcome)
+- [ ] **Tested**: Test email functionality with live email sending
+- [ ] **Tested**: Integration with Resend API
+- [ ] **Tested**: Form object properly attached (fixed duplicate form issue)
+- [ ] **Tested**: Real-time validation and error handling
+- [ ] **Tested**: Settings persistence in database
+
+#### 18. **Internationalization (i18n) Configuration** ✅
+- [ ] **Tested**: Ukrainian (uk) set as default language
+- [ ] **Tested**: English (en) available as secondary language
+- [ ] **Tested**: Route localization working (/en/... for English)
+- [ ] **Tested**: Paraglide compile-time translations
+- [ ] **Tested**: Translation message regeneration on dev server start
+- [ ] **Tested**: All shipping translation keys available in both languages
 
 ---
 
@@ -1067,7 +1088,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 11. ✅ Email notifications - **IMPLEMENTED**
 12. ✅ Order confirmation/tracking pages - **IMPLEMENTED**
 
-### Phase 3: Customer Features (Weeks 7-8)
+### Phase 3: Customer Features (Weeks 7-8) ✅ **COMPLETED**
 13. ✅ Customer account management - **COMPLETED** (includes profile, address book, and order history)
     - ✅ Profile management page with form
     - ✅ Address book with full CRUD operations
@@ -1079,7 +1100,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Shipping rates with price and conditions
     - ✅ Admin pages for zones and rates management
     - ✅ Rate applicability logic for checkout
-15. ❌ Discount system - **TODO**
+    - ✅ TypeScript errors fixed in zones and rates pages
+    - ✅ JSON syntax error in uk.json fixed
+    - ✅ Form object attachment issue resolved in email settings
+    - ✅ Ukrainian language set as default
+15. ❌ Discount system - **TODO** (Next priority)
 16. ❌ Wishlist/Favorites functionality - **TODO**
 
 ### Phase 4: CMS & Content (Weeks 9-10)

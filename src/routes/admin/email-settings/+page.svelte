@@ -102,7 +102,6 @@
 					</Card.Header>
 					<Card.Content>
 						<div class="space-y-4">
-						<div class="space-y-4">
 							<div class="flex items-center justify-between">
 								<div class="space-y-0.5">
 									<Label>Order Confirmation</Label>
