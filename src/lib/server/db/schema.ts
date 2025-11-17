@@ -340,3 +340,17 @@ export const discount = sqliteTable('discount', {
 
 export type Discount = typeof discount.$inferSelect;
 export type InsertDiscount = typeof discount.$inferInsert;
+
+export const wishlist = sqliteTable('wishlist', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id)
+		.unique(), // One wishlist per user
+	items: text('items').notNull().default('[]'), // JSON array of product IDs
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Wishlist = typeof wishlist.$inferSelect;
+export type InsertWishlist = typeof wishlist.$inferInsert;

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { User, Package, MapPin, Settings, LogOut } from '@lucide/svelte/icons';
+	import { User, Package, MapPin, Settings, LogOut, Heart } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { getMyProfile } from '$lib/remotes/profile.remote';
+	import { getWishlistCount } from '$lib/remotes/wishlist.remote';
 	import { goto } from '$app/navigation';
 	import { logout } from '$lib/remotes/user.remote';
 
@@ -13,6 +14,12 @@
 			title: () => m.nav_profile(),
 			url: '/dashboard',
 			icon: User
+		},
+		{
+			title: () => m.wishlist(),
+			url: '/dashboard/wishlist',
+			icon: Heart,
+			showBadge: true
 		},
 		{
 			title: () => m.nav_orders(),
@@ -75,6 +82,17 @@
 							>
 								<item.icon class="size-4" />
 								<span>{item.title()}</span>
+								{#if item.showBadge}
+									{#await getWishlistCount()}
+										<!-- Loading -->
+									{:then count}
+										{#if count > 0}
+											<span class="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+												{count > 99 ? '99+' : count}
+											</span>
+										{/if}
+									{/await}
+								{/if}
 							</Sidebar.MenuButton>
 						</Sidebar.MenuItem>
 					{/each}

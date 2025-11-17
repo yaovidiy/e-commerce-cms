@@ -3,6 +3,7 @@
 	import { getProductBySlug } from '$lib/remotes/product.remote';
 	import { addToCart, getCartItemCount } from '$lib/remotes/cart.remote';
 	import { Button } from '$lib/components/ui/button';
+	import { WishlistButton } from '$lib/components/client/features/wishlist';
 	import * as m from '$lib/paraglide/messages';
 	import { ShoppingCart, Minus, Plus } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
@@ -202,6 +203,8 @@
 									{m.shop_add_to_cart()}
 								{/if}
 							</Button>
+							
+							<WishlistButton productId={product.id} size="lg" variant="outline" />
 						</div>
 					{/if}
 

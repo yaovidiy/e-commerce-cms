@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browseProducts } from '$lib/remotes/product.remote';
 	import { Input } from '$lib/components/ui/input';
+	import { WishlistButton } from '$lib/components/client/features/wishlist';
 	import * as m from '$lib/paraglide/messages';
 	import { ShoppingCart } from '@lucide/svelte';
 
@@ -62,41 +63,45 @@
 		{:else}
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 				{#each products as product}
-					<a
-						href="/products/{product.slug}"
-						class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
-					>
-						<!-- Product image -->
-						<div class="aspect-square bg-gray-100 relative overflow-hidden">
-							{#if product.images}
-								{@const imageIds = JSON.parse(product.images)}
-								{#if imageIds.length > 0}
-									<img
-										src="/api/assets/{imageIds[0]}"
-										alt={product.name}
-										class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-									/>
+					<div class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group relative">
+						<a href="/products/{product.slug}">
+							<!-- Product image -->
+							<div class="aspect-square bg-gray-100 relative overflow-hidden">
+								{#if product.images}
+									{@const imageIds = JSON.parse(product.images)}
+									{#if imageIds.length > 0}
+										<img
+											src="/api/assets/{imageIds[0]}"
+											alt={product.name}
+											class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+										/>
+									{:else}
+										<div class="w-full h-full flex items-center justify-center">
+											<ShoppingCart class="w-16 h-16 text-gray-300" />
+										</div>
+									{/if}
 								{:else}
 									<div class="w-full h-full flex items-center justify-center">
 										<ShoppingCart class="w-16 h-16 text-gray-300" />
 									</div>
 								{/if}
-							{:else}
-								<div class="w-full h-full flex items-center justify-center">
-									<ShoppingCart class="w-16 h-16 text-gray-300" />
-								</div>
-							{/if}
 
-							<!-- Sale badge -->
-							{#if product.compareAtPrice && product.compareAtPrice > product.price}
-								<div class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-									{m.shop_sale()}
-								</div>
-							{/if}
+								<!-- Sale badge -->
+								{#if product.compareAtPrice && product.compareAtPrice > product.price}
+									<div class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
+										{m.shop_sale()}
+									</div>
+								{/if}
+							</div>
+						</a>
+						
+						<!-- Wishlist button -->
+						<div class="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+							<WishlistButton productId={product.id} variant="secondary" class="bg-white/90 hover:bg-white" />
 						</div>
 
 						<!-- Product info -->
-						<div class="p-4">
+						<a href="/products/{product.slug}" class="block p-4">
 							<h3 class="font-semibold text-lg mb-2 line-clamp-2">
 								{product.name}
 							</h3>
@@ -133,8 +138,8 @@
 									</p>
 								{/if}
 							{/if}
-						</div>
-					</a>
+						</a>
+					</div>
 				{/each}
 			</div>
 		{/if}

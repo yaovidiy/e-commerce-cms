@@ -453,3 +453,17 @@ export const ApplyDiscountSchema = v.object({
     cartTotal: v.pipe(v.number(), v.minValue(0)),
     userId: v.optional(v.string())
 });
+
+// Wishlist schemas
+export const AddToWishlistSchema = v.object({
+    productId: v.pipe(v.string(), v.minLength(1), v.maxLength(100))
+});
+
+export const RemoveFromWishlistSchema = v.object({
+    productId: v.pipe(v.string(), v.minLength(1), v.maxLength(100))
+});
+
+export const MoveToCartSchema = v.object({
+    productId: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    quantity: v.optional(v.pipe(v.number(), v.minValue(1)), 1)
+});

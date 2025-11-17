@@ -5,6 +5,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { AppSidebar } from '$lib/components/common/layout';
 	import { CartButton, CartDrawer } from '$lib/components/client/features/cart';
+	import { WishlistHeaderButton } from '$lib/components/client/features/wishlist';
 	import '../app.css';
 	let { children } = $props();
 	
@@ -31,8 +32,9 @@
 					<!-- Spacer -->
 					<div class="flex-1"></div>
 					
-					<!-- Cart button (hide on auth routes) -->
+					<!-- Wishlist and Cart buttons (hide on auth routes) -->
 					{#if !isAuthRoute}
+						<WishlistHeaderButton />
 						<CartButton onclick={() => (cartDrawerOpen = true)} />
 					{/if}
 				</header>

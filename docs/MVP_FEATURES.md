@@ -234,6 +234,34 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Form submission with proper field handling
 - [ ] **Tested**: Search functionality with real-time filtering
 
+#### 20. **Wishlist/Favorites System** ✅
+- [ ] **Tested**: Database schema with wishlist table (one-to-one with users)
+- [ ] **Tested**: Wishlist table (id, userId unique, items JSON array, createdAt, updatedAt)
+- [ ] **Tested**: Wishlist remote functions (getWishlist, getWishlistCount, addToWishlist, removeFromWishlist, clearWishlist, moveToCart)
+- [ ] **Tested**: 3 validation schemas (AddToWishlistSchema, RemoveFromWishlistSchema, MoveToCartSchema)
+- [ ] **Tested**: Wishlist page at /dashboard/wishlist with product grid
+- [ ] **Tested**: Product cards with images, names, prices on wishlist page
+- [ ] **Tested**: Remove buttons for each wishlist item (visible on hover)
+- [ ] **Tested**: Move to cart with quantity selector dialog
+- [ ] **Tested**: Clear wishlist with confirmation dialog
+- [ ] **Tested**: Empty state with "Continue Shopping" link
+- [ ] **Tested**: Loading skeleton states for wishlist page
+- [ ] **Tested**: Stock and availability checks on wishlist items
+- [ ] **Tested**: WishlistButton component (reusable heart icon toggle)
+- [ ] **Tested**: Filled/outlined heart states based on wishlist status
+- [ ] **Tested**: Wishlist buttons on product listing page (top-left on hover)
+- [ ] **Tested**: Wishlist button on product detail page (next to Add to Cart)
+- [ ] **Tested**: WishlistHeaderButton with item count badge
+- [ ] **Tested**: Wishlist counter in main header (shows "99+" if > 99 items)
+- [ ] **Tested**: Wishlist menu item in CustomerSidebar (between Dashboard and Addresses)
+- [ ] **Tested**: Item count badge in sidebar navigation
+- [ ] **Tested**: 22 wishlist translation keys (English + Ukrainian)
+- [ ] **Tested**: Auto-refresh after add/remove operations
+- [ ] **Tested**: Real-time count updates across all components
+- [ ] **Tested**: TypeScript compilation (no errors in wishlist components)
+- [ ] **Tested**: Accessibility (ARIA labels, keyboard navigation)
+- [ ] **Tested**: Responsive design (mobile, tablet, desktop)
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1135,7 +1163,22 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Product/category applicability settings
     - ✅ 47 translation keys (EN + UK)
     - ✅ TypeScript compilation errors fixed
-16. ❌ Wishlist/Favorites functionality - **TODO** (Next priority)
+16. ✅ Wishlist/Favorites functionality - **COMPLETED**
+    - ✅ Database schema with wishlist table (one-to-one with users, JSON array storage)
+    - ✅ 6 remote functions (getWishlist, getWishlistCount, add, remove, clear, moveToCart)
+    - ✅ 3 validation schemas
+    - ✅ Wishlist page at /dashboard/wishlist with product grid
+    - ✅ Product cards with remove buttons, move to cart functionality
+    - ✅ Clear wishlist confirmation dialog
+    - ✅ Empty state with call-to-action
+    - ✅ WishlistButton component (reusable heart toggle)
+    - ✅ Wishlist buttons on product listing and detail pages
+    - ✅ WishlistHeaderButton with count badge in header
+    - ✅ Wishlist menu item in CustomerSidebar with badge
+    - ✅ 22 translation keys (English + Ukrainian)
+    - ✅ Real-time count updates across all components
+    - ✅ Stock validation on move-to-cart
+    - ✅ Responsive design and accessibility
 
 ### Phase 4: CMS & Content (Weeks 9-10)
 19. ❌ Site settings management - **TODO**
