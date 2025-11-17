@@ -767,5 +767,19 @@
   "page_block_content": "Контент",
   "page_block_settings": "Налаштування блоку",
   "page_preview": "Попередній перегляд",
-  "page_view_live": "Переглянути живу сторінку"
+  "page_view_live": "Переглянути живу сторінку",
+  
+  "search_placeholder": "Пошук товарів...",
+  "search_results": "Результати пошуку",
+  "search_error": "Помилка завантаження результатів пошуку",
+  "search_products": "Пошук товарів",
+  "searching_for": "Пошук за запитом",
+  "no_results_found": "Результатів не знайдено",
+  "try_different_keywords": "Спробуйте інші ключові слова або перегляньте наш каталог",
+  "browse_all_products": "Переглянути всі товари",
+  "showing_results": "Показано",
+  "results": "результатів",
+  "enter_search_query": "Введіть пошуковий запит вище, щоб знайти товари",
+  "loading": "Завантаження...",
+  "out_of_stock": "Немає в наявності"
 }

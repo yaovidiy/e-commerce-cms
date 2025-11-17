@@ -1,5 +1,5 @@
 import { query, form } from '$app/server';
-import { db } from '$lib/server/db';
+import { db, rawDb } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import * as auth from '$lib/server/auth';
 import * as v from 'valibot';
@@ -198,5 +198,77 @@ export const browseProducts = query(
 		productQuery = productQuery.limit(data.pageSize).offset(offset) as typeof productQuery;
 
 		return await productQuery;
+	}
+);
+
+// Search products using FTS5
+export const searchProducts = query(
+	v.object({
+		query: v.string(),
+		limit: v.optional(v.number(), 10)
+	}),
+	async (data) => {
+		if (!data.query || data.query.trim().length === 0) {
+			return [];
+		}
+
+		// Use FTS5 for full-text search
+		const searchQuery = data.query.trim().replace(/"/g, '""'); // Escape quotes
+
+		const results = rawDb
+			.prepare(
+				`
+			SELECT p.*, 
+				   c.name as category_name, 
+				   c.slug as category_slug,
+				   b.name as brand_name,
+				   b.slug as brand_slug,
+				   rank
+			FROM product_fts
+			JOIN product p ON product_fts.id = p.id
+			LEFT JOIN category c ON p.category_id = c.id
+			LEFT JOIN brand b ON p.brand_id = b.id
+			WHERE product_fts MATCH ?
+			  AND p.status = 'active'
+			  AND p.quantity > 0
+			ORDER BY rank
+			LIMIT ?
+		`
+			)
+			.all(searchQuery, data.limit);
+
+		return results;
+	}
+);
+
+// Autocomplete suggestions for search
+export const searchAutocomplete = query(
+	v.object({
+		query: v.string(),
+		limit: v.optional(v.number(), 5)
+	}),
+	async (data) => {
+		if (!data.query || data.query.trim().length < 2) {
+			return [];
+		}
+
+		// Use FTS5 prefix search for autocomplete
+		const searchQuery = data.query.trim().replace(/"/g, '""') + '*'; // Prefix search
+
+		const results = rawDb
+			.prepare(
+				`
+			SELECT p.id, p.name, p.slug, p.price, p.images
+			FROM product_fts
+			JOIN product p ON product_fts.id = p.id
+			WHERE product_fts MATCH ?
+			  AND p.status = 'active'
+			ORDER BY rank
+			LIMIT ?
+		`
+			)
+			.all(searchQuery, data.limit);
+
+		return results;
 	}
 );

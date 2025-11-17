@@ -767,5 +767,19 @@
   "page_block_content": "Content",
   "page_block_settings": "Block Settings",
   "page_preview": "Preview Page",
-  "page_view_live": "View Live Page"
+  "page_view_live": "View Live Page",
+  
+  "search_placeholder": "Search products...",
+  "search_results": "Search Results",
+  "search_error": "Error loading search results",
+  "search_products": "Search Products",
+  "searching_for": "Searching for",
+  "no_results_found": "No results found",
+  "try_different_keywords": "Try different keywords or browse our catalog",
+  "browse_all_products": "Browse All Products",
+  "showing_results": "Showing",
+  "results": "results",
+  "enter_search_query": "Enter a search query above to find products",
+  "loading": "Loading...",
+  "out_of_stock": "Out of Stock"
 }

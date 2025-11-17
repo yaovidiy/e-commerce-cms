@@ -400,6 +400,38 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Open Graph Debugger validation
 - [ ] **Tested**: Schema.org validator validation
 
+#### 25. **Search & Filtering** ✅
+- [ ] **Tested**: SQLite FTS5 virtual table for full-text search
+- [ ] **Tested**: FTS5 auto-sync triggers (insert, update, delete)
+- [ ] **Tested**: Setup script (scripts/setup-fts.ts)
+- [ ] **Tested**: searchProducts() remote function
+- [ ] **Tested**: Full-text search across name, description, SKU
+- [ ] **Tested**: FTS5 relevance ranking
+- [ ] **Tested**: Search filters by active status and stock
+- [ ] **Tested**: Search results with category and brand joins
+- [ ] **Tested**: searchAutocomplete() remote function
+- [ ] **Tested**: Prefix matching for autocomplete (query*)
+- [ ] **Tested**: Minimum 2 characters for suggestions
+- [ ] **Tested**: Default 5 suggestions limit
+- [ ] **Tested**: SearchBar component with debounced input
+- [ ] **Tested**: Autocomplete dropdown with product images
+- [ ] **Tested**: Keyboard navigation (arrows, enter, escape)
+- [ ] **Tested**: Click-outside closes dropdown
+- [ ] **Tested**: Loading states in autocomplete
+- [ ] **Tested**: Error states in autocomplete
+- [ ] **Tested**: Empty results messaging
+- [ ] **Tested**: Search results page at /search
+- [ ] **Tested**: URL query parameter support (?q=query)
+- [ ] **Tested**: Product grid with responsive layout
+- [ ] **Tested**: Out of stock badges
+- [ ] **Tested**: Results count display
+- [ ] **Tested**: Empty state when no query
+- [ ] **Tested**: No results state with browse link
+- [ ] **Tested**: Error handling with fallback UI
+- [ ] **Tested**: Search translations (13 keys) in English
+- [ ] **Tested**: Search translations (13 keys) in Ukrainian
+- [ ] **Tested**: Comprehensive search documentation in docs/SEARCH.md
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1382,7 +1414,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Comprehensive SEO documentation in docs/SEO.md
 
 ### Phase 5: Polish & Launch (Weeks 11-12)
-23. ❌ Search & filtering - **TODO**
+23. ✅ Search & filtering - **COMPLETED** (FTS5, autocomplete, search results page, translations)
 24. ❌ Analytics dashboard - **TODO**
 25. ❌ Performance optimization - **TODO**
 26. ❌ Security audit - **TODO**

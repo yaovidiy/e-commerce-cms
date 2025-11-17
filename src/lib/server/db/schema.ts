@@ -416,3 +416,21 @@ export const page = sqliteTable('page', {
 
 export type Page = typeof page.$inferSelect;
 export type InsertPage = typeof page.$inferInsert;
+
+// FTS5 virtual table for product search
+// Note: This needs to be created manually with SQL after schema is pushed
+// CREATE VIRTUAL TABLE product_fts USING fts5(id, name, description, sku, content='product', content_rowid='id');
+// 
+// Triggers to keep FTS table in sync:
+// CREATE TRIGGER product_fts_insert AFTER INSERT ON product BEGIN
+//   INSERT INTO product_fts(rowid, id, name, description, sku) VALUES (new.id, new.id, new.name, new.description, new.sku);
+// END;
+// 
+// CREATE TRIGGER product_fts_delete AFTER DELETE ON product BEGIN
+//   INSERT INTO product_fts(product_fts, rowid, id, name, description, sku) VALUES('delete', old.id, old.id, old.name, old.description, old.sku);
+// END;
+// 
+// CREATE TRIGGER product_fts_update AFTER UPDATE ON product BEGIN
+//   INSERT INTO product_fts(product_fts, rowid, id, name, description, sku) VALUES('delete', old.id, old.id, old.name, old.description, old.sku);
+//   INSERT INTO product_fts(rowid, id, name, description, sku) VALUES (new.id, new.id, new.name, new.description, new.sku);
+// END;
