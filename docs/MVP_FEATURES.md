@@ -1026,8 +1026,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 8. ✅ Payment integration (LiqPay primary) - **IMPLEMENTED**
 9. ✅ Checkbox РРО integration (fiscal receipts) - **IMPLEMENTED**
 10. ✅ Order management system - **IMPLEMENTED**
-11. ❌ Email notifications - **NEXT**
-12. ❌ Order confirmation/tracking - **TODO**
+11. ✅ Email notifications - **IMPLEMENTED**
+12. ❌ Order confirmation/tracking pages - **TODO**
 
 ### Phase 3: Customer Features (Weeks 7-8)
 13. ✅ Customer account management

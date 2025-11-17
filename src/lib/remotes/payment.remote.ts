@@ -7,6 +7,7 @@ import { query, command } from '$app/server';
 import * as v from 'valibot';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
+import type { Order } from '$lib/server/db/schema';
 import { getLiqPayClient } from '$lib/server/liqpay-client';
 import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
@@ -256,6 +257,35 @@ export async function handlePaymentWebhook(data: string, signature: string) {
 			updatedAt: new Date()
 		})
 		.where(eq(tables.order.id, order.id));
+
+	// Send order confirmation email for successful payment
+	if (paymentStatus === 'completed') {
+		try {
+			const { sendOrderConfirmationEmail } = await import('$lib/server/email-client');
+			
+			// Parse order items for email
+			const orderItems = JSON.parse(order.items) as Array<{
+				productId: string;
+				name: string;
+				price: number;
+				quantity: number;
+			}>;
+			
+			await sendOrderConfirmationEmail({
+				order: {
+					...order,
+					items: orderItems.map(item => ({
+						productName: item.name,
+						quantity: item.quantity,
+						price: item.price
+					}))
+				} as Order & { items: Array<{ productName: string; quantity: number; price: number; }> }
+			});
+		} catch (emailError) {
+			// Log but don't fail the webhook
+			console.error('[Payment Webhook] Failed to send order confirmation email:', emailError);
+		}
+	}
 
 	// Auto-generate Checkbox receipt for successful LiqPay payment
 	if (paymentStatus === 'completed' && payment.provider === 'liqpay') {

@@ -246,6 +246,36 @@ export const updateOrderStatus = form(UpdateOrderStatusSchema, async (data) => {
 		throw new Error('Order not found');
 	}
 
+	// Send status-specific email notifications
+	try {
+		const orderItems = JSON.parse(order.items) as Array<{
+			productId: string;
+			name: string;
+			price: number;
+			quantity: number;
+		}>;
+
+		const orderWithItems = {
+			...order,
+			items: orderItems.map(item => ({
+				productName: item.name,
+				quantity: item.quantity,
+				price: item.price
+			}))
+		} as typeof order & { items: Array<{ productName: string; quantity: number; price: number; }> };
+
+		if (data.status === 'shipped') {
+			const { sendOrderShippedEmail } = await import('$lib/server/email-client');
+			await sendOrderShippedEmail({ order: orderWithItems });
+		} else if (data.status === 'delivered') {
+			const { sendOrderDeliveredEmail } = await import('$lib/server/email-client');
+			await sendOrderDeliveredEmail({ order: orderWithItems });
+		}
+	} catch (emailError) {
+		// Log but don't fail the status update
+		console.error('[Order] Failed to send status email:', emailError);
+	}
+
 	// Refresh orders query
 	await getAllOrders({
 		status: 'all',
@@ -306,6 +336,32 @@ export const cancelOrder = form(v.object({ id: v.string() }), async (data) => {
 		})
 		.where(eq(tables.order.id, data.id))
 		.returning();
+
+	// Send cancellation email
+	try {
+		const { sendOrderCancelledEmail } = await import('$lib/server/email-client');
+		const orderItems = JSON.parse(order.items) as Array<{
+			productId: string;
+			name: string;
+			price: number;
+			quantity: number;
+		}>;
+
+		await sendOrderCancelledEmail({
+			order: {
+				...order,
+				items: orderItems.map(item => ({
+					productName: item.name,
+					quantity: item.quantity,
+					price: item.price
+				}))
+			} as typeof order & { items: Array<{ productName: string; quantity: number; price: number; }> },
+			cancellationReason: user?.isAdmin ? 'Cancelled by admin' : 'Cancelled by customer'
+		});
+	} catch (emailError) {
+		// Log but don't fail the cancellation
+		console.error('[Order] Failed to send cancellation email:', emailError);
+	}
 
 	return order;
 });
