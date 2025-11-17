@@ -95,6 +95,50 @@ export const product = sqliteTable('product', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
 
+export const cart = sqliteTable('cart', {
+	id: text('id').primaryKey(),
+	sessionId: text('session_id'), // for guest users
+	userId: text('user_id').references(() => user.id), // for logged-in users
+	items: text('items').notNull(), // JSON array of cart items
+	subtotal: integer('subtotal').notNull().default(0), // stored in cents
+	total: integer('total').notNull().default(0), // stored in cents
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const order = sqliteTable('order', {
+	id: text('id').primaryKey(),
+	orderNumber: text('order_number').notNull().unique(),
+	userId: text('user_id').references(() => user.id), // optional for guest checkout
+	status: text('status', {
+		enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+	})
+		.notNull()
+		.default('pending'),
+	items: text('items').notNull(), // JSON array of order items
+	shippingAddress: text('shipping_address').notNull(), // JSON object
+	billingAddress: text('billing_address').notNull(), // JSON object
+	customerEmail: text('customer_email').notNull(),
+	customerPhone: text('customer_phone'),
+	customerFirstName: text('customer_first_name').notNull(),
+	customerLastName: text('customer_last_name').notNull(),
+	subtotal: integer('subtotal').notNull(), // stored in cents
+	shippingCost: integer('shipping_cost').notNull().default(0), // stored in cents
+	tax: integer('tax').notNull().default(0), // stored in cents
+	discount: integer('discount').notNull().default(0), // stored in cents
+	total: integer('total').notNull(), // stored in cents
+	paymentMethod: text('payment_method'), // liqpay, stripe, cod, etc.
+	paymentStatus: text('payment_status', { enum: ['pending', 'completed', 'failed', 'refunded'] })
+		.notNull()
+		.default('pending'),
+	shippingMethod: text('shipping_method'),
+	notes: text('notes'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	shippedAt: integer('shipped_at', { mode: 'timestamp' }),
+	deliveredAt: integer('delivered_at', { mode: 'timestamp' })
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -113,3 +157,9 @@ export type InsertBrand = typeof brand.$inferInsert;
 
 export type Product = typeof product.$inferSelect;
 export type InsertProduct = typeof product.$inferInsert;
+
+export type Cart = typeof cart.$inferSelect;
+export type InsertCart = typeof cart.$inferInsert;
+
+export type Order = typeof order.$inferSelect;
+export type InsertOrder = typeof order.$inferInsert;

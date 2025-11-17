@@ -217,3 +217,63 @@ export const FilterProductsSchema = v.object({
     page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
     pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
 });
+
+// Cart schemas
+export const AddToCartSchema = v.object({
+    productId: v.string(),
+    quantity: v.pipe(v.number(), v.minValue(1)),
+    variantId: v.optional(v.string()) // for product variants
+});
+
+export const UpdateCartItemSchema = v.object({
+    productId: v.string(),
+    quantity: v.pipe(v.number(), v.minValue(0)), // 0 to remove
+    variantId: v.optional(v.string())
+});
+
+export const RemoveFromCartSchema = v.object({
+    productId: v.string(),
+    variantId: v.optional(v.string())
+});
+
+// Checkout schemas
+export const CheckoutSchema = v.object({
+    customerFirstName: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    customerLastName: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    customerEmail: v.pipe(v.string(), v.email()),
+    customerPhone: v.optional(v.string()),
+    shippingAddress: v.object({
+        address1: v.pipe(v.string(), v.minLength(1)),
+        address2: v.optional(v.string()),
+        city: v.pipe(v.string(), v.minLength(1)),
+        state: v.pipe(v.string(), v.minLength(1)),
+        postalCode: v.pipe(v.string(), v.minLength(1)),
+        country: v.pipe(v.string(), v.minLength(1))
+    }),
+    billingAddress: v.optional(v.object({
+        address1: v.pipe(v.string(), v.minLength(1)),
+        address2: v.optional(v.string()),
+        city: v.pipe(v.string(), v.minLength(1)),
+        state: v.pipe(v.string(), v.minLength(1)),
+        postalCode: v.pipe(v.string(), v.minLength(1)),
+        country: v.pipe(v.string(), v.minLength(1))
+    })),
+    sameAsShipping: v.optional(v.boolean(), true),
+    shippingMethod: v.optional(v.string()),
+    paymentMethod: v.optional(v.string(), 'cod'), // cod = cash on delivery
+    notes: v.optional(v.string())
+});
+
+// Order schemas
+export const UpdateOrderStatusSchema = v.object({
+    id: v.string(),
+    status: v.picklist(['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'])
+});
+
+export const FilterOrdersSchema = v.object({
+    status: v.optional(v.picklist(['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded', 'all']), 'all'),
+    customerEmail: v.optional(v.string(), ''),
+    orderNumber: v.optional(v.string(), ''),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
+});

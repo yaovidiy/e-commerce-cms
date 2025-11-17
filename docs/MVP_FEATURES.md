@@ -10,30 +10,92 @@ This document outlines the minimum viable product (MVP) features required for a 
 ### ✅ Completed Features
 1. **User Authentication & Management**
    - User registration/login
-   - Session management
+   - Session management (SHA-256 hashed tokens)
    - Admin/user roles
    - User CRUD operations in admin panel
+   - Password hashing with Argon2
+   - Session auto-renewal (15 days threshold)
 
 2. **Blog Management**
    - Blog post creation/editing/deletion
    - Rich text editor
    - Admin panel for blog management
+   - Slug generation
+   - Author tracking
 
 3. **Asset Management**
    - Image upload to Cloudflare R2
    - Image optimization with Sharp
-   - Thumbnail generation
+   - Thumbnail generation (300x300)
    - Asset library in admin panel
+   - MIME type validation
+   - File size tracking
 
 4. **Internationalization (i18n)**
    - Multi-language support (English, Ukrainian)
-   - Compile-time translations
+   - Compile-time translations with Paraglide
+   - Route localization
+
+5. **Product Management** ✅
+   - Product database schema with full fields
+   - Product CRUD operations
+   - Admin panel for product management
+   - Product listing with search/filter/pagination
+   - Image gallery support (JSON array)
+   - Product variants support (JSON)
+   - Inventory tracking
+   - SKU/barcode management
+   - SEO fields (title, description)
+   - Status management (draft, active, archived)
+   - Price and compare-at-price (sale pricing)
+
+6. **Category Management** ✅
+   - Category database schema
+   - Category CRUD operations
+   - Admin panel for category management
+   - Hierarchical categories (parent-child)
+   - Category images
+   - Display order management
+   - Visibility toggle
+   - SEO optimization fields
+   - Slug generation
+
+7. **Brand Management** ✅
+   - Brand database schema
+   - Brand CRUD operations
+   - Admin panel for brand management
+   - Brand logo upload
+   - Visibility toggle
+   - Slug generation
+
+8. **Shopping Cart System** ✅
+   - Cart database schema with session/user support
+   - Cart remote functions (getCart, addToCart, updateCartItem, removeFromCart, clearCart)
+   - Session-based cart for guest users
+   - User-based cart for logged-in users
+   - Cart item management with product details
+   - Inventory checking on add-to-cart
+   - Real-time cart totals calculation
+   - Cart item count tracking
+
+9. **Order Management System** ✅
+   - Order database schema with full order lifecycle
+   - Order remote functions (getAllOrders, getOrder, getMyOrders, checkout)
+   - Order number generation (ORD-TIMESTAMP-RANDOM)
+   - Guest checkout support
+   - Customer information capture
+   - Shipping and billing address management
+   - Order status tracking (pending, processing, shipped, delivered, cancelled, refunded)
+   - Inventory deduction on order creation
+   - Order cancellation with inventory restoration
+   - Admin order management
+   - Customer order history
 
 ---
 
 ## 🚧 Required MVP Features
 
-### 1. **Product Management** (Priority: CRITICAL)
+### 1. **Product Management** ✅ COMPLETED
 
 #### 1.1 Product Catalog
 **Database Schema:**
