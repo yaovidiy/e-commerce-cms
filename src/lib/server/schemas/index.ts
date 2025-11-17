@@ -571,3 +571,79 @@ export const UpdateAdvancedSettingsSchema = v.object({
     enableCaching: v.optional(v.boolean()),
     cacheDuration: v.optional(v.pipe(v.number(), v.minValue(0))) // in seconds
 });
+
+// Banner schemas
+export const CreateBannerSchema = v.pipe(
+    v.object({
+        title: v.pipe(v.string(), v.minLength(1, 'Title is required'), v.maxLength(200, 'Title must be at most 200 characters')),
+        imageId: v.optional(v.string()),
+        imageUrl: v.optional(v.string()),
+        link: v.optional(v.pipe(v.string(), v.url('Must be a valid URL'))),
+        linkText: v.optional(v.pipe(v.string(), v.maxLength(100, 'Link text must be at most 100 characters'))),
+        position: v.optional(
+            v.picklist(['home_hero', 'home_secondary', 'category_top', 'product_sidebar', 'footer'], 'Invalid position'),
+            'home_hero'
+        ),
+        displayOrder: v.optional(v.pipe(v.number(), v.minValue(0, 'Display order must be 0 or greater')), 0),
+        startsAt: v.optional(v.pipe(v.string(), v.isoDateTime('Must be a valid date'))),
+        endsAt: v.optional(v.pipe(v.string(), v.isoDateTime('Must be a valid date'))),
+        isActive: v.optional(v.boolean(), true)
+    }),
+    v.check(
+        (data) => !!(data.imageId || data.imageUrl),
+        'Either imageId or imageUrl is required'
+    ),
+    v.check(
+        (data) => {
+            if (data.startsAt && data.endsAt) {
+                return new Date(data.startsAt) < new Date(data.endsAt);
+            }
+            return true;
+        },
+        'Start date must be before end date'
+    )
+);
+
+export const UpdateBannerSchema = v.pipe(
+    v.object({
+        id: v.string(),
+        title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+        imageId: v.optional(v.string()),
+        imageUrl: v.optional(v.string()),
+        link: v.optional(v.pipe(v.string(), v.url('Must be a valid URL'))),
+        linkText: v.optional(v.pipe(v.string(), v.maxLength(100))),
+        position: v.optional(v.picklist(['home_hero', 'home_secondary', 'category_top', 'product_sidebar', 'footer'])),
+        displayOrder: v.optional(v.pipe(v.number(), v.minValue(0))),
+        startsAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+        endsAt: v.optional(v.pipe(v.string(), v.isoDateTime())),
+        isActive: v.optional(v.boolean())
+    }),
+    v.check(
+        (data) => {
+            if (data.startsAt && data.endsAt) {
+                return new Date(data.startsAt) < new Date(data.endsAt);
+            }
+            return true;
+        },
+        'Start date must be before end date'
+    )
+);
+
+export const DeleteBannerSchema = v.object({
+    id: v.string()
+});
+
+export const GetBannersByPositionSchema = v.object({
+    position: v.picklist(['home_hero', 'home_secondary', 'category_top', 'product_sidebar', 'footer'], 'Invalid position'),
+    includeInactive: v.optional(v.boolean(), false)
+});
+
+export const FilterBannersSchema = v.object({
+    title: v.optional(v.string(), ''),
+    position: v.optional(v.picklist(['home_hero', 'home_secondary', 'category_top', 'product_sidebar', 'footer', 'all']), 'all'),
+    isActive: v.optional(v.picklist(['true', 'false', 'all']), 'all'),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+    sortField: v.optional(v.picklist(['title', 'position', 'displayOrder', 'createdAt']), 'displayOrder'),
+    sortDirection: v.optional(v.picklist(['asc', 'desc']), 'asc')
+});

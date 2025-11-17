@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -47,6 +47,11 @@
 			title: () => m.asset_media_library(),
 			url: '/admin/assets',
 			icon: Image
+		},
+		{
+			title: () => m.banner_banners(),
+			url: '/admin/banners',
+			icon: Frame
 		},
 		{
 			title: () => 'Fiscal Receipts',

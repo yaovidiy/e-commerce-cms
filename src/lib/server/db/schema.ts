@@ -373,3 +373,26 @@ export const siteSetting = sqliteTable('site_setting', {
 
 export type SiteSetting = typeof siteSetting.$inferSelect;
 export type InsertSiteSetting = typeof siteSetting.$inferInsert;
+
+export const banner = sqliteTable('banner', {
+	id: text('id').primaryKey(),
+	title: text('title').notNull(),
+	imageId: text('image_id').references(() => asset.id), // reference to asset table
+	imageUrl: text('image_url'), // fallback if not using asset
+	link: text('link'), // click-through URL
+	linkText: text('link_text'), // call-to-action text
+	position: text('position', {
+		enum: ['home_hero', 'home_secondary', 'category_top', 'product_sidebar', 'footer']
+	})
+		.notNull()
+		.default('home_hero'),
+	displayOrder: integer('display_order').notNull().default(0), // for ordering multiple banners in same position
+	startsAt: integer('starts_at', { mode: 'timestamp' }), // null = immediately active
+	endsAt: integer('ends_at', { mode: 'timestamp' }), // null = never expires
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type Banner = typeof banner.$inferSelect;
+export type InsertBanner = typeof banner.$inferInsert;

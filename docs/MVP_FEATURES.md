@@ -290,6 +290,38 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Helper functions (parseSettingValue, stringifySettingValue)
 - [ ] **Tested**: Empty state handling with initialize functionality
 
+#### 22. **Banner Management** ✅
+- [ ] **Tested**: Banner database schema (13 fields)
+- [ ] **Tested**: Validation schemas (5 schemas with custom checks)
+- [ ] **Tested**: Remote functions (9 total: queries, forms, commands)
+- [ ] **Tested**: Translation keys (67 banner + 5 common per language)
+- [ ] **Tested**: Admin banner management page at /admin/banners
+- [ ] **Tested**: Banner list table with search, filters (position, status), pagination
+- [ ] **Tested**: Create banner dialog with comprehensive form (3 sections)
+- [ ] **Tested**: Edit banner dialog with field pre-population
+- [ ] **Tested**: Delete banner confirmation dialog
+- [ ] **Tested**: Toggle banner active/inactive status
+- [ ] **Tested**: Banner position types (5): home_hero, home_secondary, category_top, product_sidebar, footer
+- [ ] **Tested**: Display order management
+- [ ] **Tested**: Scheduled banner support (startsAt, endsAt timestamps)
+- [ ] **Tested**: Dual image support (asset FK + direct URL fallback)
+- [ ] **Tested**: Link and link text (CTA button)
+- [ ] **Tested**: Status badges (active, scheduled, expired, inactive)
+- [ ] **Tested**: Position badges with variants
+- [ ] **Tested**: Customer-facing BannerHero component with auto-rotation
+- [ ] **Tested**: Customer-facing BannerSecondary component for smaller banners
+- [ ] **Tested**: Navigation arrows and pagination dots on carousel
+- [ ] **Tested**: Responsive design (mobile, tablet, desktop)
+- [ ] **Tested**: Lazy loading images
+- [ ] **Tested**: Smooth transitions and hover effects
+- [ ] **Tested**: Banners menu item in AdminSidebar (Frame icon)
+- [ ] **Tested**: Database migration applied (banner table created)
+- [ ] **Tested**: TypeScript compilation (no errors)
+- [ ] **Tested**: Active banner filtering with date-based logic
+- [ ] **Tested**: Image URL validation
+- [ ] **Tested**: Date validation (startsAt < endsAt)
+- [ ] **Tested**: Image requirement check (imageId OR imageUrl required)
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1222,7 +1254,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ Form integration with validation and error display
     - ✅ 67 translation keys (English + Ukrainian)
     - ✅ Settings menu in AdminSidebar
-20. ❌ Banner management - **TODO**
+20. ✅ Banner management - **COMPLETED**
+    - ✅ Banner database schema (13 fields, 5 position types, scheduling)
+    - ✅ 5 validation schemas with custom checks
+    - ✅ 9 remote functions (queries, forms, commands)
+    - ✅ 67 banner translation keys + 5 common keys per language
+    - ✅ Admin UI components (list table, create/edit/delete dialogs)
+    - ✅ Customer-facing components (BannerHero, BannerSecondary)
+    - ✅ Banners menu item in AdminSidebar
+    - ✅ Database migration applied
 21. ❌ Page builder (basic) - **TODO**
 22. ❌ SEO optimization - **TODO**
 
