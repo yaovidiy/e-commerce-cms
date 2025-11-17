@@ -49,64 +49,59 @@
 			</Card.Content>
 		</Card.Root>
 	{:then settings}
-		<div class="grid gap-6">
-			<!-- Email Configuration -->
-			<Card.Root>
-				<Card.Header>
-					<Card.Title>Email Configuration</Card.Title>
-					<Card.Description>Configure the sender information for outgoing emails</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<form {...updateEmailSettings} class="space-y-4">
-						<div class="grid md:grid-cols-2 gap-4">
+		<form {...updateEmailSettings}>
+			<div class="grid gap-6">
+				<!-- Email Configuration -->
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>Email Configuration</Card.Title>
+						<Card.Description>Configure the sender information for outgoing emails</Card.Description>
+					</Card.Header>
+					<Card.Content>
+						<div class="space-y-4">
+							<div class="grid md:grid-cols-2 gap-4">
+								<div>
+									<Label>From Email *</Label>
+									<Input {...updateEmailSettings.fields.fromEmail.as('email')} />
+									{#each updateEmailSettings.fields.fromEmail.issues() as issue}
+										<p class="text-destructive text-sm mt-1">{issue.message}</p>
+									{/each}
+									<p class="text-muted-foreground text-xs mt-1">
+										Must be a verified domain in Resend
+									</p>
+								</div>
+
+								<div>
+									<Label>From Name *</Label>
+									<Input {...updateEmailSettings.fields.fromName.as('text')} />
+									{#each updateEmailSettings.fields.fromName.issues() as issue}
+										<p class="text-destructive text-sm mt-1">{issue.message}</p>
+									{/each}
+								</div>
+							</div>
+
 							<div>
-								<Label>From Email *</Label>
-								<Input {...updateEmailSettings.fields.fromEmail.as('email')} />
-								{#each updateEmailSettings.fields.fromEmail.issues() as issue}
+								<Label>Reply-To Email (Optional)</Label>
+								<Input {...updateEmailSettings.fields.replyToEmail.as('email')} />
+								{#each updateEmailSettings.fields.replyToEmail.issues() as issue}
 									<p class="text-destructive text-sm mt-1">{issue.message}</p>
 								{/each}
 								<p class="text-muted-foreground text-xs mt-1">
-									Must be a verified domain in Resend
+									Customers will reply to this email if different from sender
 								</p>
 							</div>
-
-							<div>
-								<Label>From Name *</Label>
-								<Input {...updateEmailSettings.fields.fromName.as('text')} />
-								{#each updateEmailSettings.fields.fromName.issues() as issue}
-									<p class="text-destructive text-sm mt-1">{issue.message}</p>
-								{/each}
-							</div>
 						</div>
+					</Card.Content>
+				</Card.Root>
 
-						<div>
-							<Label>Reply-To Email (Optional)</Label>
-							<Input {...updateEmailSettings.fields.replyToEmail.as('email')} />
-							{#each updateEmailSettings.fields.replyToEmail.issues() as issue}
-								<p class="text-destructive text-sm mt-1">{issue.message}</p>
-							{/each}
-							<p class="text-muted-foreground text-xs mt-1">
-								Customers will reply to this email if different from sender
-							</p>
-						</div>
-
-						<div class="pt-4">
-							<Button type="submit" disabled={!!updateEmailSettings.pending}>
-								{updateEmailSettings.pending ? 'Saving...' : 'Save Settings'}
-							</Button>
-						</div>
-					</form>
-				</Card.Content>
-			</Card.Root>
-
-			<!-- Email Toggles -->
-			<Card.Root>
-				<Card.Header>
-					<Card.Title>Email Notifications</Card.Title>
-					<Card.Description>Enable or disable specific email types</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<form {...updateEmailSettings} class="space-y-4">
+				<!-- Email Toggles -->
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>Email Notifications</Card.Title>
+						<Card.Description>Enable or disable specific email types</Card.Description>
+					</Card.Header>
+					<Card.Content>
+						<div class="space-y-4">
 						<div class="space-y-4">
 							<div class="flex items-center justify-between">
 								<div class="space-y-0.5">
@@ -192,16 +187,19 @@
 								/>
 							</div>
 						</div>
+					</Card.Content>
+				</Card.Root>
 
-						<div class="pt-4">
-							<Button type="submit" disabled={!!updateEmailSettings.pending}>
-								{updateEmailSettings.pending ? 'Saving...' : 'Save Toggles'}
-							</Button>
-						</div>
-					</form>
-				</Card.Content>
-			</Card.Root>
+				<!-- Save Button -->
+				<div class="flex justify-end">
+					<Button type="submit" disabled={!!updateEmailSettings.pending}>
+						{updateEmailSettings.pending ? 'Saving...' : 'Save All Settings'}
+					</Button>
+				</div>
+			</div>
+		</form>
 
+		<div class="mt-6">
 			<!-- Test Email -->
 			<Card.Root>
 				<Card.Header>
