@@ -200,9 +200,11 @@ export const checkout = form(CheckoutSchema, async (data) => {
 
 	// Create order
 	const orderNumber = generateOrderNumber();
+	const orderId = crypto.randomUUID();
+	const now = new Date();
 
 	const [order] = await db.insert(tables.order).values({
-		id: crypto.randomUUID(),
+		id: orderId,
 		orderNumber,
 		userId: user?.id || null,
 		status: 'pending',
@@ -222,9 +224,25 @@ export const checkout = form(CheckoutSchema, async (data) => {
 		paymentStatus: 'pending',
 		shippingMethod: data.shippingMethod || null,
 		notes: data.notes || null,
-		createdAt: new Date(),
-		updatedAt: new Date()
+		createdAt: now,
+		updatedAt: now
 	}).returning();
+
+	// Create order_item records for analytics
+	for (const item of items) {
+		await db.insert(tables.orderItem).values({
+			id: crypto.randomUUID(),
+			orderId: orderId,
+			productId: item.productId,
+			productName: item.name,
+			productSlug: item.slug,
+			productImage: item.image || null,
+			price: item.price,
+			quantity: item.quantity,
+			subtotal: item.price * item.quantity,
+			createdAt: now
+		});
+	}
 
 	// Update inventory
 	for (const item of items) {
@@ -326,6 +344,8 @@ export const updateOrderStatus = form(UpdateOrderStatusSchema, async (data) => {
 });
 
 // Cancel order (customer or admin)
+// Note: This updates the order status to 'cancelled' but does NOT delete the order or order_item records.
+// This preserves order history for analytics and reporting. Analytics queries filter by status.
 export const cancelOrder = form(v.object({ id: v.string() }), async (data) => {
 	const event = getRequestEvent();
 	const user = event.locals.user;

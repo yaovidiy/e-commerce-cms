@@ -432,6 +432,105 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Search translations (13 keys) in Ukrainian
 - [ ] **Tested**: Comprehensive search documentation in docs/SEARCH.md
 
+#### 26. **Analytics Dashboard** ✅
+- [ ] **Tested**: Analytics remote functions (analytics.remote.ts)
+- [ ] **Tested**: getDashboardStats() - 30-day metrics with trends
+- [ ] **Tested**: Revenue calculation (excluding cancelled/refunded orders)
+- [ ] **Tested**: Order count tracking
+- [ ] **Tested**: Active products count
+- [ ] **Tested**: Unique customers count (by email)
+- [ ] **Tested**: Previous period comparison (30-60 days ago)
+- [ ] **Tested**: Change percentage calculation
+- [ ] **Tested**: Trend direction (up/down) determination
+- [ ] **Tested**: getRevenueChart() - 30-day time-series data
+- [ ] **Tested**: Raw SQL with DATE grouping
+- [ ] **Tested**: Daily revenue aggregation
+- [ ] **Tested**: Daily order count aggregation
+- [ ] **Tested**: getTopProducts() - Best-selling products
+- [ ] **Tested**: Product sales aggregation (SUM quantity)
+- [ ] **Tested**: Revenue aggregation (SUM quantity * price)
+- [ ] **Tested**: Order status filtering (excludes cancelled/refunded)
+- [ ] **Tested**: Limit parameter (default 5)
+- [ ] **Tested**: getTopCategories() - Top-performing categories
+- [ ] **Tested**: Category-product-order joins
+- [ ] **Tested**: Product count per category
+- [ ] **Tested**: Units sold per category
+- [ ] **Tested**: Revenue per category
+- [ ] **Tested**: Visible categories filter
+- [ ] **Tested**: getRecentOrders() - Latest orders
+- [ ] **Tested**: Customer name concatenation (firstName + lastName)
+- [ ] **Tested**: Order sorting by createdAt DESC
+- [ ] **Tested**: Limit parameter (default 10)
+- [ ] **Tested**: getOrderStatusDistribution() - Status breakdown
+- [ ] **Tested**: Group by status with counts
+- [ ] **Tested**: StatCard component
+- [ ] **Tested**: Icon prop with lucide-svelte icons
+- [ ] **Tested**: Value display (number or string)
+- [ ] **Tested**: Change percentage display
+- [ ] **Tested**: Trend indicator (up/down with color coding)
+- [ ] **Tested**: TrendingUp/TrendingDown icons
+- [ ] **Tested**: Custom formatValue function support
+- [ ] **Tested**: Svelte 5 runes syntax ($props)
+- [ ] **Tested**: RevenueChart component
+- [ ] **Tested**: 30-day bar chart visualization
+- [ ] **Tested**: Height-scaled bars (relative to max revenue)
+- [ ] **Tested**: Hover tooltips with formatted data
+- [ ] **Tested**: X-axis labels (every 7th date)
+- [ ] **Tested**: Summary stats (total revenue, total orders, average order)
+- [ ] **Tested**: Currency formatting (cents to dollars)
+- [ ] **Tested**: Empty state for no data
+- [ ] **Tested**: Responsive flex layout
+- [ ] **Tested**: TopProducts widget
+- [ ] **Tested**: Ranked list with #1, #2, #3, etc.
+- [ ] **Tested**: Product images or Package icon fallback
+- [ ] **Tested**: Product name truncation
+- [ ] **Tested**: Units sold display
+- [ ] **Tested**: Total revenue and unit price
+- [ ] **Tested**: Empty state messaging
+- [ ] **Tested**: TopCategories widget
+- [ ] **Tested**: Ranked list with numbers
+- [ ] **Tested**: FolderOpen icon in primary/10 background
+- [ ] **Tested**: Category name display
+- [ ] **Tested**: Product count and units sold
+- [ ] **Tested**: Total revenue display
+- [ ] **Tested**: Empty state messaging
+- [ ] **Tested**: RecentOrders widget
+- [ ] **Tested**: Order number and status badge
+- [ ] **Tested**: Customer name and email
+- [ ] **Tested**: Formatted date/time (MMM DD, HH:MM)
+- [ ] **Tested**: Total amount display
+- [ ] **Tested**: Status badge color coding (delivered, shipped, processing, cancelled, refunded)
+- [ ] **Tested**: "View All" button linking to /admin/orders
+- [ ] **Tested**: Empty state for no orders
+- [ ] **Tested**: Analytics dashboard page (/admin/analytics)
+- [ ] **Tested**: 4-column grid for stat cards (responsive: 1/2/4)
+- [ ] **Tested**: Revenue stat with trend and currency formatting
+- [ ] **Tested**: Orders stat with trend
+- [ ] **Tested**: Active Products stat
+- [ ] **Tested**: Total Customers stat
+- [ ] **Tested**: Full-width revenue chart section
+- [ ] **Tested**: 2-column grid for products/categories (responsive: 1/2)
+- [ ] **Tested**: Full-width recent orders section
+- [ ] **Tested**: Async data loading with {#await} blocks
+- [ ] **Tested**: Loading skeletons (bg-muted, animate-pulse)
+- [ ] **Tested**: Error boundaries for each widget
+- [ ] **Tested**: Translated UI text (paraglide messages)
+- [ ] **Tested**: Analytics translations (25 keys) in English
+- [ ] **Tested**: Analytics translations (25 keys) in Ukrainian
+- [ ] **Tested**: Admin sidebar navigation
+- [ ] **Tested**: BarChart icon from lucide-svelte
+- [ ] **Tested**: Analytics menu item as first navigation item
+- [ ] **Tested**: Active state highlighting for /admin/analytics
+- [ ] **Tested**: TypeScript compilation (all errors fixed)
+- [ ] **Tested**: Svelte 5 runes mode compatibility
+- [ ] **Tested**: Dynamic component rendering (icon props)
+- [ ] **Tested**: Type assertions for trend ('up' | 'down')
+- [ ] **Tested**: formatValue function signature
+- [ ] **Tested**: Authorization checks (requireAdminUser in all remote functions)
+- [ ] **Tested**: Date-based aggregations (30-day windows)
+- [ ] **Tested**: Order status filtering consistency
+- [ ] **Tested**: Responsive grid layouts (mobile, tablet, desktop)
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1415,7 +1514,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ### Phase 5: Polish & Launch (Weeks 11-12)
 23. ✅ Search & filtering - **COMPLETED** (FTS5, autocomplete, search results page, translations)
-24. ❌ Analytics dashboard - **TODO**
+24. ✅ Analytics dashboard - **COMPLETED** (6 remote functions, 5 widgets, dashboard page, translations)
 25. ❌ Performance optimization - **TODO**
 26. ❌ Security audit - **TODO**
 27. ❌ Testing (E2E, unit) - **TODO**

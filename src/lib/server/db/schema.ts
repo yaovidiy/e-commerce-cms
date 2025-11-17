@@ -144,6 +144,23 @@ export const order = sqliteTable('order', {
 	deliveredAt: integer('delivered_at', { mode: 'timestamp' })
 });
 
+export const orderItem = sqliteTable('order_item', {
+	id: text('id').primaryKey(),
+	orderId: text('order_id')
+		.notNull()
+		.references(() => order.id, { onDelete: 'cascade' }),
+	productId: text('product_id')
+		.notNull()
+		.references(() => product.id),
+	productName: text('product_name').notNull(), // Snapshot at time of order
+	productSlug: text('product_slug').notNull(),
+	productImage: text('product_image'), // Single image URL/ID
+	price: integer('price').notNull(), // Price at time of order (in cents)
+	quantity: integer('quantity').notNull(),
+	subtotal: integer('subtotal').notNull(), // price * quantity (in cents)
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
 export const payment = sqliteTable('payment', {
 	id: text('id').primaryKey(),
 	orderId: text('order_id')
@@ -251,6 +268,9 @@ export type InsertCart = typeof cart.$inferInsert;
 
 export type Order = typeof order.$inferSelect;
 export type InsertOrder = typeof order.$inferInsert;
+
+export type OrderItem = typeof orderItem.$inferSelect;
+export type InsertOrderItem = typeof orderItem.$inferInsert;
 
 export type Payment = typeof payment.$inferSelect;
 export type InsertPayment = typeof payment.$inferInsert;

@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
 
 	// Navigation items for admin panel
 	const navItems = [
+		{
+			title: () => m.analytics?.() || 'Analytics',
+			url: '/admin/analytics',
+			icon: BarChart
+		},
 		{
 			title: () => m.product_products(),
 			url: '/admin/products',
