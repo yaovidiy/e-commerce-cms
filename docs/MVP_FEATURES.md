@@ -214,6 +214,26 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Translation message regeneration on dev server start
 - [ ] **Tested**: All shipping translation keys available in both languages
 
+#### 19. **Discount System** ✅
+- [ ] **Tested**: Database schema with discount table (15 fields)
+- [ ] **Tested**: Discount table (id, code, type, value, minOrderAmount, maxUsesTotal, maxUsesPerCustomer, currentUses, startsAt, endsAt, isActive, applicableProducts, applicableCategories, description, timestamps)
+- [ ] **Tested**: Discount remote functions (getAllDiscounts, getDiscount, createDiscount, updateDiscount, deleteDiscount, validateDiscount, applyDiscount)
+- [ ] **Tested**: 5 validation schemas (CreateDiscountSchema, UpdateDiscountSchema, DeleteDiscountSchema, ValidateDiscountSchema, ApplyDiscountSchema)
+- [ ] **Tested**: Admin discount management page at /admin/discounts with full CRUD
+- [ ] **Tested**: Discount type selection (percentage, fixed amount, free shipping)
+- [ ] **Tested**: Usage limit configuration (total uses, per-customer uses)
+- [ ] **Tested**: Date range validity (start date, end date)
+- [ ] **Tested**: Minimum order amount requirement
+- [ ] **Tested**: Product/category applicability (JSON arrays)
+- [ ] **Tested**: Active/inactive status toggle
+- [ ] **Tested**: Current usage tracking
+- [ ] **Tested**: Discount validation logic (dates, usage limits, order amount)
+- [ ] **Tested**: Discounts menu item in AdminSidebar with Percent icon
+- [ ] **Tested**: 47+ discount translation keys (English + Ukrainian)
+- [ ] **Tested**: TypeScript compilation (icon imports, Select component, Checkbox component)
+- [ ] **Tested**: Form submission with proper field handling
+- [ ] **Tested**: Search functionality with real-time filtering
+
 ---
 
 ## 🚧 Required MVP Features
@@ -1104,8 +1124,18 @@ export const handle: Handle = async ({ event, resolve }) => {
     - ✅ JSON syntax error in uk.json fixed
     - ✅ Form object attachment issue resolved in email settings
     - ✅ Ukrainian language set as default
-15. ❌ Discount system - **TODO** (Next priority)
-16. ❌ Wishlist/Favorites functionality - **TODO**
+15. ✅ Discount system - **COMPLETED**
+    - ✅ Database schema with 15 fields (code, type, value, usage limits, dates, applicability)
+    - ✅ 7 remote functions (CRUD + validation + apply)
+    - ✅ 5 validation schemas
+    - ✅ Admin management page at /admin/discounts
+    - ✅ Full CRUD interface with search/filter
+    - ✅ Type-specific UI (percentage/fixed/free shipping)
+    - ✅ Date range and usage limit configuration
+    - ✅ Product/category applicability settings
+    - ✅ 47 translation keys (EN + UK)
+    - ✅ TypeScript compilation errors fixed
+16. ❌ Wishlist/Favorites functionality - **TODO** (Next priority)
 
 ### Phase 4: CMS & Content (Weeks 9-10)
 19. ❌ Site settings management - **TODO**
