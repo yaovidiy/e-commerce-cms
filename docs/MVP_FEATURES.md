@@ -1023,11 +1023,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 7. ✅ Basic checkout flow
 
 ### Phase 2: Transactions (Weeks 5-6)
-8. ✅ Payment integration (LiqPay primary)
-9. ✅ Checkbox РРО integration (fiscal receipts)
-10. ✅ Order management system
-11. ✅ Email notifications
-12. ✅ Order confirmation/tracking
+8. ✅ Payment integration (LiqPay primary) - **IMPLEMENTED**
+9. ❌ Checkbox РРО integration (fiscal receipts) - **NEXT**
+10. ✅ Order management system - **IMPLEMENTED**
+11. ❌ Email notifications - **TODO**
+12. ❌ Order confirmation/tracking - **TODO**
 
 ### Phase 3: Customer Features (Weeks 7-8)
 13. ✅ Customer account management

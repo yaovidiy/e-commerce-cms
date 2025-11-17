@@ -139,6 +139,26 @@ export const order = sqliteTable('order', {
 	deliveredAt: integer('delivered_at', { mode: 'timestamp' })
 });
 
+export const payment = sqliteTable('payment', {
+	id: text('id').primaryKey(),
+	orderId: text('order_id')
+		.notNull()
+		.references(() => order.id),
+	provider: text('provider', { enum: ['liqpay', 'stripe', 'paypal', 'cod'] })
+		.notNull()
+		.default('cod'),
+	transactionId: text('transaction_id'), // external payment ID from provider
+	amount: integer('amount').notNull(), // stored in cents
+	currency: text('currency').notNull().default('UAH'),
+	status: text('status', { enum: ['pending', 'completed', 'failed', 'refunded'] })
+		.notNull()
+		.default('pending'),
+	liqpayData: text('liqpay_data'), // JSON - payment_id, status, etc.
+	metadata: text('metadata'), // JSON - additional provider-specific data
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -163,3 +183,6 @@ export type InsertCart = typeof cart.$inferInsert;
 
 export type Order = typeof order.$inferSelect;
 export type InsertOrder = typeof order.$inferInsert;
+
+export type Payment = typeof payment.$inferSelect;
+export type InsertPayment = typeof payment.$inferInsert;

@@ -218,8 +218,14 @@ export const checkout = form(CheckoutSchema, async (data) => {
 	// Clear cart session cookie
 	event.cookies.delete('cart-session', { path: '/' });
 
-	// Redirect to order confirmation
-	redirect(303, `/order-confirmation/${order.id}`);
+	// Create payment and handle redirect based on payment method
+	if (data.paymentMethod === 'cod') {
+		// Cash on delivery - go directly to confirmation
+		redirect(303, `/order-confirmation/${order.id}`);
+	} else {
+		// Online payment (LiqPay) - redirect to payment page which will handle LiqPay checkout
+		redirect(303, `/payment/${order.id}`);
+	}
 });
 
 // Update order status (admin only)
