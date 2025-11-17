@@ -125,6 +125,41 @@ This document outlines the minimum viable product (MVP) features required for a 
 - [ ] **Tested**: Loading and error states
 - [ ] **Tested**: Out-of-stock prevention
 
+#### 13. **Cart Drawer Component** ✅
+- [ ] **Tested**: Slide-out sheet drawer UI implementation
+- [ ] **Tested**: Real-time cart item display with product images
+- [ ] **Tested**: Item quantity controls (+/- buttons)
+- [ ] **Tested**: Stock validation on quantity changes
+- [ ] **Tested**: Sale price display with compare-at-price
+- [ ] **Tested**: Remove individual items functionality
+- [ ] **Tested**: Clear entire cart with confirmation
+- [ ] **Tested**: Real-time subtotal and total calculations
+- [ ] **Tested**: Empty cart state with friendly messaging
+- [ ] **Tested**: Loading states with skeleton loaders
+- [ ] **Tested**: Proceed to checkout navigation
+- [ ] **Tested**: Continue shopping functionality
+- [ ] **Tested**: Cart button with real-time item count badge
+- [ ] **Tested**: Badge displays "99+" for counts > 99
+- [ ] **Tested**: Integration in main layout header
+
+#### 14. **Checkout Page** ✅
+- [ ] **Tested**: Multi-step checkout form (3 steps)
+- [ ] **Tested**: Visual progress indicator with step navigation
+- [ ] **Tested**: Step 1 - Customer information (firstName, lastName, email, phone)
+- [ ] **Tested**: Step 2 - Shipping address (6 fields: address1, address2, city, state, postalCode, country)
+- [ ] **Tested**: Step 2 - Optional billing address with "same as shipping" checkbox
+- [ ] **Tested**: Step 3 - Payment method selection (COD, Card via radio buttons)
+- [ ] **Tested**: Step 3 - Order notes textarea for special instructions
+- [ ] **Tested**: Real-time form validation with error messages
+- [ ] **Tested**: Field validation before step progression
+- [ ] **Tested**: Order summary sidebar with cart items
+- [ ] **Tested**: Real-time totals display (subtotal, total)
+- [ ] **Tested**: Responsive layout (stacks on mobile, sidebar on desktop)
+- [ ] **Tested**: Empty cart detection with "Continue Shopping" redirect
+- [ ] **Tested**: Loading states during cart fetch
+- [ ] **Tested**: Previous/Continue/Place Order button navigation
+- [ ] **Tested**: Integration with checkout() remote function
+
 ---
 
 ## 🚧 Required MVP Features
