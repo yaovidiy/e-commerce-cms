@@ -4,8 +4,9 @@
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { AppSidebar } from '$lib/components/common/layout';
-	import { ClientHeader, ClientFooter } from '$lib/components/client/layout';
-	import { CartDrawer } from '$lib/components/client/features/cart';
+	import Header from '$lib/components/client/layout/header.svelte';
+	import Footer from '$lib/components/client/layout/footer.svelte';
+	import MobileMenu from '$lib/components/client/layout/mobile-menu.svelte';
 	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
 	import '../app.css';
 	let { children } = $props();
@@ -36,19 +37,15 @@
 	{:else}
 		<!-- Customer-facing routes use header/footer layout -->
 		<div class="flex min-h-screen flex-col">
-			<ClientHeader onCartClick={() => (cartDrawerOpen = true)} />
-			<main class="flex-1">
-				<div class="mx-auto max-w-7xl px-4 md:px-6">
-					{@render children()}
-				</div>
-			</main>
-			<ClientFooter />
+		   <Header />
+		   <MobileMenu />
+		   <main class="flex-1">
+			   <div class="mx-auto max-w-7xl px-4 md:px-6">
+				   {@render children()}
+			   </div>
+		   </main>
+		   <Footer />
 		</div>
-		
-		<!-- Cart drawer (available on all non-admin, non-auth routes) -->
-		{#if !isAuthRoute}
-			<CartDrawer bind:open={cartDrawerOpen} />
-		{/if}
 	{/if}
 	
 	<!-- Web Vitals Tracker (shows in dev mode only) -->

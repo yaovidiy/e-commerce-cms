@@ -226,7 +226,7 @@ export const register = form(RegisterSchema, async (data, invalid) => {
 	};
 });
 
-export const logout = form(async () => {
+export const logout = command(async () => {
 	const event = getRequestEvent();
 
 	if (!event?.locals?.session) {
