@@ -8,14 +8,15 @@
 	import Footer from '$lib/components/client/layout/footer.svelte';
 	import MobileMenu from '$lib/components/client/layout/mobile-menu.svelte';
 	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import '../app.css';
 	let { children } = $props();
-	
+
 	// Check if we're on an admin or dashboard route
 	const isAdminRoute = $derived($page.url.pathname.startsWith('/admin'));
 	const isDashboardRoute = $derived($page.url.pathname.startsWith('/dashboard'));
 	const isAuthRoute = $derived($page.url.pathname.startsWith('/auth'));
-	
+
 	// Cart drawer state
 	let cartDrawerOpen = $state(false);
 </script>
@@ -37,17 +38,18 @@
 	{:else}
 		<!-- Customer-facing routes use header/footer layout -->
 		<div class="flex min-h-screen flex-col">
-		   <Header />
-		   <MobileMenu />
-		   <main class="flex-1">
-			   <div class="mx-auto max-w-7xl px-4 md:px-6">
-				   {@render children()}
-			   </div>
-		   </main>
-		   <Footer />
+			<Header />
+			<MobileMenu />
+			<Toaster />
+			<main class="flex-1">
+				<div class="mx-auto max-w-7xl px-4 md:px-6">
+					{@render children()}
+				</div>
+			</main>
+			<Footer />
 		</div>
 	{/if}
-	
+
 	<!-- Web Vitals Tracker (shows in dev mode only) -->
 	<WebVitalsTracker />
 </ParaglideJS>
