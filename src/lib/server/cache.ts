@@ -100,16 +100,16 @@ class Cache<T> {
 
 // Cache instances for different data types
 // Product catalog: 10 minutes TTL (changes when products are updated)
-export const productCache = new Cache<unknown>(10);
+export const productCache = new Cache<unknown[]>(10);
 
 // Category tree: 15 minutes TTL (changes when categories are updated)
-export const categoryCache = new Cache<unknown>(15);
+export const categoryCache = new Cache<unknown[]>(15);
 
 // Site settings: 30 minutes TTL (rarely changes)
-export const settingsCache = new Cache<unknown>(30);
+export const settingsCache = new Cache<unknown[]>(30);
 
 // Brand list: 15 minutes TTL
-export const brandCache = new Cache<unknown>(15);
+export const brandCache = new Cache<unknown[]>(15);
 
 // User data: 5 minutes TTL (for non-sensitive user info)
 export const userCache = new Cache<unknown>(5);

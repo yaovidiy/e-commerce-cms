@@ -225,14 +225,14 @@
 							{#await getAllCategories()}
 								<select
 									disabled
-									class="bg-background border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
 								>
 									<option>{m.common_loading()}</option>
 								</select>
 							{:then categories}
 								<select
 									{...updateCategory.fields.parentId.as('select')}
-									class="bg-background border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
 								>
 									<option value="">{m.common_none()}</option>
 									{#each categories.filter((c) => c.id !== categoryId) as cat}
@@ -242,7 +242,7 @@
 							{:catch}
 								<select
 									disabled
-									class="bg-background border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
 								>
 									<option>{m.common_error()}</option>
 								</select>

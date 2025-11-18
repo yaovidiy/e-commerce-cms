@@ -68,7 +68,7 @@
 		/>
 		<select
 			bind:value={statusFilter}
-			class="bg-background border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+			class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
 		>
 			<option value="all">{m.product_all()}</option>
 			<option value="draft">{m.product_status_draft()}</option>

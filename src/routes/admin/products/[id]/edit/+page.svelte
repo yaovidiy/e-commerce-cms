@@ -426,7 +426,7 @@
 					<Card.Content>
 						<select
 							{...updateProduct.fields.status.as('select')}
-							class="bg-background border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
+							class="bg-white border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
 						>
 							<option value="draft">{m.product_status_draft()}</option>
 							<option value="active">{m.product_status_active()}</option>
@@ -450,14 +450,14 @@
 							{#await getAllCategories()}
 								<select
 									disabled
-									class="bg-background border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm opacity-50"
+									class="bg-white border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm opacity-50"
 								>
 									<option>{m.common_loading()}</option>
 								</select>
 							{:then categories}
 								<select
 									{...updateProduct.fields.categoryId.as('select')}
-									class="bg-background border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
 								>
 									<option value="">{m.product_select_category()}</option>
 									{#each categories as category}
@@ -478,14 +478,14 @@
 							{#await getAllBrands()}
 								<select
 									disabled
-									class="bg-background border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm opacity-50"
+									class="bg-white border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm opacity-50"
 								>
 									<option>{m.common_loading()}</option>
 								</select>
 							{:then brands}
 								<select
 									{...updateProduct.fields.brandId.as('select')}
-									class="bg-background border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm"
 								>
 									<option value="">{m.product_select_brand()}</option>
 									{#each brands as brand}

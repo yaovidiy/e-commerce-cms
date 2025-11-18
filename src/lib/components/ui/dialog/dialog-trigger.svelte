@@ -5,4 +5,3 @@
 </script>
 
 <DialogPrimitive.Trigger bind:ref data-slot="dialog-trigger" {...restProps} />
-

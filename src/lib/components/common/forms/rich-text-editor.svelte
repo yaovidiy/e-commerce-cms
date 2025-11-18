@@ -148,7 +148,7 @@
 	}
 </script>
 
-<div class={cn('bg-background relative rounded-md border', className)}>
+<div class={cn('bg-white relative rounded-md border', className)}>
 	{#if editor}
 		<div class="bg-muted/50 flex flex-wrap gap-1 border-b p-2">
 			<!-- Text Formatting -->

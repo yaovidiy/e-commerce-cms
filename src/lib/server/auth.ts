@@ -112,5 +112,7 @@ export function requireAdminUser() {
 		redirect(302, '/auth/login');
 	}
 
+	console.log('Admin user verified:', user);
+
 	return user;
 }

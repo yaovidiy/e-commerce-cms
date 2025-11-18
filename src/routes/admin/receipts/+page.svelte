@@ -164,7 +164,7 @@
 				</div>
 				<select
 					bind:value={statusFilter}
-					class="px-4 py-2 border rounded-md bg-background"
+					class="px-4 py-2 border rounded-md bg-white"
 				>
 					<option value="all">All Statuses</option>
 					<option value="created">Created</option>

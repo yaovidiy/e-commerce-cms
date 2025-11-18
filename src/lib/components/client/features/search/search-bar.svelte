@@ -105,14 +105,14 @@
 	{#if showSuggestions && debouncedQuery.length >= 2}
 		{#await searchAutocomplete({ query: debouncedQuery })}
 			<div
-				class="absolute top-full mt-2 w-full rounded-lg border bg-background shadow-lg z-50 p-4"
+				class="absolute top-full mt-2 w-full rounded-lg border bg-white shadow-lg z-50 p-4"
 			>
 				<p class="text-sm text-muted-foreground">{m.loading()}</p>
 			</div>
 		{:then suggestions}
 			{#if suggestions.length > 0}
 				<div
-					class="absolute top-full mt-2 w-full rounded-lg border bg-background shadow-lg z-50 overflow-hidden"
+					class="absolute top-full mt-2 w-full rounded-lg border bg-white shadow-lg z-50 overflow-hidden"
 				>
 					<ul class="divide-y">
 						{#each suggestions as suggestion, index}
@@ -151,7 +151,7 @@
 				</div>
 			{:else}
 				<div
-					class="absolute top-full mt-2 w-full rounded-lg border bg-background shadow-lg z-50 p-4"
+					class="absolute top-full mt-2 w-full rounded-lg border bg-white shadow-lg z-50 p-4"
 				>
 					<p class="text-sm text-muted-foreground">
 						{m.no_results_found()}
@@ -160,7 +160,7 @@
 			{/if}
 		{:catch error}
 			<div
-				class="absolute top-full mt-2 w-full rounded-lg border bg-background shadow-lg z-50 p-4"
+				class="absolute top-full mt-2 w-full rounded-lg border bg-white shadow-lg z-50 p-4"
 			>
 				<p class="text-sm text-destructive">
 					{m.search_error()}

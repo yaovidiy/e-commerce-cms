@@ -437,6 +437,57 @@ export const page = sqliteTable('page', {
 export type Page = typeof page.$inferSelect;
 export type InsertPage = typeof page.$inferInsert;
 
+// Navigation menu table
+export const navigationMenu = sqliteTable('navigation_menu', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(), // e.g., "Main Menu", "Footer Menu"
+	location: text('location', {
+		enum: ['header', 'footer', 'mobile']
+	})
+		.notNull()
+		.default('header'),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type NavigationMenu = typeof navigationMenu.$inferSelect;
+export type InsertNavigationMenu = typeof navigationMenu.$inferInsert;
+
+// Navigation menu items
+export const navigationMenuItem = sqliteTable('navigation_menu_item', {
+	id: text('id').primaryKey(),
+	menuId: text('menu_id')
+		.notNull()
+		.references(() => navigationMenu.id, { onDelete: 'cascade' }),
+	label: text('label').notNull(), // Display text
+	url: text('url').notNull(), // Link URL
+	parentId: text('parent_id'), // For nested menus
+	displayOrder: integer('display_order').notNull().default(0),
+	openInNewTab: integer('open_in_new_tab', { mode: 'boolean' }).notNull().default(false),
+	isVisible: integer('is_visible', { mode: 'boolean' }).notNull().default(true),
+	icon: text('icon'), // Optional icon name (e.g., "home", "shopping-cart")
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type NavigationMenuItem = typeof navigationMenuItem.$inferSelect;
+export type InsertNavigationMenuItem = typeof navigationMenuItem.$inferInsert;
+
+// Contact phones table
+export const contactPhone = sqliteTable('contact_phone', {
+	id: text('id').primaryKey(),
+	phoneNumber: text('phone_number').notNull(),
+	label: text('label'), // e.g., "Customer Service", "Sales"
+	displayOrder: integer('display_order').notNull().default(0),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type ContactPhone = typeof contactPhone.$inferSelect;
+export type InsertContactPhone = typeof contactPhone.$inferInsert;
+
 // FTS5 virtual table for product search
 // Note: This needs to be created manually with SQL after schema is pushed
 // CREATE VIRTUAL TABLE product_fts USING fts5(id, name, description, sku, content='product', content_rowid='id');
