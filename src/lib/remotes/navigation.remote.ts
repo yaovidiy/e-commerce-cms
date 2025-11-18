@@ -157,14 +157,19 @@ export const getNavigationMenuByLocation = query(
  * Create navigation menu
  */
 export const createNavigationMenu = form(CreateNavigationMenuSchema, async (data) => {
-	const event = getRequestEvent();
+	console.log('Creating navigation menu with data:', data);
+    const event = getRequestEvent();
 	const user = event?.locals?.user;
 
+    console.log('User in createNavigationMenu:', user);
+
 	if (!user) {
+        console.log('Authentication required');
 		throw new Error('Authentication required');
 	}
 
 	if (!user.isAdmin) {
+        console.log('Admin access required');
 		throw new Error('Admin access required');
 	}
 

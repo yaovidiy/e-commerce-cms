@@ -427,7 +427,7 @@
 							form.reset();
 							menuDialogOpen = false;
 							console.log('Menu updated successfully');
-                            getAllNavigationMenus().refresh();
+							getAllNavigationMenus().refresh();
 						} catch (error) {
 							console.error('Failed to update menu:', error);
 						}
@@ -438,14 +438,18 @@
 							form.reset();
 							menuDialogOpen = false;
 							console.log('Menu created successfully with data ', data);
-                            getAllNavigationMenus().refresh();
+							getAllNavigationMenus().refresh();
 						} catch (error) {
 							console.error('Failed to create menu:', error);
 						}
 					})}
 		>
 			{#if editingMenu}
-				<input {...updateNavigationMenu.fields.id.as('text')} value={editingMenu.id} />
+				<input
+					{...updateNavigationMenu.fields.id.as('text')}
+					value={editingMenu.id}
+					class="hidden"
+				/>
 			{/if}
 
 			<div class="space-y-4">
@@ -514,7 +518,23 @@
 				>{editingMenuItem ? m.nav_edit_menu_item() : m.nav_create_menu_item()}</Dialog.Title
 			>
 		</Dialog.Header>
-		<form {...editingMenuItem ? updateNavigationMenuItem : createNavigationMenuItem}>
+		<form
+			{...(editingMenuItem ? updateNavigationMenuItem : createNavigationMenuItem).enhance(
+				async ({ submit, form, data }) => {
+					try {
+						await submit();
+						form.reset();
+						menuItemDialogOpen = false;
+						console.log('Menu item saved successfully with data ', data);
+						if (selectedMenu) {
+							getNavigationMenuItems(selectedMenu.id).refresh();
+						}
+					} catch (error) {
+						console.error('Failed to save menu item:', error);
+					}
+				}
+			)}
+		>
 			{#if editingMenuItem}
 				<input {...updateNavigationMenuItem.fields.id.as('text')} value={editingMenuItem.id} />
 			{/if}
@@ -593,9 +613,27 @@
 				>{editingPhone ? m.nav_edit_phone_number() : m.nav_add_phone_number()}</Dialog.Title
 			>
 		</Dialog.Header>
-		<form {...editingPhone ? updateContactPhone : createContactPhone}>
+		<form
+			{...(editingPhone ? updateContactPhone : createContactPhone).enhance(
+				async ({ submit, form, data }) => {
+					try {
+						await submit();
+						form.reset();
+						phoneDialogOpen = false;
+						console.log('Phone number saved successfully with data ', data);
+						getAllContactPhonesAdmin().refresh();
+					} catch (error) {
+						console.error('Failed to save phone number:', error);
+					}
+				}
+			)}
+		>
 			{#if editingPhone}
-				<input {...updateContactPhone.fields.id.as('text')} value={editingPhone.id} />
+				<input
+					{...updateContactPhone.fields.id.as('text')}
+					value={editingPhone.id}
+					class="hidden"
+				/>
 			{/if}
 
 			<div class="space-y-4">
@@ -605,6 +643,7 @@
 						{...(editingPhone ? updateContactPhone : createContactPhone).fields.phoneNumber.as(
 							'text'
 						)}
+						value={editingPhone ? editingPhone.phoneNumber : ''}
 						placeholder={m.nav_phone_number_placeholder()}
 					/>
 				</div>
@@ -614,6 +653,7 @@
 					<Input
 						{...(editingPhone ? updateContactPhone : createContactPhone).fields.label.as('text')}
 						placeholder={m.nav_label_placeholder()}
+						value={editingPhone ? editingPhone.label : ''}
 					/>
 				</div>
 
@@ -623,6 +663,7 @@
 						{...(editingPhone ? updateContactPhone : createContactPhone).fields.displayOrder.as(
 							'number'
 						)}
+						value={editingPhone ? editingPhone.displayOrder : ''}
 					/>
 				</div>
 
@@ -631,6 +672,7 @@
 						{...(editingPhone ? updateContactPhone : createContactPhone).fields.isActive.as(
 							'checkbox'
 						)}
+						checked={editingPhone ? editingPhone.isActive : true}
 					/>
 					<Label>{m.nav_active()}</Label>
 				</div>
@@ -688,7 +730,11 @@
 		</Dialog.Header>
 		{#if deletingMenuItem}
 			<form {...deleteNavigationMenuItem}>
-				<input {...deleteNavigationMenuItem.fields.id.as('text')} value={deletingMenuItem.id} />
+				<input
+					{...deleteNavigationMenuItem.fields.id.as('text')}
+					value={deletingMenuItem.id}
+					type="hidden"
+				/>
 				<div class="flex justify-end gap-2">
 					<Button type="button" variant="outline" onclick={() => (deleteItemDialogOpen = false)}>
 						{m.common_cancel()}
@@ -713,7 +759,11 @@
 		</Dialog.Header>
 		{#if deletingPhone}
 			<form {...deleteContactPhone}>
-				<input {...deleteContactPhone.fields.id.as('text')} value={deletingPhone.id} />
+				<input
+					{...deleteContactPhone.fields.id.as('text')}
+					value={deletingPhone.id}
+					type="hidden"
+				/>
 				<div class="flex justify-end gap-2">
 					<Button type="button" variant="outline" onclick={() => (deletePhoneDialogOpen = false)}>
 						{m.common_cancel()}
