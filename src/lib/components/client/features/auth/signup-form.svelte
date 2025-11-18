@@ -14,7 +14,18 @@
 	}
 </script>
 
-<form {...register}>
+<form
+	{...register.enhance(async ({ submit, form }) => {
+		try {
+			await submit();
+			confirmPassword = '';
+			passwordMismatch = false;
+			form.reset();
+		} catch (error) {
+			console.error('Registration error:', error);
+		}
+	})}
+>
 	<div class="space-y-4">
 		<div class="space-y-2">
 			<Label for="username">{m.auth_username()}</Label>
@@ -74,11 +85,7 @@
 			{/if}
 		</div>
 
-		<Button 
-			type="submit" 
-			class="w-full" 
-			disabled={!!register.pending || passwordMismatch}
-		>
+		<Button type="submit" class="w-full" disabled={!!register.pending || passwordMismatch}>
 			{register.pending ? '...' : m.auth_sign_up()}
 		</Button>
 	</div>

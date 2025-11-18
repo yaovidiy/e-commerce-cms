@@ -176,6 +176,7 @@ export const register = form(RegisterSchema, async (data, invalid) => {
 
 	if (existingUser) {
 		invalid(invalid.username('Username already taken'));
+		console.info('Username already taken:', username);
 		return;
 	}
 
