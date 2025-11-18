@@ -139,6 +139,7 @@ export const login = form(LoginSchema, async (data, invalid) => {
 
 	if (!existingUser) {
 		invalid(invalid.password('Incorrect username or password'));
+		console.info('No such user', username);
 		return;
 	}
 
@@ -151,6 +152,7 @@ export const login = form(LoginSchema, async (data, invalid) => {
 
 	if (!validPassword) {
 		invalid(invalid.password('Incorrect username or password'));
+		console.info('Invalid password for user', username);
 		return;
 	}
 
