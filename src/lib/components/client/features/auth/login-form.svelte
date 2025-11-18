@@ -4,9 +4,20 @@
 	import { Label } from '$lib/components/ui/label';
 	import { login } from '$lib/remotes/user.remote';
 	import * as m from '$lib/paraglide/messages';
+	import { goto } from '$app/navigation';
 </script>
 
-<form {...login}>
+<form
+	{...login.enhance(async ({ submit, form }) => {
+		try {
+			await submit();
+			goto('/');
+			form.reset();
+		} catch (error) {
+			console.error('Login error:', error);
+		}
+	})}
+>
 	<div class="space-y-4">
 		<div class="space-y-2">
 			<Label for="username">{m.auth_username()}</Label>

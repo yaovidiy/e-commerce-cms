@@ -4,6 +4,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { register } from '$lib/remotes/user.remote';
 	import * as m from '$lib/paraglide/messages';
+	import { goto } from '$app/navigation';
 
 	let confirmPassword = $state('');
 	let passwordMismatch = $state(false);
@@ -20,6 +21,7 @@
 			await submit();
 			confirmPassword = '';
 			passwordMismatch = false;
+			goto('/');
 			form.reset();
 		} catch (error) {
 			console.error('Registration error:', error);
