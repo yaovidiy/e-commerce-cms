@@ -5,7 +5,7 @@
 
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
-import { handlePaymentWebhook } from '$lib/remotes/payment.remote';
+import { handlePaymentWebhook } from '$lib/server/payment-utils';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
