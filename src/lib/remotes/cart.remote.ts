@@ -19,7 +19,7 @@ interface CartItem {
 	image: string | null;
 }
 
-// Helper to get or create cart
+// Helper to get or create cart (for commands that can set cookies)
 async function getOrCreateCart() {
 	const event = getRequestEvent();
 	const user = event.locals.user;
@@ -70,6 +70,32 @@ async function getOrCreateCart() {
 	return cart;
 }
 
+// Helper to get existing cart only (for queries - doesn't set cookies)
+async function getExistingCart() {
+	const event = getRequestEvent();
+	const user = event.locals.user;
+	
+	let cart;
+	
+	if (user) {
+		// Logged-in user - find by userId
+		[cart] = await db.select()
+			.from(tables.cart)
+			.where(eq(tables.cart.userId, user.id));
+	} else {
+		// Guest user - use existing session ID from cookie (don't create new one)
+		const sessionId = event.cookies.get('cart-session');
+		
+		if (sessionId) {
+			[cart] = await db.select()
+				.from(tables.cart)
+				.where(eq(tables.cart.sessionId, sessionId));
+		}
+	}
+	
+	return cart;
+}
+
 // Helper to calculate cart totals
 function calculateCartTotals(items: CartItem[]) {
 	const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -80,7 +106,18 @@ function calculateCartTotals(items: CartItem[]) {
 
 // Get current cart
 export const getCart = query(async () => {
-	const cart = await getOrCreateCart();
+	const cart = await getExistingCart();
+	
+	// Return empty cart if no cart exists yet
+	if (!cart) {
+		return {
+			id: null,
+			items: [],
+			subtotal: 0,
+			total: 0
+		};
+	}
+	
 	const items = JSON.parse(cart.items);
 	
 	// Fetch product details for each item
@@ -269,7 +306,13 @@ export const clearCart = command(v.object({}), async () => {
 
 // Get cart item count
 export const getCartItemCount = query(async () => {
-	const cart = await getOrCreateCart();
+	const cart = await getExistingCart();
+	
+	// Return 0 if no cart exists yet
+	if (!cart) {
+		return 0;
+	}
+	
 	const items = JSON.parse(cart.items);
 	
 	const count = items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
