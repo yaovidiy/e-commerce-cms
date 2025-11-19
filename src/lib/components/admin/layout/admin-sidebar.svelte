@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -82,6 +82,11 @@
 			title: () => m.settings(),
 			url: '/admin/settings',
 			icon: Settings
+		},
+		{
+			title: () => m.migration(),
+			url: '/admin/migration',
+			icon: Database
 		}
 	];
 

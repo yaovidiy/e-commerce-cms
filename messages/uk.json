@@ -844,5 +844,6 @@
   "nav_delete_menu_item": "Видалити елемент меню",
   "nav_delete_menu_item_confirm": "Ви впевнені, що хочете видалити цей елемент меню?",
   "nav_delete_phone_number": "Видалити номер телефону",
-  "nav_delete_phone_number_confirm": "Ви впевнені, що хочете видалити цей номер телефону?"
+  "nav_delete_phone_number_confirm": "Ви впевнені, що хочете видалити цей номер телефону?",
+  "migration": "Міграція"
 }

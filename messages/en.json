@@ -844,5 +844,6 @@
   "nav_delete_menu_item": "Delete Menu Item",
   "nav_delete_menu_item_confirm": "Are you sure you want to delete this menu item?",
   "nav_delete_phone_number": "Delete Phone Number",
-  "nav_delete_phone_number_confirm": "Are you sure you want to delete this phone number?"
+  "nav_delete_phone_number_confirm": "Are you sure you want to delete this phone number?",
+  "migration": "Migration"
 }
