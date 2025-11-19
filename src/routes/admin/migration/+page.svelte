@@ -105,7 +105,7 @@
 			for (const product of products as any[]) {
 				console.log('Processing product:', product);
 				const start = Date.now();
-				currentItem = `Processing product: ${product.name}`;
+				currentItem = `Processing product: ${product.title}`;
 
 				await sleep(500); // Add a small delay to avoid overwhelming the server
 
@@ -118,17 +118,6 @@
 						? product.images.map((imgId: string) => fileIdMap.get(imgId)).filter(Boolean)
 						: [];
 
-					console.log('Mapped images for product:', images);
-					console.log('Category ID for product:', categoryId);
-					console.log('Creating product with data:', {
-						name: product.title,
-						description: product.description || '',
-						slug: product.slug,
-						price: product.price || 0,
-						categoryId,
-						images,
-						status: 'draft'
-					});
 					const result = await createProduct({
 						name: product.title,
 						description: product.description || '',
@@ -141,7 +130,7 @@
 
 					addLog(`Product "${result.name}": created`);
 				} catch (error) {
-					addLog(`Error processing product "${product.name}": ${error}`);
+					addLog(`Error processing product "${product.title}": ${error}`);
 				}
 
 				const time = Date.now() - start;
