@@ -1,4 +1,4 @@
-import { query, form, getRequestEvent } from '$app/server';
+import { query, form, command, getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import * as auth from '$lib/server/auth';
@@ -6,7 +6,10 @@ import * as v from 'valibot';
 import {
 	CheckoutSchema,
 	UpdateOrderStatusSchema,
-	FilterOrdersSchema
+	FilterOrdersSchema,
+	GetOrderByIdSchema,
+	UpdateOrderNotesSchema,
+	SendOrderEmailSchema
 } from '$lib/server/schemas';
 import { eq, like, and, desc, count } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
@@ -284,7 +287,7 @@ export const checkout = form(CheckoutSchema, async (data) => {
 });
 
 // Update order status (admin only)
-export const updateOrderStatus = form(UpdateOrderStatusSchema, async (data) => {
+export const updateOrderStatus = command(UpdateOrderStatusSchema, async (data) => {
 	auth.requireAdminUser();
 
 	const [order] = await db.update(tables.order)
@@ -421,4 +424,91 @@ export const cancelOrder = form(v.object({ id: v.string() }), async (data) => {
 	}
 
 	return order;
+});
+
+// Get order by ID (admin only)
+export const getOrderById = query(GetOrderByIdSchema, async (data) => {
+	auth.requireAdminUser();
+
+	const [order] = await db.select()
+		.from(tables.order)
+		.where(eq(tables.order.id, data.id));
+
+	if (!order) {
+		throw new Error('Order not found');
+	}
+
+	// Get order items from the order_item table
+	const orderItems = await db.select()
+		.from(tables.orderItem)
+		.where(eq(tables.orderItem.orderId, order.id));
+
+	return {
+		...order,
+		orderItems
+	};
+});
+
+// Update order notes (admin only)
+export const updateOrderNotes = command(UpdateOrderNotesSchema, async (data) => {
+	auth.requireAdminUser();
+
+	const [order] = await db.update(tables.order)
+		.set({
+			notes: data.notes || null,
+			updatedAt: new Date()
+		})
+		.where(eq(tables.order.id, data.id))
+		.returning();
+
+	if (!order) {
+		throw new Error('Order not found');
+	}
+
+	// Refresh the order query
+	await getOrderById({ id: data.id }).refresh();
+
+	return order;
+});
+
+// Send custom email to customer (admin only)
+export const sendOrderEmail = command(SendOrderEmailSchema, async (data) => {
+	auth.requireAdminUser();
+
+	// Get order details
+	const [order] = await db.select()
+		.from(tables.order)
+		.where(eq(tables.order.id, data.orderId));
+
+	if (!order) {
+		throw new Error('Order not found');
+	}
+
+	try {
+		const { sendCustomOrderEmail } = await import('$lib/server/email-client');
+		const result = await sendCustomOrderEmail({
+			toEmail: order.customerEmail,
+			subject: data.subject,
+			message: data.message,
+			orderNumber: order.orderNumber,
+			customerName: `${order.customerFirstName} ${order.customerLastName}`
+		});
+
+		if (result.success) {
+			return {
+				success: true,
+				message: `Email sent successfully to ${order.customerEmail}`
+			};
+		} else {
+			return {
+				success: false,
+				message: result.error || result.message || 'Failed to send email'
+			};
+		}
+	} catch (error) {
+		return {
+			success: false,
+			message: error instanceof Error ? error.message : 'Unknown error occurred'
+		};
+	}
 });

@@ -278,6 +278,21 @@ export const FilterOrdersSchema = v.object({
     pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
 });
 
+export const GetOrderByIdSchema = v.object({
+    id: v.string()
+});
+
+export const UpdateOrderNotesSchema = v.object({
+    id: v.string(),
+    notes: v.optional(v.string())
+});
+
+export const SendOrderEmailSchema = v.object({
+    orderId: v.string(),
+    subject: v.pipe(v.string(), v.minLength(1, 'Subject is required'), v.maxLength(200)),
+    message: v.pipe(v.string(), v.minLength(1, 'Message is required'))
+});
+
 // Email settings schemas
 export const UpdateEmailSettingsSchema = v.object({
     fromEmail: v.pipe(v.string(), v.email('Invalid email address')),

@@ -310,3 +310,65 @@ export async function sendTestEmail(toEmail: string) {
 		};
 	}
 }
+
+/**
+ * Send custom email to customer about their order
+ * Used by admin to communicate with customers
+ */
+export async function sendCustomOrderEmail(data: {
+	toEmail: string;
+	subject: string;
+	message: string;
+	orderNumber: string;
+	customerName: string;
+}) {
+	if (!EMAIL_ENABLED) {
+		return { success: false, message: 'Email service not configured' };
+	}
+
+	try {
+		const result = await resend.emails.send({
+			from: FROM_EMAIL,
+			to: data.toEmail,
+			subject: `${data.subject} - Order #${data.orderNumber}`,
+			html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${data.subject}</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+  <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #333; margin: 0 0 10px 0;">Order #${data.orderNumber}</h2>
+    <p style="color: #666; margin: 0;">Dear ${data.customerName},</p>
+  </div>
+  
+  <div style="padding: 20px 0; line-height: 1.6; color: #333;">
+    ${data.message.split('\n').map(line => `<p style="margin: 0 0 10px 0;">${line}</p>`).join('')}
+  </div>
+  
+  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+  
+  <p style="color: #666; font-size: 14px; margin-top: 30px;">
+    If you have any questions, please reply to this email or contact our customer support.
+  </p>
+  
+  <p style="color: #999; font-size: 12px; margin-top: 20px;">
+    This email was sent from ${FROM_EMAIL}
+  </p>
+</body>
+</html>
+      `
+		});
+
+		console.log('[Email] Custom order email sent:', result.data?.id);
+		return { success: true, messageId: result.data?.id };
+	} catch (error) {
+		console.error('[Email] Failed to send custom order email:', error);
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : 'Unknown error'
+		};
+	}
+}
