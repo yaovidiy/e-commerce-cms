@@ -3,115 +3,80 @@
 
 @variant dark (&:is(.dark *));
 
-@theme {
+:root {
   --radius: 0.5rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   
-  /* SpiceRoom Color Palette */
-  --color-background: 0 0% 100%;
-  --color-foreground: 222.2 84% 4.9%;
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 222.2 84% 4.9%;
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222.2 84% 4.9%;
-  --color-primary: 69 20% 42%;
-  --color-primary-foreground: 0 0% 100%;
-  --color-dark-green: 120 21% 16%;
-  --color-secondary: 210 40% 96.1%;
-  --color-secondary-foreground: 222.2 47.4% 11.2%;
-  --color-muted: 210 40% 96.1%;
-  --color-muted-foreground: 215.4 16.3% 46.9%;
-  --color-accent: 210 40% 96.1%;
-  --color-accent-foreground: 222.2 47.4% 11.2%;
-  --color-destructive: 0 72.2% 50.6%;
-  --color-destructive-foreground: 210 40% 98%;
-  --color-border: 214.3 31.8% 91.4%;
-  --color-input: 214.3 31.8% 91.4%;
-  --color-ring: 222.2 84% 4.9%;
-  --color-chart-1: oklch(0.646 0.222 41.116);
-  --color-chart-2: oklch(0.6 0.118 184.704);
-  --color-chart-3: oklch(0.398 0.07 227.392);
-  --color-chart-4: oklch(0.828 0.189 84.429);
-  --color-chart-5: oklch(0.769 0.188 70.08);
+  /* SpiceRoom Color Palette - HSL values for use with hsl() */
+  --colors-background: 0 0% 100%;
+  --colors-foreground: 222.2 84% 4.9%;
+  --colors-card: 0 0% 100%;
+  --colors-card-foreground: 222.2 84% 4.9%;
+  --colors-popover: 0 0% 100%;
+  --colors-popover-foreground: 222.2 84% 4.9%;
+  --colors-primary: 69 20% 42%;
+  --colors-primary-foreground: 0 0% 100%;
+  --colors-secondary: 210 40% 96.1%;
+  --colors-secondary-foreground: 222.2 47.4% 11.2%;
+  --colors-muted: 210 40% 96.1%;
+  --colors-muted-foreground: 215.4 16.3% 46.9%;
+  --colors-accent: 210 40% 96.1%;
+  --colors-accent-foreground: 222.2 47.4% 11.2%;
+  --colors-destructive: 0 72.2% 50.6%;
+  --colors-destructive-foreground: 210 40% 98%;
+  --colors-border: 214.3 31.8% 91.4%;
+  --colors-input: 214.3 31.8% 91.4%;
+  --colors-ring: 222.2 84% 4.9%;
+  --colors-milky: 45 29% 95%;
+  --colors-dark-green: 120 21% 16%;
+  --colors-sidebar: 0 0% 98%;
+  --colors-sidebar-foreground: 240 5.3% 26.1%;
+  --colors-sidebar-primary: 240 5.9% 10%;
+  --colors-sidebar-primary-foreground: 0 0% 98%;
+  --colors-sidebar-accent: 240 4.8% 95.9%;
+  --colors-sidebar-accent-foreground: 240 5.9% 10%;
+  --colors-sidebar-border: 220 13% 91%;
+  --colors-sidebar-ring: 217.2 91.2% 59.8%;
   
-  /* Custom SpiceRoom colors */
-  --color-milky: 45 29% 95%;
-  --color-dark-green: 120 21% 16%;
-  
-  /* Sidebar colors */
-  --color-sidebar: 0 0% 98%;
-  --color-sidebar-foreground: 240 5.3% 26.1%;
-  --color-sidebar-primary: 240 5.9% 10%;
-  --color-sidebar-primary-foreground: 0 0% 98%;
-  --color-sidebar-accent: 240 4.8% 95.9%;
-  --color-sidebar-accent-foreground: 240 5.9% 10%;
-  --color-sidebar-border: 220 13% 91%;
-  --color-sidebar-ring: 217.2 91.2% 59.8%;
+  color-scheme: light;
 }
 
 .dark {
-  --color-background: 222.2 84% 4.9%;
-  --color-foreground: 210 40% 98%;
-  --color-card: 222.2 84% 4.9%;
-  --color-card-foreground: 210 40% 98%;
-  --color-popover: 222.2 84% 4.9%;
-  --color-popover-foreground: 210 40% 98%;
-  --color-primary: 210 40% 98%;
-  --color-primary-foreground: 222.2 47.4% 11.2%;
-  --color-secondary: 217.2 32.6% 17.5%;
-  --color-secondary-foreground: 210 40% 98%;
-  --color-muted: 217.2 32.6% 17.5%;
-  --color-muted-foreground: 215 20.2% 65.1%;
-  --color-accent: 217.2 32.6% 17.5%;
-  --color-accent-foreground: 210 40% 98%;
-  --color-destructive: 0 62.8% 30.6%;
-  --color-destructive-foreground: 210 40% 98%;
-  --color-border: 217.2 32.6% 17.5%;
-  --color-input: 217.2 32.6% 17.5%;
-  --color-ring: 212.7 26.8% 83.9%;
-  --color-chart-1: oklch(0.488 0.243 264.376);
-  --color-chart-2: oklch(0.696 0.17 162.48);
-  --color-chart-3: oklch(0.769 0.188 70.08);
-  --color-chart-4: oklch(0.627 0.265 303.9);
-  --color-chart-5: oklch(0.645 0.246 16.439);
+  --colors-background: 222.2 84% 4.9%;
+  --colors-foreground: 210 40% 98%;
+  --colors-card: 222.2 84% 4.9%;
+  --colors-card-foreground: 210 40% 98%;
+  --colors-popover: 222.2 84% 4.9%;
+  --colors-popover-foreground: 210 40% 98%;
+  --colors-primary: 210 40% 98%;
+  --colors-primary-foreground: 222.2 47.4% 11.2%;
+  --colors-secondary: 217.2 32.6% 17.5%;
+  --colors-secondary-foreground: 210 40% 98%;
+  --colors-muted: 217.2 32.6% 17.5%;
+  --colors-muted-foreground: 215 20.2% 65.1%;
+  --colors-accent: 217.2 32.6% 17.5%;
+  --colors-accent-foreground: 210 40% 98%;
+  --colors-destructive: 0 62.8% 30.6%;
+  --colors-destructive-foreground: 210 40% 98%;
+  --colors-border: 217.2 32.6% 17.5%;
+  --colors-input: 217.2 32.6% 17.5%;
+  --colors-ring: 212.7 26.8% 83.9%;
+  --colors-milky: 45 29% 95%;
+  --colors-dark-green: 120 21% 16%;
+  --colors-sidebar: 240 5.9% 10%;
+  --colors-sidebar-foreground: 240 4.8% 95.9%;
+  --colors-sidebar-primary: 224.3 76.3% 48%;
+  --colors-sidebar-primary-foreground: 0 0% 100%;
+  --colors-sidebar-accent: 240 3.7% 15.9%;
+  --colors-sidebar-accent-foreground: 240 4.8% 95.9%;
+  --colors-sidebar-border: 240 3.7% 15.9%;
+  --colors-sidebar-ring: 217.2 91.2% 59.8%;
   
-  /* Custom SpiceRoom colors - same in dark mode */
-  --color-milky: 45 29% 95%;
-  --color-dark-green: 120 21% 16%;
-  
-  /* Sidebar colors */
-  --color-sidebar: 240 5.9% 10%;
-  --color-sidebar-foreground: 240 4.8% 95.9%;
-  --color-sidebar-primary: 224.3 76.3% 48%;
-  --color-sidebar-primary-foreground: 0 0% 100%;
-  --color-sidebar-accent: 240 3.7% 15.9%;
-  --color-sidebar-accent-foreground: 240 4.8% 95.9%;
-  --color-sidebar-border: 240 3.7% 15.9%;
-  --color-sidebar-ring: 217.2 91.2% 59.8%;
+  color-scheme: dark;
 }
 
 @layer base {
-  :root {
-    --primary: hsl(69 20% 42%);
-    --primary-foreground: hsl(0 0% 100%);
-    --dark-green: hsl(120 21% 16%);
-    --background: hsl(0 0% 100%);
-  }
-  
-  .dark {
-    --primary: hsl(210 40% 98%);
-    --primary-foreground: hsl(222.2 47.4% 11.2%);
-    --dark-green: hsl(120 21% 16%);
-    --background: hsl(222.2 84% 4.9%);
-  }
-  
-  * {
-    @apply border-border outline-ring/50;
-  }
   body {
-    @apply bg-white text-foreground;
+    background-color: hsl(var(--colors-background));
+    color: hsl(var(--colors-foreground));
   }
 }
