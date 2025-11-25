@@ -177,27 +177,27 @@
 						{#await getAllCategories()}
 							<select
 								disabled
-								class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+									class="bg-white border-input ring-offset-white flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
 							>
 								<option>{m.common_loading()}</option>
 							</select>
 						{:then categories}
-							<select
-								{...createCategory.fields.parentId.as('select')}
-								class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
-							>
-								<option value="">{m.common_none()}</option>
-								{#each categories as category}
-									<option value={category.id}>{category.name}</option>
-								{/each}
-							</select>
+						<select
+							{...createCategory.fields.parentId.as('select')}
+							class="bg-white border-input ring-offset-white flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+						>
+							<option value="">{m.common_none()}</option>
+							{#each categories as category}
+								<option value={category.id}>{category.name}</option>
+							{/each}
+						</select>
 						{:catch}
-							<select
-								disabled
-								class="bg-white border-input ring-offset-background flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
-							>
-								<option>{m.common_error()}</option>
-							</select>
+						<select
+							disabled
+							class="bg-white border-input ring-offset-white flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+						>
+							<option>{m.common_error()}</option>
+						</select>
 						{/await}
 						{#each createCategory.fields.parentId.issues() as issue}
 							<p class="text-destructive text-sm">{issue.message}</p>

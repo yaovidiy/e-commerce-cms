@@ -129,7 +129,7 @@
 							type="text"
 							bind:value={searchQuery}
 							placeholder="Search..."
-							class="border-input ring-offset-primary placeholder:text-muted-foreground focus-visible:ring-ring flex h-full w-full rounded-md border bg-white px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							class="border-input ring-offset-white placeholder:text-muted-foreground focus-visible:ring-foreground flex h-full w-full rounded-md border bg-white px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 							onkeydown={(e) =>
 								e.key === 'Enter' &&
 								searchQuery &&

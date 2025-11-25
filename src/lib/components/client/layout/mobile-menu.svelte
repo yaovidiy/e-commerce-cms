@@ -16,7 +16,7 @@
       <a href="/blog" class="hover:underline">{m.blog()}</a>
       <a href="/about" class="hover:underline">{m.about()}</a>
       <a href="/contact" class="hover:underline">{m.contact()}</a>
-      <button class="mt-auto" onclick={() => open = false}>{m.close()}</button>
+      <button class="mt-auto" onclick={() => open = false}>{m.common_close()}</button>
     </nav>
   {/if}
 </div>
