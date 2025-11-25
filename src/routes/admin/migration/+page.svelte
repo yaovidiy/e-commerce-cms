@@ -6,13 +6,16 @@
 		createBlogCommand
 	} from '$lib/remotes/migration.remote';
 	import { me } from '$lib/remotes/user.remote';
-	import { Button } from '$lib/components/ui/button';
-	import { Progress } from '$lib/components/ui/progress';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import * as m from '$lib/paraglide/messages';
+import { Button } from '$lib/components/ui/button';
+import { Progress } from '$lib/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+import { Input } from '$lib/components/ui/input';
+import { Label } from '$lib/components/ui/label';
+import * as m from '$lib/paraglide/messages';
 	import { sleep } from '$lib/utils';
 
 	let file: File | null = $state(null);
+	let baseUrl: string = $state('https://crm.thespiceroom.com.ua');
 	let isProcessing = $state(false);
 	let progress = $state(0);
 	let totalItems = $state(0);
@@ -87,7 +90,8 @@
 				try {
 					const result = await uploadFileFromUrl({
 						url: fileData.url,
-						filename: fileData.name
+						filename: fileData.name,
+						baseUrl: baseUrl
 					});
 					fileIdMap.set(fileData.id, result.id);
 					addLog(`File "${fileData.name}": uploaded`);
@@ -187,6 +191,18 @@
 		</CardHeader>
 		<CardContent>
 			<div class="space-y-4">
+				<div>
+					<Label for="base-url">Base URL for Images</Label>
+					<Input
+						id="base-url"
+						type="text"
+						bind:value={baseUrl}
+						placeholder="https://crm.thespiceroom.com.ua"
+						disabled={isProcessing}
+					/>
+					<p class="text-xs text-muted-foreground mt-1">Enter the base URL from which images will be downloaded</p>
+				</div>
+
 				<input
 					type="file"
 					accept=".json"

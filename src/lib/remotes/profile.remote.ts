@@ -1,4 +1,4 @@
-import { form, query } from '$app/server';
+import { form, query, getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -10,7 +10,13 @@ import { error } from '@sveltejs/kit';
  * Get current user's profile
  */
 export const getMyProfile = query(async () => {
-    const sessionUser = getUser();
+    const event = getRequestEvent();
+    const sessionUser = event?.locals?.user;
+    
+    // Return null if not authenticated (don't redirect - let component handle it)
+    if (!sessionUser) {
+        return null;
+    }
     
     // Fetch full user data from database
     const [user] = await db

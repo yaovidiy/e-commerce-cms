@@ -1,4 +1,4 @@
-import { command } from '$app/server';
+import { command, query } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import { requireAdminUser } from '$lib/server/auth';
@@ -50,15 +50,14 @@ export const createCategoryIfNotExists = command(
 /**
  * Upload file from URL to R2 and create asset record
  */
-export const uploadFileFromUrl = command(
+export const uploadFileFromUrl = query(
     v.object({
         url: v.string(),
-        filename: v.pipe(v.string(), v.nonEmpty())
+        filename: v.pipe(v.string(), v.nonEmpty()),
+        baseUrl: v.pipe(v.string(), v.nonEmpty())
     }),
     async (data) => {
         const user = requireAdminUser();
-
-        const BASE_URL = 'https://crm.thespiceroom.com.ua'; // Replace with your actual base URL
 
         try {
             const [existingAsset] = await db
@@ -71,9 +70,11 @@ export const uploadFileFromUrl = command(
             }
 
             // Download file from URL
-            const response = await fetch(`${BASE_URL}${data.url}`);
+            const fullUrl = `${data.baseUrl}${data.url}`;
+            console.log('Fetching image from:', fullUrl);
+            const response = await fetch(fullUrl);
             if (!response.ok) {
-                throw new Error(`Failed to download file: ${response.status}`);
+                throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
             }
 
             const buffer = Buffer.from(await response.arrayBuffer());
@@ -125,7 +126,8 @@ export const uploadFileFromUrl = command(
 
             return asset;
         } catch (error) {
-            throw new Error(`Failed to upload file from URL: ${error}`);
+            console.error('Upload error:', error);
+            throw new Error(`Failed to upload file from URL: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 );

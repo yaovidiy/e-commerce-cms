@@ -22,31 +22,34 @@
 
 	// Check if user is authenticated
 	const isAuthRoute = $derived($page.url.pathname.startsWith('/auth'));
-	
-	// Create unique logout form instance for this header
-	const headerLogout = logout.for('header');
-	
+
 	let searchQuery = $state('');
 </script>
 
-	<header class="sticky top-0 z-50 w-full bg-white">
+<header class="sticky top-0 z-50 w-full bg-white">
 	<!-- Top Navigation Bar (Desktop Only) -->
-	<div class="hidden md:flex flex-col items-center justify-between">
+	<div class="hidden flex-col items-center justify-between md:flex">
 		<div class="mx-auto flex w-full max-w-7xl items-center justify-between px-8 py-2">
 			<!-- Logo -->
 			{#await storeNamePromise then storeName}
 				<a href="/" class="flex h-10 max-w-40 items-center">
-					<div class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold text-lg mr-2">
-						{storeName?.parsedValue ? String(storeName.parsedValue).substring(0, 2).toUpperCase() : 'SR'}
+					<div
+						class="bg-primary text-primary-foreground mr-2 flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold"
+					>
+						{storeName?.parsedValue
+							? String(storeName.parsedValue).substring(0, 2).toUpperCase()
+							: 'SR'}
 					</div>
-					<span class="font-bold text-lg">{storeName?.parsedValue || 'SpiceRoom'}</span>
+					<span class="text-lg font-bold">{storeName?.parsedValue}</span>
 				</a>
 			{:catch}
 				<a href="/" class="flex h-10 max-w-40 items-center">
-					<div class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold text-lg mr-2">
+					<div
+						class="bg-primary text-primary-foreground mr-2 flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold"
+					>
 						SR
 					</div>
-					<span class="font-bold text-lg">SpiceRoom</span>
+					<span class="text-lg font-bold">SpiceRoom</span>
 				</a>
 			{/await}
 
@@ -57,7 +60,9 @@
 						{#each headerMenu.items as link}
 							<a
 								href={link.url}
-								class="text-sm transition-colors hover:text-primary {$page.url.pathname === link.url ? 'text-foreground font-medium' : 'text-foreground/60'}"
+								class="hover:text-primary text-sm transition-colors {$page.url.pathname === link.url
+									? 'text-foreground font-medium'
+									: 'text-foreground/60'}"
 								target={link.openInNewTab ? '_blank' : '_self'}
 								rel={link.openInNewTab ? 'noopener noreferrer' : ''}
 							>
@@ -66,10 +71,21 @@
 						{/each}
 					{:else}
 						<!-- Fallback navigation -->
-						<a href="/" class="text-sm transition-colors hover:text-primary {$page.url.pathname === '/' ? 'text-foreground font-medium' : 'text-foreground/60'}">
+						<a
+							href="/"
+							class="hover:text-primary text-sm transition-colors {$page.url.pathname === '/'
+								? 'text-foreground font-medium'
+								: 'text-foreground/60'}"
+						>
 							{m.nav_home()}
 						</a>
-						<a href="/products" class="text-sm transition-colors hover:text-primary {$page.url.pathname === '/products' ? 'text-foreground font-medium' : 'text-foreground/60'}">
+						<a
+							href="/products"
+							class="hover:text-primary text-sm transition-colors {$page.url.pathname ===
+							'/products'
+								? 'text-foreground font-medium'
+								: 'text-foreground/60'}"
+						>
 							{m.nav_products()}
 						</a>
 					{/if}
@@ -77,11 +93,11 @@
 			</nav>
 
 			<!-- Empty space for alignment -->
-			<div class="flex items-center gap-4 w-40"></div>
+			<div class="flex w-40 items-center gap-4"></div>
 		</div>
-		
+
 		<!-- Second Bar with Categories, Search, and Actions -->
-		<div class="fixed top-14 z-10 h-20 w-full bg-milky transition-all border-b">
+		<div class="bg-milky fixed top-14 z-10 h-20 w-full border-b transition-all">
 			<div class="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-8">
 				<!-- Categories Button -->
 				<DropdownMenu.Root>
@@ -94,17 +110,15 @@
 					<DropdownMenu.Content align="start" class="w-56">
 						{#await categoriesPromise then categories}
 							{#if categories && categories.length > 0}
-								{#each categories.filter(c => c.isVisible).slice(0, 10) as category}
-									<DropdownMenu.Item onclick={() => goto(`/products?category=${category.slug}`)}>
-										{category.name}
+								{#each categories.filter((c) => c.isVisible).slice(0, 10) as category}
+									<DropdownMenu.Item onclick={() => goto(`/products?category=${category?.slug}`)}>
+										{category?.name}
 									</DropdownMenu.Item>
 								{/each}
 								<DropdownMenu.Separator />
 							{/if}
 						{/await}
-						<DropdownMenu.Item onclick={() => goto('/products')}>
-							View All
-						</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => goto('/products')}>View All</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 
@@ -115,10 +129,15 @@
 							type="text"
 							bind:value={searchQuery}
 							placeholder="Search..."
-							class="flex h-full w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							onkeydown={(e) => e.key === 'Enter' && searchQuery && goto(`/search?q=${encodeURIComponent(searchQuery)}`)}
+							class="border-input ring-offset-primary placeholder:text-muted-foreground focus-visible:ring-ring flex h-full w-full rounded-md border bg-white px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							onkeydown={(e) =>
+								e.key === 'Enter' &&
+								searchQuery &&
+								goto(`/search?q=${encodeURIComponent(searchQuery)}`)}
 						/>
-						<Search class="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+						<Search
+							class="text-muted-foreground absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2"
+						/>
 					</div>
 				</div>
 
@@ -140,7 +159,7 @@
 											<Phone class="mr-2 h-4 w-4" />
 											<div class="flex flex-col">
 												{#if phone.label}
-													<span class="text-xs text-muted-foreground">{phone.label}</span>
+													<span class="text-muted-foreground text-xs">{phone.label}</span>
 												{/if}
 												<span>{phone.phoneNumber}</span>
 											</div>
@@ -177,7 +196,7 @@
 								<DropdownMenu.Content align="end" class="w-56">
 									<DropdownMenu.Label>
 										<div class="flex flex-col space-y-1">
-											<p class="text-sm font-medium leading-none">
+											<p class="text-sm leading-none font-medium">
 												{user.firstName && user.lastName
 													? `${user.firstName} ${user.lastName}`
 													: user.username}
@@ -208,15 +227,16 @@
 									{/if}
 									<DropdownMenu.Separator />
 									<DropdownMenu.Item>
-										<form {...headerLogout}>
-											<button
-												type="submit"
-												disabled={!!headerLogout.pending}
-												class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
-											>
-												{headerLogout.pending ? m.auth_logging_out?.() || 'Logging out...' : m.auth_logout()}
-											</button>
-										</form>
+										<button
+											type="submit"
+											disabled={!!logout.pending}
+											onclick={() => logout()}
+											class="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
+										>
+											{logout.pending
+												? m.auth_logging_out?.() || 'Logging out...'
+												: m.auth_logout()}
+										</button>
 									</DropdownMenu.Item>
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
@@ -245,21 +265,27 @@
 	</div>
 
 	<!-- Mobile Header -->
-	<div class="flex md:hidden items-center justify-between px-4 py-3 border-b">
+	<div class="flex items-center justify-between border-b px-4 py-3 md:hidden">
 		<!-- Mobile Logo -->
 		{#await storeNamePromise then storeName}
 			<a href="/" class="flex items-center space-x-2">
-				<div class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold text-lg">
-					{storeName?.parsedValue ? String(storeName.parsedValue).substring(0, 2).toUpperCase() : 'SR'}
+				<div
+					class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold"
+				>
+					{storeName?.parsedValue
+						? String(storeName.parsedValue).substring(0, 2).toUpperCase()
+						: 'SR'}
 				</div>
-				<span class="font-bold text-lg">{storeName?.parsedValue || 'SpiceRoom'}</span>
+				<span class="text-lg font-bold">{storeName?.parsedValue || 'SpiceRoom'}</span>
 			</a>
 		{:catch}
 			<a href="/" class="flex items-center space-x-2">
-				<div class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold text-lg">
+				<div
+					class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold"
+				>
 					SR
 				</div>
-				<span class="font-bold text-lg">SpiceRoom</span>
+				<span class="text-lg font-bold">SpiceRoom</span>
 			</a>
 		{/await}
 
@@ -270,7 +296,7 @@
 					<ShoppingCart class="h-5 w-5" />
 				</Button>
 			{/if}
-			
+
 			<!-- Mobile Menu -->
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
@@ -296,9 +322,7 @@
 						{/if}
 					{/await}
 					<DropdownMenu.Separator />
-					<DropdownMenu.Item onclick={() => goto('/products')}>
-						Categories
-					</DropdownMenu.Item>
+					<DropdownMenu.Item onclick={() => goto('/products')}>Categories</DropdownMenu.Item>
 					{#await contactPhonesPromise then phones}
 						{#if phones && phones.length > 0}
 							<DropdownMenu.Separator />
