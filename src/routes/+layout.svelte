@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { i18n } from '$lib/i18n';
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import * as Sidebar from '$lib/components/ui/sidebar';
@@ -13,9 +13,9 @@
 	let { children } = $props();
 
 	// Check if we're on an admin or dashboard route
-	const isAdminRoute = $derived($page.url.pathname.startsWith('/admin'));
-	const isDashboardRoute = $derived($page.url.pathname.startsWith('/dashboard'));
-	const isAuthRoute = $derived($page.url.pathname.startsWith('/auth'));
+	const isAdminRoute = $derived(page.url.pathname.startsWith('/admin'));
+	const isDashboardRoute = $derived(page.url.pathname.startsWith('/dashboard'));
+	const isAuthRoute = $derived(page.url.pathname.startsWith('/auth'));
 
 	// Cart drawer state
 	let cartDrawerOpen = $state(false);

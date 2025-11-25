@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { getProductBySlug } from '$lib/remotes/product.remote';
 	import { addToCart, getCartItemCount } from '$lib/remotes/cart.remote';
 	import { Button } from '$lib/components/ui/button';
@@ -13,7 +13,7 @@
 	let isAddingToCart = $state(false);
 	let addedToCart = $state(false);
 
-	const slug = $derived($page.params.slug);
+	const slug = $derived(page.params.slug);
 
 	// Helper to format price
 	function formatPrice(cents: number) {

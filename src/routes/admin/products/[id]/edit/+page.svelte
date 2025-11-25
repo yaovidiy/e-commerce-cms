@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { updateProduct, getProductById } from '$lib/remotes/product.remote';
 	import { getAllCategories } from '$lib/remotes/category.remote';
 	import { getAllBrands } from '$lib/remotes/brand.remote';
@@ -17,7 +17,7 @@
 	import { generateSlug } from '$lib/utils';
 	import type { Asset } from '$lib/server/db/schema';
 
-	const productId = $page.params.id;
+	const productId = page.params.id;
 
 	// Local state for rich text editor
 	let descriptionValue = $state('');

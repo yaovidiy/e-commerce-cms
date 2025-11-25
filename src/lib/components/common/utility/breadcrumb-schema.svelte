@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface BreadcrumbItem {
 		name: string;
@@ -8,7 +8,7 @@
 
 	let { items }: { items: BreadcrumbItem[] } = $props();
 
-	const siteUrl = $derived($page.url.origin);
+	const siteUrl = $derived(page.url.origin);
 
 	const schema = $derived({
 		'@context': 'https://schema.org',

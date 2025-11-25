@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { searchProducts } from '$lib/remotes/product.remote';
 	import { SearchBar } from '$lib/components/client/features/search';
 	import { Button } from '$lib/components/ui/button';
@@ -7,7 +7,7 @@
 	import { Search } from '@lucide/svelte';
 
 	// Get search query from URL
-	const searchQuery = $derived($page.url.searchParams.get('q') || '');
+	const searchQuery = $derived(page.url.searchParams.get('q') || '');
 	const limit = $derived(parseInt($page.url.searchParams.get('limit') || '20'));
 
 	function formatPrice(price: number) {

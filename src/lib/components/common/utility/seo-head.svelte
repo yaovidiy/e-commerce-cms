@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface SeoProps {
 		title?: string;
@@ -41,8 +41,8 @@
 	}: SeoProps = $props();
 
 	// Get current URL from page store
-	const currentUrl = $derived(canonical || $page.url.href);
-	const siteUrl = $derived($page.url.origin);
+	const currentUrl = $derived(canonical || page.url.href);
+	const siteUrl = $derived(page.url.origin);
 
 	// Construct full image URL if relative
 	const fullImageUrl = $derived(

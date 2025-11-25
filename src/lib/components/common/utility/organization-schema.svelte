@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface OrganizationSchema {
 		name: string;
@@ -35,7 +35,7 @@
 		socialMedia = undefined
 	}: OrganizationSchema = $props();
 
-	const siteUrl = $derived($page.url.origin);
+	const siteUrl = $derived(page.url.origin);
 	const fullLogoUrl = $derived(logo ? (logo.startsWith('http') ? logo : `${siteUrl}${logo}`) : '');
 	const siteUrlFinal = $derived(url || siteUrl);
 

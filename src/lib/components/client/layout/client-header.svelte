@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import * as m from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button';
@@ -21,7 +21,7 @@
 	const storeNamePromise = getSetting({ key: 'store_name' });
 
 	// Check if user is authenticated
-	const isAuthRoute = $derived($page.url.pathname.startsWith('/auth'));
+	const isAuthRoute = $derived(page.url.pathname.startsWith('/auth'));
 
 	let searchQuery = $state('');
 </script>

@@ -12,10 +12,10 @@
 	import { ArrowLeft, Link, X } from '@lucide/svelte/icons';
 	import { generateSlug } from '$lib/utils';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import type { Asset, Brand } from '$lib/server/db/schema';
 
-	const brandId = $page.params.id;
+	const brandId = page.params.id;
 
 	// Redirect if no ID provided
 	if (!brandId) {

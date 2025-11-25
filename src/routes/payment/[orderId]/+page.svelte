@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { createPayment } from '$lib/remotes/payment.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Loader2 } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { onMount } from 'svelte';
 
-	const orderId = $page.params.orderId;
+	const orderId = page.params.orderId;
 	
 	if (!orderId) {
 		throw new Error('Order ID is required');

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { getOrder } from '$lib/remotes/order.remote';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -7,7 +7,7 @@
 	import { CheckCircle, Package, MapPin, CreditCard, Mail, Phone, Printer } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 
-	const orderId = $page.params.id || '';
+	const orderId = page.params.id || '';
 
 	const formatPrice = (price: number) => {
 		return new Intl.NumberFormat('en-US', {

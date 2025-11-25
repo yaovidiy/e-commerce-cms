@@ -10,7 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as m from '$lib/paraglide/messages';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { me } from '$lib/remotes/user.remote';
 
 	// Get current user from remote function
@@ -57,9 +57,9 @@
 	// Check if current route is active
 	function isActive(url: string): boolean {
 		if (url === '/') {
-			return $page.url.pathname === '/';
+			return page.url.pathname === '/';
 		}
-		return $page.url.pathname.startsWith(url);
+		return page.url.pathname.startsWith(url);
 	}
 </script>
 

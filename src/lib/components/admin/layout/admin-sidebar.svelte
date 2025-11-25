@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
@@ -92,7 +92,7 @@
 
 	// Helper to check if route is active
 	function isActive(url: string) {
-		return $page.url.pathname === url || $page.url.pathname.startsWith(url + '/');
+		return page.url.pathname === url || page.url.pathname.startsWith(url + '/');
 	}
 </script>
 

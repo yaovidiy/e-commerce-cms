@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { getBlogById } from '$lib/remotes/blog.remote';
 	import { BlogForm } from '$lib/components/admin/features/blog-management';
 	import * as m from '$lib/paraglide/messages';
@@ -8,7 +8,7 @@
 	import { goto } from '$app/navigation';
 
 	// Get blog ID from route parameter
-	const blogId = $derived($page.params.id || '');
+	const blogId = $derived(page.params.id || '');
 </script>
 
 <div class="flex flex-col gap-6">

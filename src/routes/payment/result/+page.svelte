@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
@@ -7,7 +7,7 @@
 	import * as m from '$lib/paraglide/messages';
 
 	// LiqPay returns data and signature in URL params
-	const urlParams = $derived($page.url.searchParams);
+	const urlParams = $derived(page.url.searchParams);
 	let data = $state<string | null>(null);
 	let signature = $state<string | null>(null);
 	let paymentData = $state<any>(null);

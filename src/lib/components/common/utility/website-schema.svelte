@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface WebSiteSchema {
 		name: string;
@@ -15,7 +15,7 @@
 		searchUrl = '/products?search={search_term_string}'
 	}: WebSiteSchema = $props();
 
-	const siteUrl = $derived($page.url.origin);
+	const siteUrl = $derived(page.url.origin);
 	const siteUrlFinal = $derived(url || siteUrl);
 
 	const schema = $derived({

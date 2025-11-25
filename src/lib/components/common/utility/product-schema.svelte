@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	interface ProductSchema {
 		name: string;
@@ -30,8 +30,8 @@
 		rating = undefined
 	}: ProductSchema = $props();
 
-	const siteUrl = $derived($page.url.origin);
-	const currentUrl = $derived($page.url.href);
+	const siteUrl = $derived(page.url.origin);
+	const currentUrl = $derived(page.url.href);
 
 	const schema = $derived({
 		'@context': 'https://schema.org/',

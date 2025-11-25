@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { SidebarProvider, SidebarInset, SidebarTrigger } from '$lib/components/ui/sidebar';
 	import { AdminSidebar } from '$lib/components/admin/layout';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as m from '$lib/paraglide/messages';
 
 	let { children } = $props();
+
 </script>
 
 <SidebarProvider>
@@ -20,7 +22,7 @@
 			</div>
 		</header>
 		<div class="flex flex-1 flex-col gap-4 p-4">
-			{#key children}
+			{#key page.url.pathname}
 				{@render children()}
 			{/key}
 		</div>
