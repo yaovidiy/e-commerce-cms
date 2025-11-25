@@ -33,7 +33,7 @@
 	}
 
 	function formatCurrency(amount: number): string {
-		return new Intl.NumberFormat('en-US', {
+		return new Intl.NumberFormat('uk-UA', {
 			style: 'currency',
 			currency: 'UAH'
 		}).format(amount / 100);

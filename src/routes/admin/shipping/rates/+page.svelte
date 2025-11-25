@@ -168,7 +168,7 @@
 									</Table.Cell>
 									<Table.Cell>
 										<div>
-											<p>${formatPrice(rate.price)}</p>
+											<p>₴{formatPrice(rate.price)}</p>
 											{#if rate.minOrderAmount || rate.maxOrderAmount}
 												<p class="text-muted-foreground text-xs">
 													{#if rate.minOrderAmount && rate.maxOrderAmount}

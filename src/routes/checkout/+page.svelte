@@ -15,9 +15,9 @@
 	let currentStep = $state(1);
 	const totalSteps = 3;
 
-	// Format price helper (cents to dollars)
+	// Format price helper (cents to hryvnia)
 	function formatPrice(cents: number): string {
-		return `$${(cents / 100).toFixed(2)}`;
+		return `₴${(cents / 100).toFixed(2)}`;
 	}
 
 	// Navigation functions

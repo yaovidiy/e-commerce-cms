@@ -29,9 +29,9 @@
 
 	// Helper to format price from cents
 	function formatPrice(cents: number) {
-		return new Intl.NumberFormat('en-US', {
+		return new Intl.NumberFormat('uk-UA', {
 			style: 'currency',
-			currency: 'USD'
+			currency: 'UAH'
 		}).format(cents / 100);
 	}
 

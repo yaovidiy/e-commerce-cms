@@ -59,7 +59,7 @@
 					<div class="p-4">
 						<h4 class="font-semibold text-sm mb-1 line-clamp-2">Product Name {i + 1}</h4>
 						<p class="text-muted-foreground text-xs mb-2">100g</p>
-						<p class="font-bold text-lg">$12.99</p>
+						<p class="font-bold text-lg">₴12.99</p>
 					</div>
 				</a>
 			{/each}
@@ -80,7 +80,7 @@
 					<div class="p-4">
 						<h4 class="font-semibold text-sm mb-1 line-clamp-2">Popular Product {i + 1}</h4>
 						<p class="text-muted-foreground text-xs mb-2">100g</p>
-						<p class="font-bold text-lg">$9.99</p>
+						<p class="font-bold text-lg">₴9.99</p>
 					</div>
 				</a>
 			{/each}

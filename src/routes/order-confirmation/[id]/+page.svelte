@@ -10,7 +10,7 @@
 	const orderId = page.params.id || '';
 
 	const formatPrice = (price: number) => {
-		return new Intl.NumberFormat('en-US', {
+		return new Intl.NumberFormat('uk-UA', {
 			style: 'currency',
 			currency: 'UAH'
 		}).format(price);

@@ -11,9 +11,9 @@
 	import * as m from '$lib/paraglide/messages';
 
 	function formatCurrency(amount: number) {
-		return new Intl.NumberFormat('en-US', {
+		return new Intl.NumberFormat('uk-UA', {
 			style: 'currency',
-			currency: 'USD'
+			currency: 'UAH'
 		}).format(amount / 100);
 	}
 </script>

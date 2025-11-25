@@ -124,17 +124,17 @@
 					<div class="flex items-center gap-3 mb-6">
 						{#if product.compareAtPrice && product.compareAtPrice > product.price}
 							<span class="text-3xl font-bold text-red-600">
-								${formatPrice(product.price)}
+								₴{formatPrice(product.price)}
 							</span>
 							<span class="text-xl text-gray-500 line-through">
-								${formatPrice(product.compareAtPrice)}
+								₴{formatPrice(product.compareAtPrice)}
 							</span>
 							<span class="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
 								{m.shop_sale()}
 							</span>
 						{:else}
 							<span class="text-3xl font-bold">
-								${formatPrice(product.price)}
+								₴{formatPrice(product.price)}
 							</span>
 						{/if}
 					</div>
