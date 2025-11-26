@@ -1,103 +1,151 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart } from '@lucide/svelte/icons';
+	import * as Collapsible from '$lib/components/ui/collapsible';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
 
-	// Navigation items for admin panel
-	const navItems = [
+	// Navigation items organized by category
+	const menuGroups = [
 		{
-			title: () => m.analytics?.() || 'Analytics',
-			url: '/admin/analytics',
-			icon: BarChart
+			label: () => m.admin_dashboard(),
+			icon: BarChart,
+			items: [
+				{
+					title: () => m.analytics?.() || 'Analytics',
+					url: '/admin/analytics',
+					icon: BarChart
+				}
+			]
 		},
 		{
-			title: () => m.order_orders?.() || 'Orders',
-			url: '/admin/orders',
-			icon: ShoppingCart
+			label: () => m.admin_sales(),
+			icon: ShoppingCart,
+			items: [
+				{
+					title: () => m.order_orders?.() || 'Orders',
+					url: '/admin/orders',
+					icon: ShoppingCart
+				},
+				{
+					title: () => m.admin_fiscal_receipts(),
+					url: '/admin/receipts',
+					icon: Receipt
+				}
+			]
 		},
 		{
-			title: () => m.product_products(),
-			url: '/admin/products',
-			icon: Package
+			label: () => m.admin_catalog(),
+			icon: Package,
+			items: [
+				{
+					title: () => m.product_products(),
+					url: '/admin/products',
+					icon: Package
+				},
+				{
+					title: () => m.category_categories(),
+					url: '/admin/categories',
+					icon: FolderTree
+				},
+				{
+					title: () => m.brand_brands(),
+					url: '/admin/brands',
+					icon: Tag
+				}
+			]
 		},
 		{
-			title: () => m.category_categories(),
-			url: '/admin/categories',
-			icon: FolderTree
+			label: () => m.admin_commerce(),
+			icon: Truck,
+			items: [
+				{
+					title: () => m.shipping(),
+					url: '/admin/shipping/zones',
+					icon: Truck
+				},
+				{
+					title: () => m.discounts(),
+					url: '/admin/discounts',
+					icon: Percent
+				}
+			]
 		},
 		{
-			title: () => m.brand_brands(),
-			url: '/admin/brands',
-			icon: Tag
+			label: () => m.admin_content(),
+			icon: FileText,
+			items: [
+				{
+					title: () => m.admin_blogs(),
+					url: '/admin/blogs',
+					icon: FileText
+				},
+				{
+					title: () => m.page_pages(),
+					url: '/admin/pages',
+					icon: Layout
+				},
+				{
+					title: () => m.banner_banners(),
+					url: '/admin/banners',
+					icon: Frame
+				}
+			]
 		},
 		{
-			title: () => m.shipping(),
-			url: '/admin/shipping/zones',
-			icon: Truck
+			label: () => m.admin_media(),
+			icon: Image,
+			items: [
+				{
+					title: () => m.asset_media_library(),
+					url: '/admin/assets',
+					icon: Image
+				}
+			]
 		},
 		{
-			title: () => m.discounts(),
-			url: '/admin/discounts',
-			icon: Percent
-		},
-		{
-			title: () => m.admin_blogs(),
-			url: '/admin/blogs',
-			icon: FileText
-		},
-		{
-			title: () => m.admin_users(),
-			url: '/admin/users',
-			icon: Users
-		},
-		{
-			title: () => m.asset_media_library(),
-			url: '/admin/assets',
-			icon: Image
-		},
-		{
-			title: () => m.banner_banners(),
-			url: '/admin/banners',
-			icon: Frame
-		},
-		{
-			title: () => m.page_pages(),
-			url: '/admin/pages',
-			icon: Layout
-		},
-		{
-			title: () => 'Navigation & Contact',
-			url: '/admin/navigation',
-			icon: Menu
-		},
-		{
-			title: () => 'Fiscal Receipts',
-			url: '/admin/receipts',
-			icon: Receipt
-		},
-		{
-			title: () => 'Email Settings',
-			url: '/admin/email-settings',
-			icon: Mail
-		},
-		{
-			title: () => m.settings(),
-			url: '/admin/settings',
-			icon: Settings
-		},
-		{
-			title: () => m.migration(),
-			url: '/admin/migration',
-			icon: Database
+			label: () => m.admin_system(),
+			icon: Settings,
+			items: [
+				{
+					title: () => m.admin_users(),
+					url: '/admin/users',
+					icon: Users
+				},
+				{
+					title: () => m.admin_navigation_contact(),
+					url: '/admin/navigation',
+					icon: Menu
+				},
+				{
+					title: () => m.admin_email_settings(),
+					url: '/admin/email-settings',
+					icon: Mail
+				},
+				{
+					title: () => m.settings(),
+					url: '/admin/settings',
+					icon: Settings
+				},
+				{
+					title: () => m.migration(),
+					url: '/admin/migration',
+					icon: Database
+				}
+			]
 		}
 	];
 
 	// Helper to check if route is active
 	function isActive(url: string) {
 		return page.url.pathname === url || page.url.pathname.startsWith(url + '/');
+	}
+
+	// Helper to check if any item in a group is active
+	function isGroupActive(items: any[]) {
+		return items.some(item => isActive(item.url));
 	}
 </script>
 
@@ -125,26 +173,68 @@
 	</Sidebar.Header>
 
 	<Sidebar.Content>
-		<Sidebar.Group>
-			<Sidebar.GroupLabel>{m.admin_management()}</Sidebar.GroupLabel>
-			<Sidebar.GroupContent>
-				<Sidebar.Menu>
-					{#each navItems as item}
-						<Sidebar.MenuItem>
-							<Sidebar.MenuButton
-								onclick={() => {
-									goto(item.url);
-								}}
-								isActive={isActive(item.url)}
-							>
-								<item.icon class="size-4" />
-								<span>{item.title()}</span>
-							</Sidebar.MenuButton>
-						</Sidebar.MenuItem>
-					{/each}
-				</Sidebar.Menu>
-			</Sidebar.GroupContent>
-		</Sidebar.Group>
+		{#each menuGroups as group}
+			{#if group.items.length === 1}
+				<!-- Single item groups as simple nav items -->
+				<Sidebar.Group>
+					<Sidebar.GroupContent>
+						<Sidebar.Menu>
+							{#each group.items as item}
+								<Sidebar.MenuItem>
+									<Sidebar.MenuButton
+										onclick={() => {
+											goto(item.url);
+										}}
+										isActive={isActive(item.url)}
+									>
+										<item.icon class="size-4" />
+										<span>{item.title()}</span>
+									</Sidebar.MenuButton>
+								</Sidebar.MenuItem>
+							{/each}
+						</Sidebar.Menu>
+					</Sidebar.GroupContent>
+				</Sidebar.Group>
+			{:else}
+				<!-- Multi-item groups as collapsibles -->
+				<Collapsible.Root open={isGroupActive(group.items)} class="group/collapsible">
+					<Sidebar.Group>
+						<Sidebar.GroupContent>
+							<Sidebar.Menu>
+								<Sidebar.MenuItem>
+									<Collapsible.Trigger>
+										<Sidebar.MenuButton>
+											<svelte:component this={group.icon} class="size-4" />
+											<span>{group.label()}</span>
+											<ChevronDown class="ms-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+										</Sidebar.MenuButton>
+									</Collapsible.Trigger>
+								</Sidebar.MenuItem>
+							</Sidebar.Menu>
+						</Sidebar.GroupContent>
+						<Collapsible.Content>
+							<Sidebar.GroupContent>
+								<Sidebar.Menu>
+									{#each group.items as item}
+										<Sidebar.MenuItem>
+											<Sidebar.MenuButton
+												onclick={() => {
+													goto(item.url);
+												}}
+												isActive={isActive(item.url)}
+											>
+												<item.icon class="size-4" />
+												<span>{item.title()}</span>
+											</Sidebar.MenuButton>
+										</Sidebar.MenuItem>
+									{/each}
+								</Sidebar.Menu>
+							</Sidebar.GroupContent>
+						</Collapsible.Content>
+					</Sidebar.Group>
+				</Collapsible.Root>
+			{/if}
+		{/each}
 	</Sidebar.Content>
 
 	<Sidebar.Footer>
