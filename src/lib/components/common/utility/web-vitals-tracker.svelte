@@ -21,6 +21,7 @@
 	}
 	
 	let metrics = $state<WebVitalsMetric[]>([]);
+	let isMinimized = $state(true);
 	
 	onMount(() => {
 		// Check if browser supports Performance API
@@ -204,18 +205,32 @@
 
 <!-- Only show in development -->
 {#if import.meta.env.DEV && metrics.length > 0}
-	<div class="fixed bottom-4 right-4 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm">
-		<h3 class="text-sm font-bold mb-2">Web Vitals</h3>
-		<div class="space-y-2 text-xs">
-			{#each metrics as metric}
-				<div class="flex justify-between items-center">
-					<span class="font-medium">{metric.name}:</span>
-					<span class={getRatingColor(metric.rating)}>
-						{Math.round(metric.value)}{metric.name === 'CLS' ? '' : 'ms'}
-						({metric.rating})
-					</span>
-				</div>
-			{/each}
+	<div class="fixed bottom-14 right-4 z-50 bg-white border border-gray-300 rounded-lg shadow-lg {isMinimized ? 'p-2' : 'p-4'} max-w-sm">
+		<!-- Header with toggle button -->
+		<div class="flex justify-between items-center {isMinimized ? 'mb-0' : 'mb-2'}">
+			<h3 class="text-sm font-bold">Web Vitals</h3>
+			<button
+				onclick={() => (isMinimized = !isMinimized)}
+				class="text-gray-500 hover:text-gray-700 text-lg leading-none p-1"
+				title={isMinimized ? 'Expand' : 'Minimize'}
+			>
+				{isMinimized ? '▼' : '▲'}
+			</button>
 		</div>
+
+		<!-- Metrics display (shown when expanded) -->
+		{#if !isMinimized}
+			<div class="space-y-2 text-xs">
+				{#each metrics as metric}
+					<div class="flex justify-between items-center">
+						<span class="font-medium">{metric.name}:</span>
+						<span class={getRatingColor(metric.rating)}>
+							{Math.round(metric.value)}{metric.name === 'CLS' ? '' : 'ms'}
+							({metric.rating})
+						</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 {/if}
