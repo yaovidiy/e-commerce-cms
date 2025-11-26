@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { User, Package, MapPin, Settings, LogOut, Heart } from '@lucide/svelte/icons';
+	import { User, Package, MapPin, Settings, LogOut, Heart, ShieldAlert } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { getMyProfile } from '$lib/remotes/profile.remote';
 	import { getWishlistCount } from '$lib/remotes/wishlist.remote';
 	import { goto } from '$app/navigation';
-	import { logout } from '$lib/remotes/user.remote';
+	import { logout, me } from '$lib/remotes/user.remote';
 
 	// Navigation items for customer dashboard
 	const navItems = [
@@ -42,6 +42,8 @@
 	function isActive(url: string) {
 		return page.url.pathname === url;
 	}
+
+	const user = me();
 </script>
 
 <Sidebar.Root>
@@ -98,6 +100,18 @@
 							</Sidebar.MenuButton>
 						</Sidebar.MenuItem>
 					{/each}
+					{#if user?.current?.role === 'admin'}
+						<Sidebar.MenuItem>
+							<Sidebar.MenuButton
+								onclick={() => {
+									goto('/admin');
+								}}
+							>
+								<ShieldAlert class="size-4" />
+								<span>{m.nav_admin_panel()}</span>
+							</Sidebar.MenuButton>
+						</Sidebar.MenuItem>
+					{/if}
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
