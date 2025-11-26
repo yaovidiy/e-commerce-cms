@@ -40,7 +40,7 @@
 
 	// Helper to check if route is active
 	function isActive(url: string) {
-		return page.url.pathname === url || page.url.pathname.startsWith(url + '/');
+		return page.url.pathname === url;
 	}
 </script>
 
@@ -87,7 +87,9 @@
 										<!-- Loading -->
 									{:then count}
 										{#if count > 0}
-											<span class="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+											<span
+												class="bg-primary text-primary-foreground ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold"
+											>
 												{count > 99 ? '99+' : count}
 											</span>
 										{/if}
@@ -133,9 +135,9 @@
 								</div>
 								<div class="flex flex-col items-start gap-0.5 leading-none">
 									<span class="font-semibold">
-										{user.firstName && user.lastName
-											? `${user.firstName} ${user.lastName}`
-											: user.username}
+										{user?.firstName && user?.lastName
+											? `${user?.firstName} ${user?.lastName}`
+											: user?.username}
 									</span>
 									<span class="text-muted-foreground text-xs">{m.customer_role()}</span>
 								</div>
@@ -148,7 +150,7 @@
 						<button
 							type="submit"
 							disabled={!!logout.pending}
-							class="hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none ring-sidebar-ring transition-colors focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
+							class="hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground ring-sidebar-ring flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
 						>
 							<LogOut class="size-4" />
 							<span>{logout.pending ? 'Logging out...' : m.auth_logout()}</span>
