@@ -57,12 +57,12 @@
 		{
 			accessorKey: 'email',
 			header: () => m.user_email(),
-			cell: (info) => info.getValue() || '-'
+			cell: (info: any) => info.getValue() || '-'
 		},
 		{
 			accessorKey: 'role',
 			header: () => m.user_role(),
-			cell: (info) => {
+			cell: (info: any) => {
 				const role = info.getValue() as string;
 				return role === 'admin' ? 'Admin' : 'User';
 			}
@@ -70,12 +70,12 @@
 		{
 			accessorKey: 'isAdmin',
 			header: () => m.user_admin_status(),
-			cell: (info) => (info.getValue() ? m.user_yes() : m.user_no())
+			cell: (info: any) => (info.getValue() ? m.user_yes() : m.user_no())
 		},
 		{
 			accessorKey: 'createdAt',
 			header: () => m.user_created_at(),
-			cell: (info) => {
+			cell: (info: any) => {
 				const date = info.getValue() as Date | null;
 				if (date instanceof Date) {
 					return date.toLocaleDateString();
@@ -88,7 +88,7 @@
 		{
 			id: 'actions',
 			header: () => m.common_actions(),
-			cell: ({ row }) =>
+			cell: ({ row }: any) =>
 				renderComponent(UserActionsCell, {
 					user: row.original,
 					onEdit: openEditDialog,
@@ -99,8 +99,6 @@
 			enableHiding: false
 		}
 	];
-
-	const users = getAllUsers({ username: searchQuery });
 </script>
 
 <div class="flex flex-col gap-4">

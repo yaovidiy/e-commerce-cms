@@ -18,6 +18,7 @@
 	let { data = [], columns = [], pageSize = 10, isLoading = false, emptyMessage = m.common_no_data?.() || 'No data' }: Props<any> = $props();
 
 	let sorting: SortingState = $state([]);
+	let pageIndex: number = $state(0);
 
 	const table = createSvelteTable({
 		get data() {
@@ -31,13 +32,18 @@
 			get sorting() {
 				return sorting;
 			},
-			pagination: {
-				pageIndex: 0,
-				pageSize: pageSize
+			get pagination() {
+				return {
+					pageIndex,
+					pageSize
+				};
 			}
 		},
-		onStateChange: () => {
-			// State changes are handled automatically through the proxy
+		onStateChange: (updater) => {
+			const newState = typeof updater === 'function' ? updater(table.getState()) : updater;
+			if (newState.pagination) {
+				pageIndex = newState.pagination.pageIndex;
+			}
 		}
 	});
 </script>
