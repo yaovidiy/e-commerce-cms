@@ -526,8 +526,8 @@ Priority order for your codebase:
 2. ✅ `user.remote.ts` - Done
 3. ✅ `category.remote.ts` - Done
 4. ✅ `order.remote.ts` - Done
-5. ⏭️ `blog.remote.ts` - Next to migrate
-6. `asset.remote.ts` - Pending
+5. ✅ `blog.remote.ts` - Done
+6. ⏭️ `asset.remote.ts` - Next to migrate
 7. Others as needed
 
 ## Related Resources
