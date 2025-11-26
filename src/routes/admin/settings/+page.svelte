@@ -7,6 +7,9 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Card from '$lib/components/ui/card';
 	import * as m from '$lib/paraglide/messages';
+	import { AssetBrowser } from '$lib/components/common/forms';
+	import { ImageIcon, X } from '@lucide/svelte';
+	import type { Asset } from '$lib/server/db/schema';
 	import {
 		getAllSettings,
 		initializeDefaultSettings,
@@ -17,6 +20,44 @@
 		updateSeoSettings,
 		updateAdvancedSettings
 	} from '$lib/remotes/settings.remote';
+
+	// Asset browser state
+	let logoBrowserOpen = $state(false);
+	let faviconBrowserOpen = $state(false);
+	let ogImageBrowserOpen = $state(false);
+
+	// Handle asset selection for logo
+	function handleLogoSelect(asset: Asset) {
+		generalSettings.storeLogo = asset.url;
+		logoBrowserOpen = false;
+	}
+
+	// Handle asset selection for favicon
+	function handleFaviconSelect(asset: Asset) {
+		generalSettings.storeFavicon = asset.url;
+		faviconBrowserOpen = false;
+	}
+
+	// Handle asset selection for OG image
+	function handleOgImageSelect(asset: Asset) {
+		seoSettings.seoDefaultOgImage = asset.url;
+		ogImageBrowserOpen = false;
+	}
+
+	// Clear logo
+	function clearLogo() {
+		generalSettings.storeLogo = '';
+	}
+
+	// Clear favicon
+	function clearFavicon() {
+		generalSettings.storeFavicon = '';
+	}
+
+	// Clear OG image
+	function clearOgImage() {
+		seoSettings.seoDefaultOgImage = '';
+	}
 
 	// Load all settings
 	const settingsQuery = getAllSettings();
@@ -254,13 +295,39 @@
 
 								<!-- Store Logo -->
 								<div class="space-y-2">
-									<Label for="store-logo">{m.settings_general_store_logo()}</Label>
-									<Input
-										id="store-logo"
-										{...updateGeneralSettings.fields.storeLogo.as('text')}
-										bind:value={generalSettings.storeLogo}
-										placeholder="https://example.com/logo.png"
+									<Label>{m.settings_general_store_logo()}</Label>
+									<input
+										type="hidden"
+										name="storeLogo"
+										value={generalSettings.storeLogo}
 									/>
+									<div class="flex items-start gap-4">
+										{#if generalSettings.storeLogo}
+											<div class="relative">
+												<div class="relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+													<img
+														src={generalSettings.storeLogo}
+														alt="Store Logo"
+														class="h-full w-full object-contain"
+													/>
+												</div>
+												<button
+													type="button"
+													onclick={clearLogo}
+													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+												>
+													<X class="h-4 w-4" />
+												</button>
+											</div>
+										{:else}
+											<div class="flex h-24 w-40 items-center justify-center rounded-lg border border-dashed bg-muted">
+												<ImageIcon class="h-8 w-8 text-muted-foreground" />
+											</div>
+										{/if}
+										<Button type="button" variant="outline" onclick={() => (logoBrowserOpen = true)}>
+											{generalSettings.storeLogo ? m.common_change() : m.common_select()}
+										</Button>
+									</div>
 									<p class="text-sm text-muted-foreground">
 										{m.settings_general_store_logo_help()}
 									</p>
@@ -271,13 +338,39 @@
 
 								<!-- Store Favicon -->
 								<div class="space-y-2">
-									<Label for="store-favicon">{m.settings_general_store_favicon()}</Label>
-									<Input
-										id="store-favicon"
-										{...updateGeneralSettings.fields.storeFavicon.as('text')}
-										bind:value={generalSettings.storeFavicon}
-										placeholder="https://example.com/favicon.ico"
+									<Label>{m.settings_general_store_favicon()}</Label>
+									<input
+										type="hidden"
+										name="storeFavicon"
+										value={generalSettings.storeFavicon}
 									/>
+									<div class="flex items-start gap-4">
+										{#if generalSettings.storeFavicon}
+											<div class="relative">
+												<div class="relative h-16 w-16 overflow-hidden rounded-lg border bg-muted">
+													<img
+														src={generalSettings.storeFavicon}
+														alt="Favicon"
+														class="h-full w-full object-contain"
+													/>
+												</div>
+												<button
+													type="button"
+													onclick={clearFavicon}
+													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+												>
+													<X class="h-4 w-4" />
+												</button>
+											</div>
+										{:else}
+											<div class="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed bg-muted">
+												<ImageIcon class="h-6 w-6 text-muted-foreground" />
+											</div>
+										{/if}
+										<Button type="button" variant="outline" onclick={() => (faviconBrowserOpen = true)}>
+											{generalSettings.storeFavicon ? m.common_change() : m.common_select()}
+										</Button>
+									</div>
 									<p class="text-sm text-muted-foreground">
 										{m.settings_general_store_favicon_help()}
 									</p>
@@ -861,13 +954,39 @@
 
 								<!-- Default OG Image -->
 								<div class="space-y-2">
-									<Label for="og-image">{m.settings_seo_default_og_image()}</Label>
-									<Input
-										id="og-image"
-										{...updateSeoSettings.fields.seoDefaultOgImage.as('text')}
-										bind:value={seoSettings.seoDefaultOgImage}
-										placeholder="https://example.com/og-image.jpg"
+									<Label>{m.settings_seo_default_og_image()}</Label>
+									<input
+										type="hidden"
+										name="seoDefaultOgImage"
+										value={seoSettings.seoDefaultOgImage}
 									/>
+									<div class="flex items-start gap-4">
+										{#if seoSettings.seoDefaultOgImage}
+											<div class="relative">
+												<div class="relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+													<img
+														src={seoSettings.seoDefaultOgImage}
+														alt="Open Graph preview"
+														class="h-full w-full object-cover"
+													/>
+												</div>
+												<button
+													type="button"
+													onclick={clearOgImage}
+													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+												>
+													<X class="h-4 w-4" />
+												</button>
+											</div>
+										{:else}
+											<div class="flex h-24 w-40 items-center justify-center rounded-lg border border-dashed bg-muted">
+												<ImageIcon class="h-8 w-8 text-muted-foreground" />
+											</div>
+										{/if}
+										<Button type="button" variant="outline" onclick={() => (ogImageBrowserOpen = true)}>
+											{seoSettings.seoDefaultOgImage ? m.common_change() : m.common_select()}
+										</Button>
+									</div>
 									<p class="text-sm text-muted-foreground">
 										{m.settings_seo_default_og_image_help()}
 									</p>
@@ -1098,3 +1217,8 @@
 		</Card.Root>
 	{/await}
 </div>
+
+<!-- Asset Browser Dialogs -->
+<AssetBrowser bind:open={logoBrowserOpen} onSelect={handleLogoSelect} />
+<AssetBrowser bind:open={faviconBrowserOpen} onSelect={handleFaviconSelect} />
+<AssetBrowser bind:open={ogImageBrowserOpen} onSelect={handleOgImageSelect} />

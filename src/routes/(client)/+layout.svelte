@@ -8,6 +8,7 @@
 	import Footer from '$lib/components/client/layout/footer.svelte';
 	import MobileMenu from '$lib/components/client/layout/mobile-menu.svelte';
 	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
+	import SiteHead from '$lib/components/common/utility/site-head.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import '../../app.css';
 	let { children } = $props();
@@ -19,6 +20,9 @@
 	// Cart drawer state
 	let cartDrawerOpen = $state(false);
 </script>
+
+<!-- Dynamic favicon, title, and SEO meta from store settings -->
+<SiteHead />
 
 <ParaglideJS {i18n}>
 	{#if isDashboardRoute}

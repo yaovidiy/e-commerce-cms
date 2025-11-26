@@ -41,8 +41,8 @@ export const uploadAsset = form(
 		const filename = `${timestamp}-${randomString}.${extension}`;
 		const thumbnailFilename = `${timestamp}-${randomString}-thumb.${extension}`;
 
-		// Process image (optimize and create thumbnail)
-		const { original, thumbnail } = await processImage(buffer);
+		// Process image (optimize and create thumbnail), preserving format for transparency
+		const { original, thumbnail } = await processImage(buffer, file.type);
 
 		// Upload original to R2
 		const url = await uploadToR2(`images/${filename}`, original, file.type);

@@ -14,9 +14,11 @@
 	import PhoneDropdown from '$lib/components/client/widgets/phone-dropdown.svelte';
 	import { onMount } from 'svelte';
 	import { getNavigationMenuByLocation } from '$lib/remotes/navigation.remote';
+	import { getPublicSettings } from '$lib/remotes/settings.remote';
 
 	let desktopHeader = $state<HTMLElement | null>(null);
 	const headerMenuPromise = getNavigationMenuByLocation('header');
+	const storeSettingsPromise = getPublicSettings();
 
 	function switchToLanguage(newLanguage: AvailableLanguageTag) {
 		const canonicalPath = i18n.route(page.url.pathname);
@@ -51,7 +53,17 @@
 		class="bg-milky fixed top-0 z-10 flex h-20 w-full items-center justify-between px-8 py-4 md:hidden"
 	>
 		<a href="/" class="flex h-10 max-w-40 items-center">
-			<img src="/logo.png" alt="SpiceRoom Logo" />
+			{#await storeSettingsPromise}
+				<Skeleton class="h-10 w-32" />
+			{:then settings}
+				{#if settings.storeLogo}
+					<img src={settings.storeLogo} alt={settings.storeName} class="max-h-full max-w-full object-contain" />
+				{:else}
+					<span class="text-lg font-bold">{settings.storeName}</span>
+				{/if}
+			{:catch}
+				<img src="/logo.png" alt="Store Logo" />
+			{/await}
 		</a>
 
 		<div class="flex gap-4">
@@ -65,7 +77,17 @@
 	<header class="hidden flex-col items-center justify-between md:flex">
 		<div class="items-ceter mx-auto flex w-full max-w-7xl justify-between px-8 py-2">
 			<a href="/" class="flex h-10 max-w-40 items-center">
-				<img src="/logo.png" alt="SpiceRoom Logo" />
+				{#await storeSettingsPromise}
+					<Skeleton class="h-10 w-32" />
+				{:then settings}
+					{#if settings.storeLogo}
+						<img src={settings.storeLogo} alt={settings.storeName} class="max-h-full max-w-full object-contain" />
+					{:else}
+						<span class="text-lg font-bold">{settings.storeName}</span>
+					{/if}
+				{:catch}
+					<img src="/logo.png" alt="Store Logo" />
+				{/await}
 			</a>
 			<nav class="flex items-center gap-5">
 				{#await headerMenuPromise}

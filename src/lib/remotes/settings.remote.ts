@@ -31,6 +31,25 @@ interface SettingDefinition {
 	description?: string;
 }
 
+// Public settings keys that don't require authentication
+const PUBLIC_SETTINGS_KEYS = [
+	'store_name',
+	'store_logo',
+	'store_favicon',
+	'store_email',
+	'store_phone',
+	'currency',
+	'currency_symbol',
+	'facebook_url',
+	'instagram_url',
+	'twitter_url',
+	'youtube_url',
+	'linkedin_url',
+	'seo_default_title',
+	'seo_default_description',
+	'seo_default_og_image'
+];
+
 // Default settings configuration
 const DEFAULT_SETTINGS: SettingDefinition[] = [
 	// General Settings
@@ -476,6 +495,41 @@ function stringifySettingValue(value: unknown): string {
 	if (typeof value === 'boolean') return value ? 'true' : 'false';
 	return JSON.stringify(value);
 }
+
+/**
+ * Get public store settings (no authentication required)
+ * Used for displaying store logo, favicon, and other public info on the client site
+ */
+export const getPublicSettings = query(async () => {
+	const settings = await db
+		.select()
+		.from(tables.siteSetting)
+		.where(inArray(tables.siteSetting.key, PUBLIC_SETTINGS_KEYS));
+
+	// Transform into a key-value object for easy access
+	const settingsMap: Record<string, unknown> = {};
+	for (const setting of settings) {
+		settingsMap[setting.key] = parseSettingValue(setting.value, setting.type as SettingType);
+	}
+
+	return {
+		storeName: settingsMap['store_name'] as string || 'My Store',
+		storeLogo: settingsMap['store_logo'] as string || '',
+		storeFavicon: settingsMap['store_favicon'] as string || '',
+		storeEmail: settingsMap['store_email'] as string || '',
+		storePhone: settingsMap['store_phone'] as string || '',
+		currency: settingsMap['currency'] as string || 'USD',
+		currencySymbol: settingsMap['currency_symbol'] as string || '$',
+		facebookUrl: settingsMap['facebook_url'] as string || '',
+		instagramUrl: settingsMap['instagram_url'] as string || '',
+		twitterUrl: settingsMap['twitter_url'] as string || '',
+		youtubeUrl: settingsMap['youtube_url'] as string || '',
+		linkedinUrl: settingsMap['linkedin_url'] as string || '',
+		seoDefaultTitle: settingsMap['seo_default_title'] as string || 'My Store',
+		seoDefaultDescription: settingsMap['seo_default_description'] as string || '',
+		seoDefaultOgImage: settingsMap['seo_default_og_image'] as string || ''
+	};
+});
 
 /**
  * Get all settings
