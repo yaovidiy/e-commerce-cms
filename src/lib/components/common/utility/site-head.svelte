@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getPublicSettings } from '$lib/remotes/settings.remote';
+	import { onMount } from 'svelte';
 
 	// Use $state to store settings once loaded
 	let settings = $state<{
@@ -10,7 +11,7 @@
 	} | null>(null);
 
 	// Load settings on component init
-	$effect(() => {
+	onMount(() => {
 		getPublicSettings().then((data) => {
 			settings = data;
 		});
