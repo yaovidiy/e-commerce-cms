@@ -139,6 +139,12 @@ export const DeleteCategorySchema = v.object({
     id: v.string()
 });
 
+export const GetCategoriesSchema = v.object({
+    search: v.optional(v.string(), ''),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
+});
+
 // Brand schemas
 export const CreateBrandSchema = v.object({
     name: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),

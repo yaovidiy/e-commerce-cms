@@ -875,7 +875,7 @@ These are automatically added to both `en.json` and `uk.json`.
 2. **Convert 0-based to 1-based in page change handler**
    ```typescript
    function handlePageChange(pageIndex: number) {
-     currentPage = pageIndex + 1;
+     currentPage = pageIndex;
    }
    ```
 

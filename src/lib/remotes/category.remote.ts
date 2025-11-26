@@ -3,19 +3,50 @@ import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import * as auth from '$lib/server/auth';
 import * as v from 'valibot';
-import { CreateCategorySchema, UpdateCategorySchema, DeleteCategorySchema } from '$lib/server/schemas';
-import { eq, isNull, desc } from 'drizzle-orm';
+import { CreateCategorySchema, UpdateCategorySchema, DeleteCategorySchema, GetCategoriesSchema } from '$lib/server/schemas';
+import { eq, isNull, desc, like, and, count } from 'drizzle-orm';
 import { categoryCache, withCache, invalidateCategoryCaches } from '$lib/server/cache';
+import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
 
-// Get all categories (including nested structure)
-export const getAllCategories = query(async () => {
-	return await withCache(categoryCache, 'all-categories', async () => {
-		const categories = await db
-			.select()
-			.from(tables.category)
-			.orderBy(desc(tables.category.displayOrder), tables.category.name);
+// Get all categories with pagination (including search)
+export const getAllCategories = query(GetCategoriesSchema, async (data) => {
+	let baseQuery = db.select().from(tables.category);
+	const conditions = [];
 
-		return categories;
+	// Filter by search term
+	if (data.search) {
+		conditions.push(like(tables.category.name, `%${data.search}%`));
+	}
+
+	// Apply conditions
+	if (conditions.length > 0) {
+		baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+	}
+
+	// Add ordering for deterministic results
+	baseQuery = baseQuery.orderBy(desc(tables.category.displayOrder), tables.category.name) as typeof baseQuery;
+
+	// Create count query with same conditions
+	let countQuery = db.select({ count: count() }).from(tables.category);
+
+	if (conditions.length > 0) {
+		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+	}
+
+	// Execute count query
+	const [countResult] = await countQuery;
+	const totalCount = Number(countResult?.count) || 0;
+
+	// Calculate pagination
+	const { offset, limit } = calculatePagination(data.page, data.pageSize);
+
+	// Execute data query with pagination
+	const categories = await baseQuery.limit(limit).offset(offset);
+
+	// Return using utility
+	return createPaginatedResponse(categories, totalCount, {
+		page: data.page,
+		pageSize: data.pageSize
 	});
 });
 
@@ -77,7 +108,7 @@ export const createCategory = form(CreateCategorySchema, async (data) => {
 	invalidateCategoryCaches();
 
 	// Refresh category list
-	await getAllCategories().refresh();
+	await getAllCategories({ search: '', page: 1, pageSize: 20 }).refresh();
 
 	return newCategory;
 });
@@ -101,7 +132,7 @@ export const updateCategory = form(UpdateCategorySchema, async (data) => {
 	invalidateCategoryCaches();
 
 	// Refresh category list
-	await getAllCategories().refresh();
+	await getAllCategories({ search: '', page: 1, pageSize: 20 }).refresh();
 
 	return updatedCategory;
 });
@@ -133,7 +164,7 @@ export const deleteCategory = form(DeleteCategorySchema, async (data) => {
 	invalidateCategoryCaches();
 
 	// Refresh category list
-	await getAllCategories().refresh();
+	await getAllCategories({ search: '', page: 1, pageSize: 20 }).refresh();
 
 	return { success: true };
 });
