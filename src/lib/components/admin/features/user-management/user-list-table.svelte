@@ -2,8 +2,10 @@
 	import { getAllUsers, toggleAdminStatus } from '$lib/remotes/user.remote';
 	import { DataTableWrapper } from '$lib/components/common/data-display';
 	import { Input } from '$lib/components/ui/input';
+	import { renderComponent } from '$lib/components/ui/data-table';
 	import EditUserDialog from './edit-user-dialog.svelte';
 	import DeleteUserDialog from './delete-user-dialog.svelte';
+	import UserActionsCell from './user-actions-cell.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Search } from '@lucide/svelte';
 	import type { ColumnDef } from '@tanstack/table-core';
@@ -39,6 +41,7 @@
 	}
 
 	async function handleToggleAdmin(user: Record<string, any> | null) {
+		if (!user) return;
 		await toggleAdminStatus({
 			id: user?.id ?? '',
 			isAdmin: !user?.isAdmin
@@ -85,10 +88,15 @@
 		{
 			id: 'actions',
 			header: () => m.common_actions(),
-			cell: (info) => {
-				const user = info.row.original;
-				return `actions-${user.id}`;
-			}
+			cell: ({ row }) =>
+				renderComponent(UserActionsCell, {
+					user: row.original,
+					onEdit: openEditDialog,
+					onDelete: openDeleteDialog,
+					onToggleAdmin: handleToggleAdmin
+				}),
+			enableSorting: false,
+			enableHiding: false
 		}
 	];
 
