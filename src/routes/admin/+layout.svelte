@@ -4,6 +4,7 @@
 	import { AdminSidebar } from '$lib/components/admin/layout';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as m from '$lib/paraglide/messages';
+	import '../../app.css';
 
 	let { children } = $props();
 

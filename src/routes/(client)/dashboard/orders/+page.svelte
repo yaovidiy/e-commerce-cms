@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getMyOrders } from '$lib/remotes/order.remote';
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as m from '$lib/paraglide/messages';
@@ -44,7 +44,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-6xl space-y-6">
+<div class="flex flex-col gap-3 px-8 space-y-6">
 	<div>
 		<h1 class="text-3xl font-bold tracking-tight">{m.orders_title()}</h1>
 		<p class="text-muted-foreground mt-1">{m.orders_description()}</p>
@@ -53,19 +53,19 @@
 	{#await getMyOrders()}
 		<div class="grid gap-4">
 			{#each Array(3) as _}
-				<Card>
-					<CardContent class="py-8">
+				<Card.Root>
+					<Card.Content class="py-8">
 						<div class="flex items-center justify-center">
 							<div class="text-muted-foreground">Loading...</div>
 						</div>
-					</CardContent>
-				</Card>
+					</Card.Content>
+				</Card.Root>
 			{/each}
 		</div>
 	{:then orders}
 		{#if orders.length === 0}
-			<Card>
-				<CardContent class="py-12">
+			<Card.Root>
+				<Card.Content class="py-12">
 					<div class="flex flex-col items-center justify-center gap-4 text-center">
 						<Package class="text-muted-foreground size-12" />
 						<div>
@@ -76,24 +76,24 @@
 							Start Shopping
 						</Button>
 					</div>
-				</CardContent>
-			</Card>
+				</Card.Content>
+			</Card.Root>
 		{:else}
 			<div class="grid gap-4">
 				{#each orders as order}
 					{@const items = JSON.parse(order.items)}
 					{@const shippingAddress = JSON.parse(order.shippingAddress)}
-					<Card>
-						<CardHeader>
+					<Card.Root>
+						<Card.Header>
 							<div class="flex flex-wrap items-start justify-between gap-4">
 								<div class="flex-1 space-y-1.5">
 									<div class="flex items-center gap-2">
-										<CardTitle class="text-lg">Order #{order.orderNumber}</CardTitle>
+										<Card.Title class="text-lg">Order #{order.orderNumber}</Card.Title>
 										<Badge variant={getStatusBadgeVariant(order.status)}>
 											{formatStatus(order.status)}
 										</Badge>
 									</div>
-									<CardDescription>
+									<Card.Description>
 										<div class="flex items-center gap-4 text-sm">
 											<div class="flex items-center gap-1">
 												<Calendar class="size-3.5" />
@@ -108,7 +108,7 @@
 												{items.length} {items.length === 1 ? 'item' : 'items'}
 											</div>
 										</div>
-									</CardDescription>
+									</Card.Description>
 								</div>
 								<div class="text-right">
 									<div class="text-2xl font-bold">{formatCurrency(order.total)}</div>
@@ -117,8 +117,8 @@
 									</div>
 								</div>
 							</div>
-						</CardHeader>
-						<CardContent class="space-y-4">
+						</Card.Header>
+						<Card.Content class="space-y-4">
 							<!-- Order Items -->
 							<div class="space-y-2">
 								<h4 class="text-sm font-semibold">Items</h4>
@@ -186,18 +186,18 @@
 									<ExternalLink class="ml-2 size-4" />
 								</Button>
 							</div>
-						</CardContent>
-					</Card>
+						</Card.Content>
+					</Card.Root>
 				{/each}
 			</div>
 		{/if}
 	{:catch error}
-		<Card>
-			<CardContent class="py-8">
+		<Card.Root>
+			<Card.Content class="py-8">
 				<div class="flex items-center justify-center">
 					<div class="text-destructive">Error loading orders: {error.message}</div>
 				</div>
-			</CardContent>
-		</Card>
+			</Card.Content>
+		</Card.Root>
 	{/await}
 </div>

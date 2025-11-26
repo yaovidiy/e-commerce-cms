@@ -94,7 +94,7 @@
 	});
 </script>
 
-<div class="mx-auto max-w-6xl space-y-6">
+<div class="px-8 flex flex-col gap-3">
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight">{m.address_title()}</h1>

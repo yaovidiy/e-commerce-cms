@@ -9,11 +9,10 @@
 	import MobileMenu from '$lib/components/client/layout/mobile-menu.svelte';
 	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import '../app.css';
+	import '../../app.css';
 	let { children } = $props();
 
 	// Check if we're on an admin or dashboard route
-	const isAdminRoute = $derived(page.url.pathname.startsWith('/admin'));
 	const isDashboardRoute = $derived(page.url.pathname.startsWith('/dashboard'));
 	const isAuthRoute = $derived(page.url.pathname.startsWith('/auth'));
 
@@ -22,19 +21,20 @@
 </script>
 
 <ParaglideJS {i18n}>
-	{#if isAdminRoute}
-		<!-- Admin routes handle their own layout -->
-		{@render children()}
-	{:else if isDashboardRoute}
+	{#if isDashboardRoute}
 		<!-- Dashboard routes use sidebar layout -->
-		<Sidebar.Provider>
-			<AppSidebar />
-			<Sidebar.Inset>
-				<main class="flex flex-1 flex-col">
+		<main class="flex flex-1 flex-col">
+			{@render children()}
+		</main>
+	{:else if isAuthRoute}
+		<!-- Auth routes use minimal layout -->
+		<div class="flex min-h-screen flex-col">
+			<main class="flex-1">
+				<div class="mx-auto max-w-2xl px-4 md:px-6">
 					{@render children()}
-				</main>
-			</Sidebar.Inset>
-		</Sidebar.Provider>
+				</div>
+			</main>
+		</div>
 	{:else}
 		<!-- Customer-facing routes use header/footer layout -->
 		<div class="flex min-h-screen flex-col">
