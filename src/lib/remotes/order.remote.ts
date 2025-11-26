@@ -13,6 +13,7 @@ import {
 } from '$lib/server/schemas';
 import { eq, like, and, desc, count } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
+import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
 
 // Helper to generate order number
 function generateOrderNumber(): string {
@@ -25,7 +26,7 @@ function generateOrderNumber(): string {
 export const getAllOrders = query(FilterOrdersSchema, async (data) => {
 	auth.requireAdminUser();
 
-	let query = db.select().from(tables.order);
+	let baseQuery = db.select().from(tables.order);
 
 	const conditions = [];
 
@@ -44,37 +45,36 @@ export const getAllOrders = query(FilterOrdersSchema, async (data) => {
 		conditions.push(like(tables.order.orderNumber, `%${data.orderNumber}%`));
 	}
 
+	// Apply conditions
 	if (conditions.length > 0) {
-		query = query.where(and(...conditions)) as typeof query;
+		baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
 	}
 
 	// Order by creation date (newest first)
-	query = query.orderBy(desc(tables.order.createdAt)) as typeof query;
+	baseQuery = baseQuery.orderBy(desc(tables.order.createdAt)) as typeof baseQuery;
 
-	// Pagination
-	const offset = (data.page - 1) * data.pageSize;
-	query = query.limit(data.pageSize).offset(offset) as typeof query;
-
-	const orders = await query;
-
-	// Get total count for pagination
+	// Create count query with same conditions
 	let countQuery = db.select({ count: count() }).from(tables.order);
 
 	if (conditions.length > 0) {
 		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
 	}
 
-	const [{ count: totalCount }] = await countQuery;
+	// Execute count query
+	const [countResult] = await countQuery;
+	const totalCount = Number(countResult?.count) || 0;
 
-	return {
-		orders,
-		pagination: {
-			page: data.page,
-			pageSize: data.pageSize,
-			totalCount,
-			totalPages: Math.ceil(totalCount / data.pageSize)
-		}
-	};
+	// Calculate pagination
+	const { offset, limit } = calculatePagination(data.page, data.pageSize);
+
+	// Execute data query with pagination
+	const orders = await baseQuery.limit(limit).offset(offset);
+
+	// Return using utility
+	return createPaginatedResponse(orders, totalCount, {
+		page: data.page,
+		pageSize: data.pageSize
+	});
 });
 
 // Get single order (admin or order owner)

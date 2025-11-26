@@ -1,31 +1,15 @@
 <script lang="ts">
 	import { getAllOrders, updateOrderStatus } from '$lib/remotes/order.remote';
+	import { DataTableWrapper } from '$lib/components/common/data-display';
+	import { renderComponent } from '$lib/components/ui/data-table';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import OrderDetailsDialog from './order-details-dialog.svelte';
 	import SendEmailDialog from './send-email-dialog.svelte';
+	import OrderActionsCell from './order-actions-cell.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import {
-		MoreHorizontal,
-		Eye,
-		Mail,
-		Search,
-		ChevronLeft,
-		ChevronRight,
-		Package,
-		Truck,
-		CheckCircle,
-		XCircle,
-		Clock,
-		RefreshCw
-	} from '@lucide/svelte';
-
-	let searchQuery = $state('');
-	let statusFilter = $state<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'>('all');
-	let currentPage = $state(1);
-	let pageSize = $state(10);
+	import { Search } from '@lucide/svelte';
 
 	type Order = {
 		id: string;
@@ -39,11 +23,21 @@
 		createdAt: Date | null;
 	};
 
+	let searchQuery = $state('');
+	let statusFilter = $state<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'>('all');
+	let currentPage = $state(1);
+	const pageSize = 10;
+
 	// Track which order is being viewed/emailed
 	let viewingOrder = $state<null | Order>(null);
 	let emailingOrder = $state<null | Order>(null);
 	let detailsDialogOpen = $state(false);
 	let emailDialogOpen = $state(false);
+
+	function handlePageChange(pageIndex: any) {
+		// DataTableWrapper sends 0-based index, convert to 1-based for API
+		currentPage = pageIndex + 1;
+	}
 
 	function openDetailsDialog(order: Order) {
 		viewingOrder = order;
@@ -55,8 +49,11 @@
 		emailDialogOpen = true;
 	}
 
-	async function handleStatusChange(orderId: string, newStatus: Order['status']) {
-		await updateOrderStatus({ id: orderId, status: newStatus });
+	async function handleStatusChange(orderId: string, newStatus: string) {
+		await updateOrderStatus({ 
+			id: orderId, 
+			status: newStatus as Order['status']
+		});
 	}
 
 	function handleSearchChange() {
@@ -79,25 +76,6 @@
 			case 'cancelled': return m.order_status_cancelled?.() ?? 'Cancelled';
 			case 'refunded': return m.order_status_refunded?.() ?? 'Refunded';
 			default: return status;
-		}
-	}
-
-	function getStatusIcon(status: Order['status']) {
-		switch (status) {
-			case 'pending':
-				return Clock;
-			case 'processing':
-				return Package;
-			case 'shipped':
-				return Truck;
-			case 'delivered':
-				return CheckCircle;
-			case 'cancelled':
-				return XCircle;
-			case 'refunded':
-				return RefreshCw;
-			default:
-				return Clock;
 		}
 	}
 
@@ -156,173 +134,100 @@
 		</Select.Root>
 	</div>
 
-	<div class="rounded-md border">
-		<div class="w-full overflow-x-auto">
-			<div class="bg-muted/50 border-b px-4 py-3">
-				<div class="grid grid-cols-7 gap-4 font-medium min-w-[800px]">
-					<div>{m.order_order_number?.() ?? 'Order #'}</div>
-					<div>{m.order_customer?.() ?? 'Customer'}</div>
-					<div>{m.order_email?.() ?? 'Email'}</div>
-					<div>{m.common_status()}</div>
-					<div>{m.order_total?.() ?? 'Total'}</div>
-					<div>{m.order_date?.() ?? 'Date'}</div>
-					<div class="text-right">{m.common_actions()}</div>
-				</div>
-			</div>
-			<div>
-				{#await getAllOrders({ 
-					status: statusFilter, 
-					customerEmail: searchQuery.includes('@') ? searchQuery : '', 
-					orderNumber: !searchQuery.includes('@') ? searchQuery : '', 
-					page: currentPage, 
-					pageSize 
-				})}
-					<div class="text-muted-foreground px-4 py-8 text-center text-sm">{m.common_loading()}</div>
-				{:then result}
-					{#each result.orders as order (order.id)}
-						{@const StatusIcon = getStatusIcon(order.status)}
-						<div class="hover:bg-muted/50 border-b px-4 py-3 last:border-0 min-w-[800px]">
-							<div class="grid grid-cols-7 items-center gap-4">
-								<div class="font-mono text-sm font-medium">{order.orderNumber}</div>
-								<div class="truncate">{order.customerFirstName} {order.customerLastName}</div>
-								<div class="text-muted-foreground truncate text-sm">{order.customerEmail}</div>
-								<div>
-										<span
-											class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(order.status)}"
-										>
-											<StatusIcon class="h-3 w-3" />
-											{getStatusLabel(order.status)}
-										</span>
-								</div>
-								<div class="font-medium">{formatCurrency(order.total)}</div>
-								<div class="text-muted-foreground text-sm">
-									{#if order.createdAt}
-										{new Date(order.createdAt).toLocaleDateString()}
-									{:else}
-										-
-									{/if}
-								</div>
-								<div class="flex items-center justify-end gap-2">
-									<DropdownMenu.Root>
-										<DropdownMenu.Trigger>
-											<Button variant="ghost" size="icon">
-												<MoreHorizontal class="h-4 w-4" />
-												<span class="sr-only">{m.common_actions()}</span>
-											</Button>
-										</DropdownMenu.Trigger>
-										<DropdownMenu.Content align="end">
-											<DropdownMenu.Item onclick={() => openDetailsDialog(order as Order)}>
-												<Eye class="mr-2 h-4 w-4" />
-												{m.order_view_details?.() ?? 'View Details'}
-											</DropdownMenu.Item>
-											<DropdownMenu.Item onclick={() => openEmailDialog(order as Order)}>
-												<Mail class="mr-2 h-4 w-4" />
-												{m.order_send_email?.() ?? 'Send Email'}
-											</DropdownMenu.Item>
-											<DropdownMenu.Separator />
-											<DropdownMenu.Sub>
-												<DropdownMenu.SubTrigger>
-													<Package class="mr-2 h-4 w-4" />
-													{m.order_update_status?.() ?? 'Update Status'}
-												</DropdownMenu.SubTrigger>
-												<DropdownMenu.SubContent>
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'pending')}
-														disabled={order.status === 'pending'}
-													>
-														<Clock class="mr-2 h-4 w-4" />
-														{m.order_status_pending?.() ?? 'Pending'}
-													</DropdownMenu.Item>
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'processing')}
-														disabled={order.status === 'processing'}
-													>
-														<Package class="mr-2 h-4 w-4" />
-														{m.order_status_processing?.() ?? 'Processing'}
-													</DropdownMenu.Item>
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'shipped')}
-														disabled={order.status === 'shipped'}
-													>
-														<Truck class="mr-2 h-4 w-4" />
-														{m.order_status_shipped?.() ?? 'Shipped'}
-													</DropdownMenu.Item>
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'delivered')}
-														disabled={order.status === 'delivered'}
-													>
-														<CheckCircle class="mr-2 h-4 w-4" />
-														{m.order_status_delivered?.() ?? 'Delivered'}
-													</DropdownMenu.Item>
-													<DropdownMenu.Separator />
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'cancelled')}
-														disabled={order.status === 'cancelled'}
-														class="text-destructive"
-													>
-														<XCircle class="mr-2 h-4 w-4" />
-														{m.order_status_cancelled?.() ?? 'Cancelled'}
-													</DropdownMenu.Item>
-													<DropdownMenu.Item 
-														onclick={() => handleStatusChange(order.id, 'refunded')}
-														disabled={order.status === 'refunded'}
-													>
-														<RefreshCw class="mr-2 h-4 w-4" />
-														{m.order_status_refunded?.() ?? 'Refunded'}
-													</DropdownMenu.Item>
-												</DropdownMenu.SubContent>
-											</DropdownMenu.Sub>
-										</DropdownMenu.Content>
-									</DropdownMenu.Root>
-								</div>
-							</div>
-						</div>
-					{:else}
-						<div class="px-4 py-8 text-center text-sm text-muted-foreground">
-							{m.order_no_orders?.() ?? 'No orders found'}
-						</div>
-					{/each}
-
-					<!-- Pagination Controls -->
-					{#if result.pagination.totalCount > 0}
-						<div class="border-t px-4 py-3">
-							<div class="flex items-center justify-between">
-								<p class="text-sm text-muted-foreground">
-									{m.common_page?.() ?? 'Page'} {currentPage} {m.common_of?.() ?? 'of'} {result.pagination.totalPages} ({result.pagination.totalCount} {m.orders?.() ?? 'orders'})
-								</p>
-
-								<div class="flex items-center gap-2">
-									<Button
-										variant="outline"
-										size="sm"
-										disabled={currentPage <= 1}
-										onclick={() => currentPage--}
-									>
-										<ChevronLeft class="h-4 w-4 mr-1" />
-										{m.common_previous()}
-									</Button>
-
-									<Button
-										variant="outline"
-										size="sm"
-										disabled={currentPage >= result.pagination.totalPages}
-										onclick={() => currentPage++}
-									>
-										{m.common_next()}
-										<ChevronRight class="h-4 w-4 ml-1" />
-									</Button>
-								</div>
-							</div>
-						</div>
-					{/if}
-				{:catch error}
-					<div class="px-4 py-8 text-center text-sm text-destructive">
-						{m.common_error()}: {error.message}
-					</div>
-				{/await}
-			</div>
+	{#await getAllOrders({ 
+		status: statusFilter, 
+		customerEmail: searchQuery.includes('@') ? searchQuery : '', 
+		orderNumber: !searchQuery.includes('@') ? searchQuery : '', 
+		page: currentPage, 
+		pageSize 
+	})}
+		<div class="text-muted-foreground px-4 py-8 text-center text-sm">{m.common_loading()}</div>
+	{:then response}
+		<DataTableWrapper
+			data={response.data}
+			columns={[
+				{
+					accessorKey: 'orderNumber',
+					header: () => m.order_order_number?.() ?? 'Order #',
+					cell: (info: any) => {
+						const value = info.getValue() as string;
+						return `<div class="font-mono text-sm font-medium">${value}</div>`;
+					}
+				},
+				{
+					accessorKey: 'customerFirstName',
+					header: () => m.order_customer?.() ?? 'Customer',
+					cell: (info: any) => {
+						const row = info.row.original;
+						return `${row.customerFirstName} ${row.customerLastName}`;
+					}
+				},
+				{
+					accessorKey: 'customerEmail',
+					header: () => m.order_email?.() ?? 'Email',
+					cell: (info: any) => {
+						const value = info.getValue() as string;
+						return `<div class="text-muted-foreground truncate text-sm">${value}</div>`;
+					}
+				},
+				{
+					accessorKey: 'status',
+					header: () => m.common_status(),
+					cell: (info: any) => {
+						const status = info.getValue() as Order['status'];
+						const label = getStatusLabel(status);
+						const color = getStatusColor(status);
+						return `<span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${color}">${label}</span>`;
+					}
+				},
+				{
+					accessorKey: 'total',
+					header: () => m.order_total?.() ?? 'Total',
+					cell: (info: any) => {
+						const value = info.getValue() as number;
+						return `<div class="font-medium">${formatCurrency(value)}</div>`;
+					}
+				},
+				{
+					accessorKey: 'createdAt',
+					header: () => m.order_date?.() ?? 'Date',
+					cell: (info: any) => {
+						const date = info.getValue() as Date | null;
+						if (date instanceof Date) {
+							return date.toLocaleDateString();
+						} else if (date) {
+							return new Date(date as string | number).toLocaleDateString();
+						}
+						return '-';
+					}
+				},
+				{
+					id: 'actions',
+					header: () => m.common_actions(),
+					cell: ({ row }: any) =>
+						renderComponent(OrderActionsCell, {
+							order: row.original,
+							onView: openDetailsDialog,
+							onEmail: openEmailDialog,
+							onStatusChange: handleStatusChange
+						}),
+					enableSorting: false,
+					enableHiding: false
+				}
+			]}
+			totalPages={response.totalPages}
+			page={currentPage}
+			pageSize={pageSize}
+			hasNextPage={response.hasNextPage}
+			hasPreviousPage={response.hasPreviousPage}
+			onPageChange={handlePageChange}
+			emptyMessage={m.order_no_orders?.() ?? 'No orders found'}
+		/>
+	{:catch error}
+		<div class="px-4 py-8 text-center text-sm text-destructive">
+			{m.common_error()}: {error.message}
 		</div>
-	</div>
+	{/await}
 </div>
 
 <OrderDetailsDialog order={viewingOrder} bind:open={detailsDialogOpen} />
