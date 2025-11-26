@@ -5,7 +5,8 @@ import { DeleteAssetSchema, FilterAssetsSchema } from '$lib/server/schemas';
 import { requireAdminUser } from '$lib/server/auth';
 import { uploadToR2, deleteFromR2, extractKeyFromUrl } from '$lib/server/r2';
 import { processImage, isValidImage } from '$lib/server/image-optimizer';
-import { eq, like, and } from 'drizzle-orm';
+import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
+import { eq, like, and, count, desc } from 'drizzle-orm';
 import * as v from 'valibot';
 import mime from 'mime-types';
 
@@ -67,7 +68,7 @@ export const uploadAsset = form(
 			.returning();
 
 		// Refresh assets list
-		await getAllAssets({ filename: '', mimeType: '' }).refresh();
+		await getAllAssets({ filename: '', mimeType: '', page: 1, pageSize: 20 }).refresh();
 
 		return asset;
 	}
@@ -79,8 +80,10 @@ export const uploadAsset = form(
 export const getAllAssets = query(FilterAssetsSchema, async (data) => {
 	requireAdminUser();
 
-	let query = db.select().from(tables.asset);
+	// 1. Start with base query
+	let baseQuery = db.select().from(tables.asset);
 
+	// 2. Build conditions separately
 	const conditions = [];
 
 	if (data.filename) {
@@ -91,13 +94,36 @@ export const getAllAssets = query(FilterAssetsSchema, async (data) => {
 		conditions.push(eq(tables.asset.mimeType, data.mimeType));
 	}
 
+	// 3. Apply conditions
 	if (conditions.length > 0) {
-		query = query.where(and(...conditions)) as typeof query;
+		baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
 	}
 
-	const assets = await query.orderBy(tables.asset.createdAt);
+	// 4. Add ordering
+	baseQuery = baseQuery.orderBy(desc(tables.asset.createdAt)) as typeof baseQuery;
 
-	return assets;
+	// 5. Create count query with same conditions
+	let countQuery = db.select({ count: count() }).from(tables.asset);
+
+	if (conditions.length > 0) {
+		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+	}
+
+	// 6. Execute count query
+	const [countResult] = await countQuery;
+	const totalCount = Number(countResult?.count) || 0;
+
+	// 7. Calculate pagination
+	const { offset, limit } = calculatePagination(data.page, data.pageSize);
+
+	// 8. Execute data query with pagination
+	const assets = await baseQuery.limit(limit).offset(offset);
+
+	// 9. Return using utility
+	return createPaginatedResponse(assets, totalCount, {
+		page: data.page,
+		pageSize: data.pageSize
+	});
 });
 
 /**
@@ -147,7 +173,7 @@ export const deleteAsset = form(DeleteAssetSchema, async (data) => {
 	await db.delete(tables.asset).where(eq(tables.asset.id, data.id));
 
 	// Refresh assets list
-	await getAllAssets({ filename: '', mimeType: '' }).refresh();
+	await getAllAssets({ filename: '', mimeType: '', page: 1, pageSize: 20 }).refresh();
 
 	return { success: true };
 });

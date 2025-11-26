@@ -112,7 +112,9 @@ export const DeleteAssetSchema = v.object({
 
 export const FilterAssetsSchema = v.object({
     filename: v.optional(v.string(), ''),
-    mimeType: v.optional(v.string(), '')
+    mimeType: v.optional(v.string(), ''),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
 });
 
 // Category schemas
