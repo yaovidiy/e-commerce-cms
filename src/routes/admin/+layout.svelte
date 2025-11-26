@@ -11,9 +11,7 @@
 <SidebarProvider>
 	<AdminSidebar />
 	<SidebarInset>
-		<header
-			class="bg-white sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4"
-		>
+		<header class="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4">
 			<SidebarTrigger class="-ml-1" />
 			<Separator orientation="vertical" class="mr-2 h-4" />
 			<div class="flex items-center gap-2">
@@ -21,9 +19,7 @@
 			</div>
 		</header>
 		<div class="flex flex-1 flex-col gap-4 p-4">
-			{#key page.url.pathname}
-				{@render children()}
-			{/key}
+			{@render children()}
 		</div>
 	</SidebarInset>
 </SidebarProvider>
