@@ -1,15 +1,49 @@
 import { form, query } from "$app/server";
 import { db } from "$lib/server/db";
 import * as tables from "$lib/server/db/schema";
-import { eq, like } from "drizzle-orm";
+import { eq, like, and, desc, count } from "drizzle-orm";
 import * as v from 'valibot';
-import { CreateBlogSchema, UpdateBlogSchema, DeleteBlogSchema } from "$lib/server/schemas";
+import { CreateBlogSchema, UpdateBlogSchema, DeleteBlogSchema, GetBlogsSchema } from "$lib/server/schemas";
 import { requireAdminUser } from "$lib/server/auth";
+import { createPaginatedResponse, calculatePagination } from "$lib/server/pagination-utils";
 
-export const getAllBlogs = query(async () => {
+export const getAllBlogs = query(GetBlogsSchema, async (data) => {
     requireAdminUser();
-    const blogs = await db.select().from(tables.blog);
-    return blogs;
+    
+    let baseQuery = db.select().from(tables.blog);
+    const conditions = [];
+    
+    // Search in title
+    if (data.search) {
+        conditions.push(like(tables.blog.title, `%${data.search}%`));
+    }
+    
+    // Apply conditions
+    if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+    }
+    
+    // Order by newest first
+    baseQuery = baseQuery.orderBy(desc(tables.blog.createdAt)) as typeof baseQuery;
+    
+    // Count
+    let countQuery = db.select({ count: count() }).from(tables.blog);
+    if (conditions.length > 0) {
+        countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+    }
+    
+    const [countResult] = await countQuery;
+    const totalCount = Number(countResult?.count) || 0;
+    
+    // Paginate
+    const { offset, limit } = calculatePagination(data.page, data.pageSize);
+    const blogs = await baseQuery.limit(limit).offset(offset);
+    
+    // Return
+    return createPaginatedResponse(blogs, totalCount, {
+        page: data.page,
+        pageSize: data.pageSize
+    });
 });
 
 export const getBlog = query(v.string(), async (slug) => {

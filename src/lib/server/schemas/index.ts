@@ -18,6 +18,12 @@ export const DeleteBlogSchema = v.object({
     id: v.string()
 });
 
+export const GetBlogsSchema = v.object({
+    search: v.optional(v.string(), ''),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 12)
+});
+
 // Auth schemas
 export const LoginSchema = v.object({
     username: v.pipe(

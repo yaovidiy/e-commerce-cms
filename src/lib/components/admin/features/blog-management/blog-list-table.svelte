@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { getAllBlogs, deleteBlog } from '$lib/remotes/blog.remote';
+	import { getAllBlogs } from '$lib/remotes/blog.remote';
+	import { DataTableWrapper } from '$lib/components/common/data-display';
+	import { renderComponent, renderSnippet } from '$lib/components/ui/data-table';
+	import { createRawSnippet } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import BlogActionsCell from './blog-actions-cell.svelte';
 	import DeleteBlogDialog from './delete-blog-dialog.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { MoreHorizontal, Pencil, Trash2, Search, Eye } from '@lucide/svelte';
-	import { goto } from '$app/navigation';
-
-	let searchQuery = $state('');
+	import { Search } from '@lucide/svelte';
 
 	type Blog = {
 		id: string;
@@ -19,6 +19,10 @@
 		createdAt: Date | null;
 	};
 
+	let searchQuery = $state('');
+	let currentPage = $state(1);
+	const pageSize = 12;
+
 	let deletingBlog = $state<null | Blog>(null);
 	let deleteDialogOpen = $state(false);
 
@@ -28,12 +32,12 @@
 		deleteDialogOpen = true;
 	}
 
-	// Filter blogs based on search query
-	function filterBlogs(blogs: Blog[]) {
-		if (!searchQuery) return blogs;
-		return blogs.filter((blog) =>
-			blog.title.toLowerCase().includes(searchQuery.toLowerCase())
-		);
+	function handlePageChange(pageIndex: number) {
+		currentPage = pageIndex + 1;
+	}
+
+	function handleSearchChange() {
+		currentPage = 1;
 	}
 </script>
 
@@ -44,82 +48,91 @@
 			type="text"
 			placeholder={m.blog_search_placeholder()}
 			bind:value={searchQuery}
+			oninput={handleSearchChange}
 			class="pl-9"
 		/>
 	</div>
 
-	<div class="rounded-md border">
-		<div class="w-full">
-			<div class="bg-muted/50 border-b px-4 py-3">
-				<div class="grid grid-cols-5 gap-4 font-medium">
-					<div class="col-span-2">{m.blog_title()}</div>
-					<div>{m.blog_slug()}</div>
-					<div>{m.blog_created_at()}</div>
-					<div class="text-right">{m.common_actions()}</div>
-				</div>
-			</div>
-			<div>
-				{#await getAllBlogs()}
-					<div class="text-muted-foreground px-4 py-8 text-center text-sm">Loading...</div>
-				{:then blogs}
-					{@const filteredBlogs = filterBlogs(blogs)}
-					{#each filteredBlogs as blog (blog.id)}
-						<div class="hover:bg-muted/50 border-b px-4 py-3 last:border-0">
-							<div class="grid grid-cols-5 items-center gap-4">
-								<div class="col-span-2 font-medium">{blog.title}</div>
-								<div class="text-muted-foreground text-sm font-mono">{blog.slug}</div>
-								<div class="text-muted-foreground text-sm">
-									{#if blog.createdAt && blog.createdAt instanceof Date}
-										{blog.createdAt.toLocaleDateString()}
-									{:else if blog.createdAt}
-										{new Date(blog.createdAt as string | number).toLocaleDateString()}
-									{:else}
-										-
-									{/if}
-								</div>
-								<div class="flex items-center justify-end gap-2">
-									<DropdownMenu.Root>
-										<DropdownMenu.Trigger>
-											<Button variant="ghost" size="icon">
-												<MoreHorizontal class="h-4 w-4" />
-												<span class="sr-only">{m.common_actions()}</span>
-											</Button>
-										</DropdownMenu.Trigger>
-										<DropdownMenu.Content align="end">
-											<DropdownMenu.Item onclick={() => goto(`/blog/${blog.slug}`)}>
-												<Eye class="mr-2 h-4 w-4" />
-												{m.blog_view()}
-											</DropdownMenu.Item>
-											<DropdownMenu.Item onclick={() => goto(`/admin/blogs/edit/${blog.id}`)}>
-												<Pencil class="mr-2 h-4 w-4" />
-												{m.blog_edit_blog()}
-											</DropdownMenu.Item>
-											<DropdownMenu.Separator />
-											<DropdownMenu.Item
-												onclick={() => openDeleteDialog(blog as Blog)}
-												class="text-destructive"
-											>
-												<Trash2 class="mr-2 h-4 w-4" />
-												{m.blog_delete_blog()}
-											</DropdownMenu.Item>
-										</DropdownMenu.Content>
-									</DropdownMenu.Root>
-								</div>
-							</div>
-						</div>
-					{:else}
-						<div class="px-4 py-8 text-center text-sm text-muted-foreground">
-							{m.blog_no_blogs()}
-						</div>
-					{/each}
-				{:catch error}
-					<div class="px-4 py-8 text-center text-sm text-destructive">
-						Error loading blogs: {error.message}
-					</div>
-				{/await}
-			</div>
+	{#await getAllBlogs({ search: searchQuery, page: currentPage, pageSize })}
+		<div class="text-muted-foreground px-4 py-8 text-center text-sm">
+			{m.common_loading?.() || 'Loading...'}
 		</div>
-	</div>
+	{:then response}
+		{console.log(response.data)}
+		<DataTableWrapper
+			data={response.data}
+			columns={[
+				{
+					accessorKey: 'title',
+					header: () => m.blog_title(),
+					cell: (info: any) => {
+						const value = info.getValue() as string;
+						const snippet = createRawSnippet<[{ title: string }]>((getTitle) => {
+							const { title } = getTitle();
+							return {
+								render: () => `<div class="font-medium">${title}</div>`
+							};
+						});
+						return renderSnippet(snippet, { title: value });
+					}
+				},
+				{
+					accessorKey: 'slug',
+					header: () => m.blog_slug(),
+					cell: (info: any) => {
+						const value = info.getValue() as string;
+						const snippet = createRawSnippet<[{ slug: string }]>((getSlug) => {
+							const { slug } = getSlug();
+							return {
+								render: () => `<div class="text-muted-foreground font-mono text-sm">${slug}</div>`
+							};
+						});
+						return renderSnippet(snippet, { slug: value });
+					}
+				},
+				{
+					accessorKey: 'createdAt',
+					header: () => m.blog_created_at(),
+					cell: (info: any) => {
+						const date = info.getValue() as Date | null;
+						const snippet = createRawSnippet<[{ date: Date | null }]>((getDate) => {
+							const { date: d } = getDate();
+							let dateStr = '-';
+							if (d instanceof Date) {
+								dateStr = d.toLocaleDateString();
+							} else if (d) {
+								dateStr = new Date(d as string | number).toLocaleDateString();
+							}
+							return {
+								render: () => `<div class="text-muted-foreground text-sm">${dateStr}</div>`
+							};
+						});
+						return renderSnippet(snippet, { date });
+					}
+				},
+				{
+					id: 'actions',
+					header: () => m.common_actions(),
+					cell: ({ row }: any) =>
+						renderComponent(BlogActionsCell, {
+							blog: row.original,
+							onDelete: openDeleteDialog
+						}),
+					enableSorting: false,
+					enableHiding: false
+				}
+			]}
+			totalPages={response.totalPages}
+			page={currentPage}
+			{pageSize}
+			onPageChange={handlePageChange}
+			emptyMessage={m.blog_no_blogs()}
+		/>
+	{:catch error}
+		<div class="text-destructive px-4 py-8 text-center text-sm">
+			{m.common_error?.() || 'Error'}: {error.message}
+		</div>
+	{/await}
 </div>
 
 <DeleteBlogDialog blog={deletingBlog} bind:open={deleteDialogOpen} />
