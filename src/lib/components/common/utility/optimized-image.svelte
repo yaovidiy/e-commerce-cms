@@ -25,6 +25,19 @@
 		placeholder = '',
 		onError,
 		...props
+	}: {
+		src: string;
+		alt?: string;
+		width?: number | string;
+		height?: number | string;
+		loading?: 'lazy' | 'eager';
+		sizes?: string;
+		srcset?: string;
+		class?: string;
+		priority?: boolean;
+		placeholder?: string;
+		onError?: (e: Event) => void;
+		[prop: string]: any;
 	} = $props();
 	
 	let imgElement = $state<HTMLImageElement | null>(null);

@@ -1,30 +1,53 @@
 <script lang="ts">
 	import { getAssetById } from '$lib/remotes/asset.remote';
+	import { OptimizedImage } from '$lib/components/common/utility';
+	import type { ComponentProps } from 'svelte';
 
-	type Props = {
+	type OptimizedImageProps = Omit<ComponentProps<typeof OptimizedImage>, 'src'>;
+
+	type Props = OptimizedImageProps & {
 		/** Asset ID to fetch and display */
 		assetId: string;
-		/** Alt text for the image */
-		alt: string;
 		/** Whether to display thumbnail version (default: true) */
 		thumbnail?: boolean;
-		/** Additional CSS classes */
-		class?: string;
 	};
 
-	let { assetId, alt, thumbnail = true, class: className = '' }: Props = $props();
+	let {
+		assetId,
+		alt,
+		thumbnail = true,
+		class: className = '',
+		width = 200,
+		height = 200,
+		loading = 'lazy',
+		sizes,
+		srcset,
+		priority = false,
+		placeholder = '',
+		onError,
+		...restProps
+	}: Props = $props();
 </script>
 
 {#await getAssetById(assetId)}
-	<div class="bg-muted animate-pulse {className}"></div>
+	<div class="bg-muted animate-pulse {className}" style:width="{width}px" style:height="{height}px"></div>
 {:then asset}
-	<img
+	<OptimizedImage
 		src={thumbnail ? asset.thumbnailUrl || asset.url : asset.url}
-		alt={alt}
+		{alt}
+		{width}
+		{height}
+		{loading}
+		{sizes}
+		{srcset}
 		class={className}
+		{priority}
+		{placeholder}
+		{onError}
+		{...restProps}
 	/>
 {:catch}
-	<div class="bg-muted flex items-center justify-center {className}">
+	<div class="bg-muted flex items-center justify-center {className}" style:width="{width}px" style:height="{height}px">
 		<span class="text-muted-foreground text-xs">?</span>
 	</div>
 {/await}
