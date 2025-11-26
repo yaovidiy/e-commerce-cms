@@ -10,9 +10,6 @@
 	import { Search } from '@lucide/svelte';
 	import type { ColumnDef } from '@tanstack/table-core';
 
-	let searchQuery = $state('');
-	let isLoading = $state(false);
-
 	type User = {
 		id: string;
 		username: string;
@@ -22,11 +19,21 @@
 		createdAt: Date | null;
 	};
 
+	// Search and pagination state
+	let searchQuery = $state('');
+	let currentPage = $state(1);
+	const pageSize = 5;
+
 	// Track which user is being edited/deleted
 	let editingUser = $state<null | User>(null);
 	let deletingUser = $state<null | User>(null);
 	let editDialogOpen = $state(false);
 	let deleteDialogOpen = $state(false);
+
+	// Page change handler - convert 0-based index from DataTableWrapper to 1-based for API
+	function handlePageChange(pageIndex: number) {
+		currentPage = pageIndex;
+	}
 
 	function openEditDialog(user: User) {
 		if (!user) return;
@@ -112,12 +119,25 @@
 		/>
 	</div>
 
-	{#await getAllUsers({ username: searchQuery })}
+	{#await getAllUsers( { username: searchQuery, page: currentPage, pageSize, sortField: 'createdAt', sortDirection: 'desc' } )}
+		<!-- Loading state -->
 		<div class="flex items-center justify-center p-8">
-			<p class="text-muted-foreground">{m.common_loading()}</p>
+			<div class="loader">
+				{m.common_loading?.() || 'Loading...'}
+			</div>
 		</div>
-	{:then users}
-		<DataTableWrapper data={users.data} {columns} pageSize={10} {isLoading} />
+	{:then response}
+		<DataTableWrapper
+			data={response.data}
+			{columns}
+			totalPages={response.totalPages}
+			page={currentPage}
+			{pageSize}
+			hasNextPage={response.hasNextPage}
+			hasPreviousPage={response.hasPreviousPage}
+			onPageChange={handlePageChange}
+			emptyMessage={m.user_no_users?.() ?? 'No users found'}
+		/>
 	{:catch error}
 		<div class="flex flex-col items-center justify-center gap-2 p-8">
 			<p class="text-red-600">{error}</p>

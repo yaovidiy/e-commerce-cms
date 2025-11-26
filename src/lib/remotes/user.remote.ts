@@ -11,12 +11,12 @@ import {
 	GetUserByIdSchema,
 	FilterUsersSchema
 } from '$lib/server/schemas';
-import { eq, count, like, asc, desc } from 'drizzle-orm';
+import { eq, count, like, asc, desc, and } from 'drizzle-orm';
 import { hash, verify } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import * as v from 'valibot';
 import { redirect } from '@sveltejs/kit';
-import { applyOffsetPagination } from '$lib/server/pagination';
+import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
 
 // Helper function to generate user ID
 function generateUserId() {
@@ -47,7 +47,7 @@ export const getAllUsers = query(FilterUsersSchema, async (data) => {
 
 	const { username, page, pageSize, sortField, sortDirection } = data;
 
-	// Build base query
+	// 1. Start with base query
 	let baseQuery = db
 		.select({
 			id: tables.user.id,
@@ -59,17 +59,19 @@ export const getAllUsers = query(FilterUsersSchema, async (data) => {
 		})
 		.from(tables.user);
 
-	// Build count query
-	let countQuery = db.select({ count: count() }).from(tables.user);
+	// 2. Build conditions separately
+	const conditions = [];
 
-	// Apply username filter to both queries
 	if (username && username.trim() !== '') {
-		const filter = like(tables.user.username, `%${username}%`);
-		baseQuery = baseQuery.where(filter) as typeof baseQuery;
-		countQuery = countQuery.where(filter) as typeof countQuery;
+		conditions.push(like(tables.user.username, `%${username}%`));
 	}
 
-	// Determine sort column
+	// 3. Apply conditions
+	if (conditions.length > 0) {
+		baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+	}
+
+	// 4. Determine sort column
 	const sortColumn =
 		sortField === 'username'
 			? tables.user.username
@@ -77,11 +79,31 @@ export const getAllUsers = query(FilterUsersSchema, async (data) => {
 				? tables.user.email
 				: tables.user.createdAt;
 
-	// Apply pagination with sorting
-	return await applyOffsetPagination({
-		query: baseQuery,
-		countQuery,
-		orderBy: [sortDirection === 'asc' ? asc(sortColumn) : desc(sortColumn), desc(tables.user.id)],
+	// 5. Add ordering
+	baseQuery = baseQuery.orderBy(
+		sortDirection === 'asc' ? asc(sortColumn) : desc(sortColumn),
+		desc(tables.user.id)
+	) as typeof baseQuery;
+
+	// 6. Create count query with same conditions
+	let countQuery = db.select({ count: count() }).from(tables.user);
+
+	if (conditions.length > 0) {
+		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+	}
+
+	// 7. Execute count query
+	const [countResult] = await countQuery;
+	const totalCount = Number(countResult?.count) || 0;
+
+	// 8. Calculate pagination
+	const { offset, limit } = calculatePagination(page, pageSize);
+
+	// 9. Execute data query with pagination
+	const users = await baseQuery.limit(limit).offset(offset);
+
+	// 10. Return using utility
+	return createPaginatedResponse(users, totalCount, {
 		page,
 		pageSize
 	});
