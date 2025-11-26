@@ -522,12 +522,13 @@ CREATE INDEX idx_item_created_at ON item(created_at DESC);
 ## Common Remote Functions to Update
 
 Priority order for your codebase:
-1. ✅ `product.remote.ts` - Already done
-2. `user.remote.ts` - Admin user management
-3. `order.remote.ts` - Order history
-4. `blog.remote.ts` - Blog/content management
-5. `asset.remote.ts` - Asset/file management
-6. Others as needed
+1. ✅ `product.remote.ts` - Done
+2. ✅ `user.remote.ts` - Done
+3. ✅ `category.remote.ts` - Done
+4. ⏭️ `order.remote.ts` - Next to migrate
+5. `blog.remote.ts` - Pending
+6. `asset.remote.ts` - Pending
+7. Others as needed
 
 ## Related Resources
 
