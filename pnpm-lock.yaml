@@ -70,8 +70,8 @@ importers:
         specifier: ^3.8.1
         version: 3.10.0
       '@lucide/svelte':
-        specifier: ^0.554.0
-        version: 0.554.0(svelte@5.43.6)
+        specifier: ^0.544.0
+        version: 0.544.0(svelte@5.43.6)
       '@playwright/test':
         specifier: ^1.45.3
         version: 1.56.1
@@ -1195,8 +1195,8 @@ packages:
   '@lix-js/fs@2.2.0':
     resolution: {integrity: sha512-B9X3FjD8WmdG7tbA44JuniSO0KdKBWnjfxl8zpgrDCkavrp/GP7U0xxBkc0WgeeoHjQ/pkqq9VqtWB2kS9jIUg==}
 
-  '@lucide/svelte@0.554.0':
-    resolution: {integrity: sha512-CM6wLEH8uk3WBpC42t8R0hF7SlQrsYEL6qGuXdB99xKZwKglpWmX5XgYu7FIYOCBYOyC1rm4dNhIe6uF9pOXqw==}
+  '@lucide/svelte@0.544.0':
+    resolution: {integrity: sha512-9f9O6uxng2pLB01sxNySHduJN3HTl5p0HDu4H26VR51vhZfiMzyOMe9Mhof3XAk4l813eTtl+/DYRvGyoRR+yw==}
     peerDependencies:
       svelte: ^5
 
@@ -4901,7 +4901,7 @@ snapshots:
     dependencies:
       typescript: 5.2.2
 
-  '@lucide/svelte@0.554.0(svelte@5.43.6)':
+  '@lucide/svelte@0.544.0(svelte@5.43.6)':
     dependencies:
       svelte: 5.43.6
 
