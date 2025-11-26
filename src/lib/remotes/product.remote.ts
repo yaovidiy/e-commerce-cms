@@ -9,14 +9,13 @@ import {
 	DeleteProductSchema,
 	FilterProductsSchema
 } from '$lib/server/schemas';
-import { eq, like, and, desc } from 'drizzle-orm';
+import { eq, like, and, desc, count } from 'drizzle-orm';
 import { productCache, withCache, invalidateProductCaches } from '$lib/server/cache';
+import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
 
 // Get all products with filters
 export const getAllProducts = query(FilterProductsSchema, async (data) => {
-	auth.requireAdminUser();
-
-	let query = db.select().from(tables.product);
+	let baseQuery = db.select().from(tables.product);
 
 	const conditions = [];
 
@@ -41,17 +40,33 @@ export const getAllProducts = query(FilterProductsSchema, async (data) => {
 	}
 
 	if (conditions.length > 0) {
-		query = query.where(and(...conditions)) as typeof query;
+		baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
 	}
 
 	// Order by creation date (newest first)
-	query = query.orderBy(desc(tables.product.createdAt)) as typeof query;
+	baseQuery = baseQuery.orderBy(desc(tables.product.createdAt)) as typeof baseQuery;
 
-	// Pagination
-	const offset = (data.page - 1) * data.pageSize;
-	query = query.limit(data.pageSize).offset(offset) as typeof query;
+	// Get total count for pagination
+	let countQuery = db
+		.select({ count: count() })
+		.from(tables.product);
 
-	return await query;
+	if (conditions.length > 0) {
+		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+	}
+
+	const [countResult] = await countQuery;
+	const totalCount = Number(countResult?.count) || 0;
+
+	// Calculate pagination
+	const { offset, limit } = calculatePagination(data.page, data.pageSize);
+	const products = await baseQuery.limit(limit).offset(offset);
+
+	// Return paginated response
+	return createPaginatedResponse(products, totalCount, {
+		page: data.page,
+		pageSize: data.pageSize
+	});
 });
 
 // Get single product by ID
@@ -199,9 +214,7 @@ export const browseProducts = query(
 				break;
 			case 'newest':
 			default:
-				productQuery = productQuery.orderBy(
-					desc(tables.product.createdAt)
-				) as typeof productQuery;
+				productQuery = productQuery.orderBy(desc(tables.product.createdAt)) as typeof productQuery;
 				break;
 		}
 

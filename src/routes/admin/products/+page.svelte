@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { getAllProducts, deleteProduct } from '$lib/remotes/product.remote';
+	import { DataTableWrapper } from '$lib/components/common/data-display';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import * as Table from '$lib/components/ui/table';
 	import { DeleteProductDialog } from '$lib/components/admin/features/product-management';
+	import ProductActionsCellComponent from './product-actions-cell.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { Plus, Pencil, Trash2 } from '@lucide/svelte/icons';
+	import { Plus } from '@lucide/svelte/icons';
+	import { renderComponent, renderSnippet } from '$lib/components/ui/data-table';
+	import { createRawSnippet } from 'svelte';
+	import { watch } from 'runed';
 	import type { Product } from '$lib/server/db/schema';
+	import type { ColumnDef } from '@tanstack/table-core';
 
 	let searchQuery = $state('');
 	let statusFilter = $state<'all' | 'draft' | 'active' | 'archived'>('all');
-	
+	let currentPage = $state(0);
+	const pageSize = 9;
+
 	// Delete dialog state
 	let deletingProduct = $state<Product | null>(null);
 	let deleteDialogOpen = $state(false);
@@ -20,12 +27,29 @@
 		deleteDialogOpen = true;
 	}
 
-	// Auto-refresh list after successful deletion
-	$effect(() => {
-		if (deleteProduct.result) {
-			getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize: 20 }).refresh();
+	function handlePageChange(pageIndex: number) {
+		// DataTableWrapper uses 0-based indexing, but our API uses 1-based
+		currentPage = pageIndex;
+	}
+
+	// Watch for deletion success and refresh list
+	watch(
+		() => deleteProduct.result,
+		(result) => {
+			if (result) {
+				getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize }).refresh();
+				currentPage = 1;
+			}
 		}
-	});
+	);
+
+	// Watch for filter changes and reset to page 1
+	watch(
+		() => [searchQuery, statusFilter],
+		() => {
+			currentPage = 1;
+		}
+	);
 
 	// Helper to format price from cents
 	function formatPrice(cents: number) {
@@ -43,6 +67,101 @@
 			day: 'numeric'
 		}).format(new Date(date));
 	}
+
+	// Column definitions
+	const columns: ColumnDef<Product>[] = [
+		{
+			accessorKey: 'name',
+			header: () => m.product_name()
+		},
+		{
+			accessorKey: 'sku',
+			header: () => m.product_sku(),
+			cell: (info: any) => info.getValue() || '-'
+		},
+		{
+			accessorKey: 'price',
+			header: () => m.product_price(),
+			cell: (info: any) => formatPrice(info.getValue() as number)
+		},
+		{
+			accessorKey: 'quantity',
+			header: () => m.product_quantity(),
+			cell: ({ row }: any) => {
+				const lowStockThreshold = row.original.lowStockThreshold || 10;
+				const quantitySnippet = createRawSnippet<[{ quantity: number; lowStockThreshold: number }]>(
+					(getParams) => {
+						const { quantity, lowStockThreshold } = getParams();
+						let classes = '';
+						if (quantity === 0) classes = 'text-red-600';
+						else if (quantity > 0 && quantity <= lowStockThreshold) classes = 'text-yellow-600';
+						return {
+							render: () => `<span class="${classes}">${quantity}</span>`
+						};
+					}
+				);
+
+				return renderSnippet(quantitySnippet, {
+					quantity: row.original.quantity,
+					lowStockThreshold
+				});
+			}
+		},
+		{
+			accessorKey: 'status',
+			header: () => m.product_status(),
+			cell: ({ row }: any) => {
+				const statusSnippet = createRawSnippet<[{ status: string }]>((getStatus) => {
+					const { status } = getStatus();
+					let bgClass = 'bg-gray-100';
+					let textClass = 'text-gray-800';
+					if (status === 'active') {
+						bgClass = 'bg-green-100';
+						textClass = 'text-green-800';
+					} else if (status === 'archived') {
+						bgClass = 'bg-yellow-100';
+						textClass = 'text-yellow-800';
+					}
+					const statusText =
+						status === 'draft'
+							? m.product_status_draft()
+							: status === 'active'
+								? m.product_status_active()
+								: m.product_status_archived();
+					return {
+						render: () =>
+							`<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium ${bgClass} ${textClass}">${statusText}</span>`
+					};
+				});
+
+				return renderSnippet(statusSnippet, {
+					status: row.original.status
+				});
+			}
+		},
+		{
+			accessorKey: 'createdAt',
+			header: () => m.product_created_at(),
+			cell: (info: any) => formatDate(info.getValue() as Date)
+		},
+		{
+			id: 'actions',
+			header: () => m.common_actions(),
+			cell: ({ row }: any) =>
+				renderComponent(ProductActionsCellComponent, {
+					product: row.original,
+					onEdit: (product) => {
+						// Navigate to edit page
+						window.location.href = `/admin/products/${product.id}/edit`;
+					},
+					onDelete: openDeleteDialog
+				}),
+			enableSorting: false,
+			enableHiding: false
+		}
+	];
+
+	$inspect(currentPage, searchQuery, statusFilter);
 </script>
 
 <div class="flex flex-col gap-6 p-6">
@@ -68,7 +187,7 @@
 		/>
 		<select
 			bind:value={statusFilter}
-			class="bg-white border-input ring-offset-white flex h-10 items-center justify-between rounded-md border px-3 py-2 text-sm"
+			class="border-input flex h-10 items-center justify-between rounded-md border bg-white px-3 py-2 text-sm ring-offset-white"
 		>
 			<option value="all">{m.product_all()}</option>
 			<option value="draft">{m.product_status_draft()}</option>
@@ -77,89 +196,24 @@
 		</select>
 	</div>
 
-	<!-- Products Table -->
-	<div class="border-border rounded-lg border">
-		{#await getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize: 20 })}
+	<!-- Products Table with Pagination -->
+	<div class="flex flex-col gap-4">
+		{#await getAllProducts( { name: searchQuery, status: statusFilter, page: currentPage, pageSize } )}
 			<div class="flex items-center justify-center p-8">
 				<p class="text-muted-foreground">{m.common_loading()}</p>
 			</div>
 		{:then products}
-			{#if products.length === 0}
-				<div class="flex flex-col items-center justify-center gap-2 p-8">
-					<p class="text-muted-foreground">{m.product_no_products()}</p>
-					<Button href="/admin/products/create" variant="outline" size="sm">
-						<Plus class="mr-2 size-4" />
-						{m.product_create_product()}
-					</Button>
-				</div>
-			{:else}
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head>{m.product_name()}</Table.Head>
-							<Table.Head>{m.product_sku()}</Table.Head>
-							<Table.Head>{m.product_price()}</Table.Head>
-							<Table.Head>{m.product_quantity()}</Table.Head>
-							<Table.Head>{m.product_status()}</Table.Head>
-							<Table.Head>{m.product_created_at()}</Table.Head>
-							<Table.Head class="text-right">{m.common_actions()}</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each products as product}
-							<Table.Row>
-								<Table.Cell class="font-medium">{product.name}</Table.Cell>
-								<Table.Cell class="text-muted-foreground">{product.sku || '-'}</Table.Cell>
-								<Table.Cell>{formatPrice(product.price)}</Table.Cell>
-								<Table.Cell>
-									<span
-										class:text-red-600={product.quantity === 0}
-										class:text-yellow-600={product.quantity > 0 &&
-											product.quantity <= (product.lowStockThreshold || 10)}
-									>
-										{product.quantity}
-									</span>
-								</Table.Cell>
-								<Table.Cell>
-									<span
-										class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
-										class:bg-gray-100={product.status === 'draft'}
-										class:text-gray-800={product.status === 'draft'}
-										class:bg-green-100={product.status === 'active'}
-										class:text-green-800={product.status === 'active'}
-										class:bg-yellow-100={product.status === 'archived'}
-										class:text-yellow-800={product.status === 'archived'}
-									>
-										{product.status === 'draft'
-											? m.product_status_draft()
-											: product.status === 'active'
-												? m.product_status_active()
-												: m.product_status_archived()}
-									</span>
-								</Table.Cell>
-								<Table.Cell class="text-muted-foreground">
-									{formatDate(product.createdAt)}
-								</Table.Cell>
-								<Table.Cell class="text-right">
-									<div class="flex justify-end gap-2">
-										<Button href="/admin/products/{product.id}/edit" variant="ghost" size="sm">
-											<Pencil class="size-4" />
-										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											class="text-destructive"
-											onclick={() => openDeleteDialog(product)}
-										>
-											<Trash2 class="size-4" />
-										</Button>
-									</div>
-								</Table.Cell>
-							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			{/if}
+			<DataTableWrapper
+				bind:data={products.data}
+				{columns}
+				{pageSize}
+				isLoading={false}
+				emptyMessage={m.product_no_products()}
+				totalPages={products.totalPages}
+				onPageChange={handlePageChange}
+				hasNextPage={products.hasNextPage}
+				page={currentPage}
+			/>
 		{:catch error}
 			<div class="flex items-center justify-center p-8">
 				<p class="text-destructive">{m.common_error()}: {error.message}</p>

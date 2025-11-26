@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table';
 	import * as Table from '$lib/components/ui/table';
-	import { getCoreRowModel, getPaginationRowModel, getSortedRowModel, type ColumnDef, type SortingState } from '@tanstack/table-core';
+	import {
+		getCoreRowModel,
+		getPaginationRowModel,
+		getSortedRowModel,
+		type ColumnDef,
+		type SortingState
+	} from '@tanstack/table-core';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
@@ -13,12 +19,26 @@
 		pageSize?: number;
 		isLoading?: boolean;
 		emptyMessage?: string;
+		totalPages?: number;
+		hasNextPage?: boolean;
+        hasPreviousPage?: boolean;
+		page?: number;
+		onPageChange?: (pageIndex: number) => void;
 	}
 
-	let { data = [], columns = [], pageSize = 10, isLoading = false, emptyMessage = m.common_no_data?.() || 'No data' }: Props<any> = $props();
+	let {
+		data = $bindable([]),
+		columns = [],
+		pageSize = 10,
+		isLoading = false,
+		emptyMessage = m.common_no_data?.() || 'No data',
+		totalPages,
+		hasNextPage = false,
+		page = $bindable(1),
+		onPageChange
+	}: Props<any> = $props();
 
 	let sorting: SortingState = $state([]);
-	let pageIndex: number = $state(0);
 
 	const table = createSvelteTable({
 		get data() {
@@ -26,7 +46,6 @@
 		},
 		columns,
 		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		state: {
 			get sorting() {
@@ -34,15 +53,9 @@
 			},
 			get pagination() {
 				return {
-					pageIndex,
+					pageIndex: page - 1,
 					pageSize
 				};
-			}
-		},
-		onStateChange: (updater) => {
-			const newState = typeof updater === 'function' ? updater(table.getState()) : updater;
-			if (newState.pagination) {
-				pageIndex = newState.pagination.pageIndex;
 			}
 		}
 	});
@@ -64,13 +77,13 @@
 		<Table.Body>
 			{#if isLoading}
 				<Table.Row>
-					<Table.Cell colspan={columns.length} class="text-center py-8 text-muted-foreground">
+					<Table.Cell colspan={columns.length} class="text-muted-foreground py-8 text-center">
 						{m.common_loading?.() || 'Loading...'}
 					</Table.Cell>
 				</Table.Row>
 			{:else if table.getRowModel().rows?.length === 0}
 				<Table.Row>
-					<Table.Cell colspan={columns.length} class="text-center py-8 text-muted-foreground">
+					<Table.Cell colspan={columns.length} class="text-muted-foreground py-8 text-center">
 						{emptyMessage}
 					</Table.Cell>
 				</Table.Row>
@@ -91,27 +104,33 @@
 
 {#if table.getRowModel().rows.length > 0}
 	<div class="flex items-center justify-between px-2 py-4">
-		<div class="text-sm text-muted-foreground">
-			{m.common_page?.() || 'Page'} {table.getState().pagination.pageIndex + 1} {m.common_of?.() || 'of'} {table.getPageCount()}
+		<div class="text-muted-foreground text-sm">
+			{m.common_page?.() || 'Page'}
+			{table.getState().pagination.pageIndex + 1}
+			{#if totalPages}
+				{m.common_of?.() || 'of'} {totalPages}
+			{/if}
 		</div>
 		<div class="flex gap-2">
 			<Button
 				variant="outline"
 				size="sm"
 				disabled={!table.getCanPreviousPage()}
-				onclick={() => table.previousPage()}
+				onclick={() => onPageChange?.(page - 1)}
 			>
-				<ChevronLeft class="h-4 w-4 mr-1" />
+				<ChevronLeft class="mr-1 h-4 w-4" />
 				{m.common_previous?.() || 'Previous'}
 			</Button>
 			<Button
 				variant="outline"
 				size="sm"
-				disabled={!table.getCanNextPage()}
-				onclick={() => table.nextPage()}
+				disabled={!hasNextPage}
+				onclick={() => {
+					onPageChange?.(page + 1);
+				}}
 			>
 				{m.common_next?.() || 'Next'}
-				<ChevronRight class="h-4 w-4 ml-1" />
+				<ChevronRight class="ml-1 h-4 w-4" />
 			</Button>
 		</div>
 	</div>
