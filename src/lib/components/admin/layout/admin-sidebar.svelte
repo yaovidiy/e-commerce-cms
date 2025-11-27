@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import * as Collapsible from '$lib/components/ui/collapsible';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown, MessageSquare } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -123,6 +123,11 @@
 					title: () => m.admin_email_settings(),
 					url: '/admin/email-settings',
 					icon: Mail
+				},
+				{
+					title: () => m.sms_management?.() || 'SMS Management',
+					url: '/admin/sms',
+					icon: MessageSquare
 				},
 				{
 					title: () => m.settings(),
