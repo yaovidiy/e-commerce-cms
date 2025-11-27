@@ -716,3 +716,65 @@ export const FilterPagesSchema = v.object({
     sortField: v.optional(v.picklist(['title', 'status', 'createdAt', 'updatedAt', 'publishedAt']), 'updatedAt'),
     sortDirection: v.optional(v.picklist(['asc', 'desc']), 'desc')
 });
+
+// Notification template schemas
+export const CreateNotificationTemplateSchema = v.object({
+    code: v.pipe(v.string(), v.minLength(1, 'Code is required'), v.maxLength(50, 'Code must be at most 50 characters')),
+    channel: v.picklist(['email', 'sms'], 'Please select a channel (email or SMS)'),
+    eventType: v.picklist(
+        ['order_created', 'order_confirmed', 'payment_pending_reminder', 'order_shipped', 'order_delivered', 'post_delivery_review'],
+        'Please select an event type'
+    ),
+    name: v.pipe(v.string(), v.minLength(1, 'Name is required'), v.maxLength(200, 'Name must be at most 200 characters')),
+    subject: v.optional(v.pipe(v.string(), v.maxLength(500))), // Only for email
+    content: v.pipe(v.string(), v.minLength(1, 'Content is required'), v.maxLength(10000, 'Content must be at most 10000 characters')),
+    description: v.optional(v.pipe(v.string(), v.maxLength(500))),
+    isActive: v.optional(v.boolean(), true),
+    variables: v.optional(v.pipe(v.string()), '[]'), // JSON string array
+    language: v.optional(v.string(), 'en')
+});
+
+export const UpdateNotificationTemplateSchema = v.object({
+    id: v.string(),
+    code: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(50))),
+    channel: v.optional(v.picklist(['email', 'sms'])),
+    eventType: v.optional(v.picklist([
+        'order_created', 'order_confirmed', 'payment_pending_reminder', 'order_shipped', 'order_delivered', 'post_delivery_review'
+    ])),
+    name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
+    subject: v.optional(v.pipe(v.string(), v.maxLength(500))),
+    content: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(10000))),
+    description: v.optional(v.pipe(v.string(), v.maxLength(500))),
+    isActive: v.optional(v.boolean()),
+    variables: v.optional(v.pipe(v.string()), '[]'),
+    language: v.optional(v.string())
+});
+
+export const DeleteNotificationTemplateSchema = v.object({
+    id: v.string()
+});
+
+export const GetNotificationTemplateSchema = v.object({
+    id: v.string()
+});
+
+export const FilterNotificationTemplatesSchema = v.object({
+    search: v.optional(v.string(), ''),
+    channel: v.optional(v.picklist(['email', 'sms', 'all']), 'all'),
+    eventType: v.optional(v.picklist([
+        'order_created', 'order_confirmed', 'payment_pending_reminder', 'order_shipped', 'order_delivered', 'post_delivery_review', 'all'
+    ]), 'all'),
+    isActive: v.optional(v.picklist(['true', 'false', 'all']), 'all'),
+    language: v.optional(v.string(), 'en'),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
+});
+
+export const GetNotificationLogsSchema = v.object({
+    orderId: v.optional(v.string()),
+    templateId: v.optional(v.string()),
+    channel: v.optional(v.picklist(['email', 'sms', 'all']), 'all'),
+    status: v.optional(v.picklist(['pending', 'sent', 'failed', 'bounced', 'all']), 'all'),
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 50)
+});

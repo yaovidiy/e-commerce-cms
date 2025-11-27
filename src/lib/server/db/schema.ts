@@ -284,6 +284,108 @@ export type InsertCheckboxShift = typeof checkboxShift.$inferInsert;
 export type EmailSettings = typeof emailSettings.$inferSelect;
 export type InsertEmailSettings = typeof emailSettings.$inferInsert;
 
+// Notification template types
+export type NotificationChannelType = 'email' | 'sms';
+export type NotificationEventType = 
+	| 'order_created' 
+	| 'order_confirmed' 
+	| 'payment_pending_reminder' 
+	| 'order_shipped' 
+	| 'order_delivered' 
+	| 'post_delivery_review';
+
+// Notification templates table
+export const notificationTemplate = sqliteTable('notification_template', {
+	id: text('id').primaryKey(),
+	code: text('code').notNull().unique(), // e.g., "E1", "S1", "E1a", etc.
+	channel: text('channel', { enum: ['email', 'sms'] }).notNull(), // email or sms
+	eventType: text('event_type', {
+		enum: [
+			'order_created',
+			'order_confirmed',
+			'payment_pending_reminder',
+			'order_shipped',
+			'order_delivered',
+			'post_delivery_review'
+		]
+	}).notNull(),
+	
+	// Template content
+	subject: text('subject'), // For email templates
+	content: text('content').notNull(), // HTML for email, plain text for SMS
+	
+	// Template metadata
+	name: text('name').notNull(), // Display name for admin
+	description: text('description'), // Admin notes
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+	
+	// Dynamic variables used in this template (stored as JSON array)
+	variables: text('variables').notNull().default('[]'), // e.g., ["order_id", "customer_name", "order_total"]
+	
+	// Language version
+	language: text('language').notNull().default('en'),
+	
+	// Metadata
+	createdBy: text('created_by')
+		.notNull()
+		.references(() => user.id),
+	updatedBy: text('updated_by').references(() => user.id),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type NotificationTemplate = typeof notificationTemplate.$inferSelect;
+export type InsertNotificationTemplate = typeof notificationTemplate.$inferInsert;
+
+// Notification logs table - tracks all sent notifications
+export const notificationLog = sqliteTable('notification_log', {
+	id: text('id').primaryKey(),
+	templateId: text('template_id')
+		.notNull()
+		.references(() => notificationTemplate.id),
+	orderId: text('order_id').references(() => order.id),
+	userId: text('user_id').references(() => user.id),
+	
+	channel: text('channel', { enum: ['email', 'sms'] }).notNull(),
+	recipient: text('recipient').notNull(), // Email address or phone number
+	
+	// Rendered content
+	subject: text('subject'), // For email
+	content: text('content').notNull(),
+	
+	// Delivery status
+	status: text('status', { enum: ['pending', 'sent', 'failed', 'bounced'] })
+		.notNull()
+		.default('pending'),
+	error: text('error'), // Error message if failed
+	
+	// External provider tracking
+	providerId: text('provider_id'), // Message ID from email/SMS provider (e.g., Resend, SMS Club)
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	sentAt: integer('sent_at', { mode: 'timestamp' }),
+	failedAt: integer('failed_at', { mode: 'timestamp' })
+});
+
+export type NotificationLog = typeof notificationLog.$inferSelect;
+export type InsertNotificationLog = typeof notificationLog.$inferInsert;
+
+// Dynamic variable definitions for template builders
+export const notificationVariable = sqliteTable('notification_variable', {
+	id: text('id').primaryKey(),
+	key: text('key').notNull().unique(), // e.g., "order_id", "customer_name"
+	label: text('label').notNull(), // Display name for UI
+	description: text('description'), // Help text
+	category: text('category').notNull(), // "order", "customer", "payment", "shipping"
+	dataType: text('data_type', { enum: ['string', 'number', 'date', 'boolean'] }).notNull(),
+	exampleValue: text('example_value'), // Example for preview
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export type NotificationVariable = typeof notificationVariable.$inferSelect;
+export type InsertNotificationVariable = typeof notificationVariable.$inferInsert;
+
 export const address = sqliteTable('address', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')
