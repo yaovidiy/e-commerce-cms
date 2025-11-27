@@ -51,7 +51,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-4 px-8">
 	<!-- Search -->
 	<Input
 		type="text"
