@@ -150,7 +150,7 @@ export async function sendNotification(
 				const smsResult = await smsClient.sendSms({
 					phone: rendered.recipient,
 					message: rendered.content,
-					senderName: 'VashZakaz' // Default sender name, can be customized
+					senderName: 'Zamovlennia' // Default sender name, can be customized
 				});
 
 				// Extract message ID from SMS Club response

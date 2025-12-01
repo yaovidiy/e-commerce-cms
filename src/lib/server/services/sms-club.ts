@@ -1,9 +1,9 @@
 /**
  * SMS Club API Client
- * 
+ *
  * SMS Club is a Ukrainian SMS gateway service.
  * Docs: https://smsclub.mobi/
- * 
+ *
  * This client handles:
  * - Sending SMS messages (single and bulk)
  * - Checking account balance
@@ -105,6 +105,8 @@ export class SMSClubClient {
 			});
 
 			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('SMS Club API request failed:', errorText);
 				throw new Error(`API request failed: ${response.statusText}`);
 			}
 
@@ -233,7 +235,10 @@ export class SMSClubClient {
 	 */
 	async getOriginatorStatus(senderId?: string): Promise<Record<string, string>> {
 		const body = senderId ? { sender_id: senderId } : {};
-		const response = await this.request<Record<string, string>>('/originators/stat-originators', body);
+		const response = await this.request<Record<string, string>>(
+			'/originators/stat-originators',
+			body
+		);
 
 		if (response.success_request?.info) {
 			return response.success_request.info;
@@ -285,7 +290,9 @@ export function getSMSClubClient(): SMSClubClient {
 	const apiToken = SMS_CLUB_API_TOKEN;
 
 	if (!apiToken) {
-		throw new Error('SMS Club API token not configured. Set SMS_CLUB_API_TOKEN environment variable.');
+		throw new Error(
+			'SMS Club API token not configured. Set SMS_CLUB_API_TOKEN environment variable.'
+		);
 	}
 
 	return new SMSClubClient({ apiToken });
