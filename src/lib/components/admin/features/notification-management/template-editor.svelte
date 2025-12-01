@@ -104,7 +104,7 @@
 </script>
 
 <div class="space-y-6">
-	{#await getAvailableVariables()}
+	{#await getAvailableVariables({})}
 		<div>{m.common_loading()}</div>
 	{:then variablesData}
 		<div class="grid gap-6 md:grid-cols-3">

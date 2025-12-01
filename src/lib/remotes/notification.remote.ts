@@ -6,7 +6,7 @@
 import { query, command } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
-import { eq, like, and, count, desc } from 'drizzle-orm';
+import { eq, like, and, count, desc, or } from 'drizzle-orm';
 import * as auth from '$lib/server/auth';
 import {
 	CreateNotificationTemplateSchema,
@@ -17,6 +17,7 @@ import {
 	GetNotificationLogsSchema
 } from '$lib/server/schemas';
 import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
+import { sendNotification, buildOrderNotificationContext } from '$lib/server/services/notification';
 import * as v from 'valibot';
 
 /**
@@ -733,3 +734,228 @@ export const seedDefaultTemplates = command(v.object({}), async () => {
 		templatesCount: inserted.length
 	};
 });
+
+/**
+ * Send test notification using real or generated order data
+ */
+export const sendTestNotification = command(
+	v.object({
+		templateId: v.string(),
+		orderId: v.optional(v.string()),
+		orderItemIds: v.optional(v.array(v.string()), []),
+		generateRandomOrder: v.optional(v.boolean(), false)
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		// Get template
+		const [template] = await db
+			.select()
+			.from(tables.notificationTemplate)
+			.where(eq(tables.notificationTemplate.id, data.templateId));
+
+		if (!template) {
+			return {
+				success: false,
+				error: 'Template not found'
+			};
+		}
+
+		let order;
+		let orderItems: typeof tables.orderItem.$inferSelect[] = [];
+
+		if (data.generateRandomOrder) {
+			// Generate a fake order for testing
+			const products = await db.select().from(tables.product).limit(5);
+			
+			if (products.length === 0) {
+				return {
+					success: false,
+					error: 'No products found in database. Please create products first.'
+				};
+			}
+
+			// Create fake order data
+			const fakeOrder = {
+				id: crypto.randomUUID(),
+				orderNumber: `TEST-${Date.now()}`,
+				customerFirstName: 'Test',
+				customerLastName: 'Customer',
+				customerEmail: 'yaovdiy@gmail.com',
+				customerPhone: '+380687235365',
+				total: 15000, // 150.00 UAH in cents
+				subtotal: 12500,
+				status: 'pending' as const,
+				paymentStatus: 'pending' as const,
+				paymentMethod: 'cod',
+				shippingMethod: 'nova_poshta',
+				shippingAddress: JSON.stringify({
+					address1: '123 Test Street',
+					city: 'Kyiv',
+					state: 'Kyiv Oblast',
+					country: 'Ukraine',
+					postalCode: '03150'
+				}),
+				billingAddress: JSON.stringify({
+					address1: '123 Test Street',
+					city: 'Kyiv',
+					state: 'Kyiv Oblast',
+					country: 'Ukraine',
+					postalCode: '03150'
+				}),
+				userId: null,
+				items: '[]',
+				notes: 'This is a test notification',
+				shippedAt: null,
+				deliveredAt: null,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+
+			// Insert test order into database
+			const [insertedOrder] = await db.insert(tables.order).values(fakeOrder).returning();
+			order = insertedOrder;
+
+			// Generate fake order items and insert them
+			const numItems = Math.min(3, products.length);
+			for (let i = 0; i < numItems; i++) {
+				const product = products[i];
+				const itemData = {
+					id: crypto.randomUUID(),
+					orderId: order.id,
+					productId: product.id,
+					productName: product.name,
+					productSlug: product.slug,
+					productImage: product.images ? JSON.parse(product.images)[0] : null,
+					price: product.price,
+					quantity: Math.floor(Math.random() * 3) + 1,
+					subtotal: product.price * (Math.floor(Math.random() * 3) + 1),
+					createdAt: new Date()
+				};
+				const [insertedItem] = await db.insert(tables.orderItem).values(itemData).returning();
+				orderItems.push(insertedItem);
+			}
+		} else if (data.orderId) {
+			// Get real order from database
+			const [foundOrder] = await db
+				.select()
+				.from(tables.order)
+				.where(eq(tables.order.id, data.orderId));
+
+			if (!foundOrder) {
+				return {
+					success: false,
+					error: 'Order not found'
+				};
+			}
+
+			order = foundOrder;
+
+			// Get order items
+			const allItems = await db.select().from(tables.orderItem).where(eq(tables.orderItem.orderId, data.orderId));
+
+			if (data.orderItemIds.length > 0) {
+				// Filter by selected item IDs
+				orderItems = allItems.filter((item) => data.orderItemIds.includes(item.id));
+			} else {
+				orderItems = allItems;
+			}
+		} else {
+			return {
+				success: false,
+				error: 'Either orderId or generateRandomOrder must be provided'
+			};
+		}
+
+		if (!order) {
+			return {
+				success: false,
+				error: 'Order not found'
+			};
+		}
+
+		if (orderItems.length === 0) {
+			return {
+				success: false,
+				error: 'No order items found'
+			};
+		}
+
+		// Build notification context
+		const context = buildOrderNotificationContext(order, orderItems);
+
+		// Send notification
+		const result = await sendNotification(data.templateId, context);
+
+		if (result.success) {
+			return {
+				success: true,
+				message: `Test notification sent successfully to ${context.customerEmail}`,
+				logId: result.logId
+			};
+		} else {
+			return {
+				success: false,
+				error: result.error || 'Failed to send notification'
+			};
+		}
+	}
+);
+
+/**
+ * Get orders for test notification selection
+ */
+export const getOrdersForTesting = query(
+	v.object({
+		search: v.optional(v.string(), ''),
+		limit: v.optional(v.number(), 50)
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const conditions = [];
+
+		if (data.search) {
+			conditions.push(
+				or(
+					like(tables.order.orderNumber, `%${data.search}%`),
+					like(tables.order.customerEmail, `%${data.search}%`),
+					like(tables.order.customerFirstName, `%${data.search}%`)
+				)
+			);
+		}
+
+		let baseQuery = db.select().from(tables.order);
+
+		if (conditions.length > 0) {
+			baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+		}
+
+		const orders = await baseQuery.orderBy(desc(tables.order.createdAt)).limit(data.limit);
+
+		return orders;
+	}
+);
+
+/**
+ * Get order items for test notification selection
+ */
+export const getOrderItemsForTesting = query(
+	v.object({
+		orderId: v.string(),
+		search: v.optional(v.string(), '')
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const conditions = [eq(tables.orderItem.orderId, data.orderId)];
+
+		if (data.search) {
+			conditions.push(like(tables.orderItem.productName, `%${data.search}%`));
+		}
+
+		const items = await db.select().from(tables.orderItem).where(and(...conditions));
+
+		return items;
+	}
+);

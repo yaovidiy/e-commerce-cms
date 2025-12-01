@@ -14,12 +14,56 @@ import {
 import { eq, like, and, desc, count } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
+// Notification imports
+import { sendNotification, buildOrderNotificationContext } from '$lib/server/services/notification';
+import { getTemplatesByEventType } from '$lib/remotes/notification.remote';
 
 // Helper to generate order number
 function generateOrderNumber(): string {
 	const timestamp = Date.now().toString(36).toUpperCase();
 	const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 	return `ORD-${timestamp}-${random}`;
+}
+
+// Helper to send order notifications
+async function sendOrderNotifications(
+	order: typeof tables.order.$inferSelect,
+	orderItems: Array<typeof tables.orderItem.$inferSelect>,
+	eventType: 'order_confirmed' | 'payment_pending_reminder' | 'order_shipped' | 'order_delivered' | 'post_delivery_review',
+	additionalVars?: Record<string, string | number | boolean>
+) {
+	try {
+		// Try to send email
+		const emailTemplates = await getTemplatesByEventType({
+			eventType,
+			channel: 'email',
+			language: 'uk'
+		});
+
+		if (emailTemplates.length > 0) {
+			const context = buildOrderNotificationContext(order, orderItems, additionalVars);
+			await sendNotification(emailTemplates[0].id, context);
+			console.log(`✅ [Order] ${eventType} email sent to ${order.customerEmail}`);
+		}
+
+		// Try to send SMS (if customer has phone)
+		if (order.customerPhone) {
+			const smsTemplates = await getTemplatesByEventType({
+				eventType,
+				channel: 'sms',
+				language: 'uk'
+			});
+
+			if (smsTemplates.length > 0) {
+				const context = buildOrderNotificationContext(order, orderItems, additionalVars);
+				await sendNotification(smsTemplates[0].id, context);
+				console.log(`✅ [Order] ${eventType} SMS sent to ${order.customerPhone}`);
+			}
+		}
+	} catch (notificationError) {
+		console.error(`[Order] Failed to send ${eventType} notifications:`, notificationError);
+		// Don't fail order operations if notifications fail
+	}
 }
 
 // Get all orders (admin only)
@@ -232,8 +276,9 @@ export const checkout = form(CheckoutSchema, async (data) => {
 	}).returning();
 
 	// Create order_item records for analytics
+	const orderItems = [];
 	for (const item of items) {
-		await db.insert(tables.orderItem).values({
+		const itemResult = await db.insert(tables.orderItem).values({
 			id: crypto.randomUUID(),
 			orderId: orderId,
 			productId: item.productId,
@@ -244,7 +289,8 @@ export const checkout = form(CheckoutSchema, async (data) => {
 			quantity: item.quantity,
 			subtotal: item.price * item.quantity,
 			createdAt: now
-		});
+		}).returning();
+		orderItems.push(...itemResult);
 	}
 
 	// Update inventory
@@ -276,6 +322,31 @@ export const checkout = form(CheckoutSchema, async (data) => {
 	// Clear cart session cookie
 	event.cookies.delete('cart-session', { path: '/' });
 
+	// Send order confirmation notifications
+	await sendOrderNotifications(order, orderItems, 'order_confirmed');
+
+	// If paying by IBAN, also send payment instructions
+	if (data.paymentMethod === 'iban') {
+		const ibanTemplates = await getTemplatesByEventType({
+			eventType: 'order_confirmed',
+			channel: 'email',
+			language: 'uk'
+		});
+
+		if (ibanTemplates.length > 0) {
+			try {
+				const context = buildOrderNotificationContext(order, orderItems, {
+					iban: 'UA623052990000026004010405791', // TODO: Get from settings
+					bank_details: 'PJSC "Raiffeisen Bank Aval", Kyiv' // TODO: Get from settings
+				});
+				await sendNotification(ibanTemplates[0].id, context);
+				console.log(`✅ [Order] IBAN payment instructions sent to ${order.customerEmail}`);
+			} catch (error) {
+				console.error('[Order] Failed to send IBAN instructions:', error);
+			}
+		}
+	}
+
 	// Create payment and handle redirect based on payment method
 	if (data.paymentMethod === 'cod') {
 		// Cash on delivery - go directly to confirmation
@@ -304,34 +375,22 @@ export const updateOrderStatus = command(UpdateOrderStatusSchema, async (data) =
 		throw new Error('Order not found');
 	}
 
-	// Send status-specific email notifications
+	// Send status-specific notifications
 	try {
-		const orderItems = JSON.parse(order.items) as Array<{
-			productId: string;
-			name: string;
-			price: number;
-			quantity: number;
-		}>;
+		// Fetch full order item records from database
+		const orderItems = await db.select()
+			.from(tables.orderItem)
+			.where(eq(tables.orderItem.orderId, order.id));
 
-		const orderWithItems = {
-			...order,
-			items: orderItems.map(item => ({
-				productName: item.name,
-				quantity: item.quantity,
-				price: item.price
-			}))
-		} as typeof order & { items: Array<{ productName: string; quantity: number; price: number; }> };
-
+		// Determine event type based on status
 		if (data.status === 'shipped') {
-			const { sendOrderShippedEmail } = await import('$lib/server/email-client');
-			await sendOrderShippedEmail({ order: orderWithItems });
+			await sendOrderNotifications(order, orderItems, 'order_shipped');
 		} else if (data.status === 'delivered') {
-			const { sendOrderDeliveredEmail } = await import('$lib/server/email-client');
-			await sendOrderDeliveredEmail({ order: orderWithItems });
+			await sendOrderNotifications(order, orderItems, 'order_delivered');
 		}
-	} catch (emailError) {
+	} catch (notificationError) {
 		// Log but don't fail the status update
-		console.error('[Order] Failed to send status email:', emailError);
+		console.error('[Order] Failed to send status notification:', notificationError);
 	}
 
 	// Refresh orders query
@@ -397,31 +456,9 @@ export const cancelOrder = form(v.object({ id: v.string() }), async (data) => {
 		.where(eq(tables.order.id, data.id))
 		.returning();
 
-	// Send cancellation email
-	try {
-		const { sendOrderCancelledEmail } = await import('$lib/server/email-client');
-		const orderItems = JSON.parse(order.items) as Array<{
-			productId: string;
-			name: string;
-			price: number;
-			quantity: number;
-		}>;
-
-		await sendOrderCancelledEmail({
-			order: {
-				...order,
-				items: orderItems.map(item => ({
-					productName: item.name,
-					quantity: item.quantity,
-					price: item.price
-				}))
-			} as typeof order & { items: Array<{ productName: string; quantity: number; price: number; }> },
-			cancellationReason: user?.isAdmin ? 'Cancelled by admin' : 'Cancelled by customer'
-		});
-	} catch (emailError) {
-		// Log but don't fail the cancellation
-		console.error('[Order] Failed to send cancellation email:', emailError);
-	}
+	// Send cancellation notification (if event type is defined in notification system)
+	// Note: order_cancelled is not part of the core notification system yet
+	// Update needed: Add order_cancelled event type and templates to notification system if needed
 
 	return order;
 });
@@ -495,6 +532,9 @@ export const sendOrderEmail = command(SendOrderEmailSchema, async (data) => {
 		});
 
 		if (result.success) {
+			// Log successful send for audit trail
+			console.log(`✅ [Order] Custom email sent to ${order.customerEmail}: "${data.subject}"`);
+
 			return {
 				success: true,
 				message: `Email sent successfully to ${order.customerEmail}`

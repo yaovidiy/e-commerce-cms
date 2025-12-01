@@ -7,6 +7,7 @@ import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { NotificationTemplate, Order, OrderItem } from '$lib/server/db/schema';
+import { getSMSClubClient } from './sms-club';
 
 export interface NotificationContext {
 	orderId?: string;
@@ -26,7 +27,7 @@ export interface RenderedNotification {
  * Render template content with dynamic variables
  * Replaces {{variable_name}} placeholders with actual values
  */
-export function renderTemplateContent(template: string, variables: Record<string, any>): string {
+export function renderTemplateContent(template: string, variables: Record<string, string | number | boolean>): string {
 	let rendered = template;
 
 	// Replace all {{variable}} placeholders
@@ -104,7 +105,7 @@ export async function sendNotification(
 			};
 		}
 
-		// Create notification log entry
+		// Create notification log entry with pending status
 		const [log] = await db
 			.insert(tables.notificationLog)
 			.values({
@@ -121,19 +122,93 @@ export async function sendNotification(
 			})
 			.returning();
 
-		// TODO: Integrate with actual email/SMS providers
-		// For now, just return success with pending status
-		// In production, you would call Resend for email or SMS Club for SMS here
+		// Send notification based on channel type
+		const channel = template.channel as 'email' | 'sms';
+		let messageId: string | undefined;
+		let sendError: string | undefined;
+
+		try {
+			if (channel === 'email') {
+				// Send via email using Resend (dynamic import to avoid build-time issues)
+				const { sendCustomOrderEmail } = await import('$lib/server/email-client');
+				const emailResult = await sendCustomOrderEmail({
+					toEmail: rendered.recipient,
+					subject: rendered.subject || template.name,
+					message: rendered.content,
+					orderNumber: context.variables.order_number as string,
+					customerName: context.variables.customer_name as string
+				});
+
+				if (emailResult.success && emailResult.messageId) {
+					messageId = emailResult.messageId;
+				} else {
+					sendError = emailResult.error || 'Failed to send email';
+				}
+			} else if (channel === 'sms') {
+				// Send via SMS using SMS Club
+				const smsClient = getSMSClubClient();
+				const smsResult = await smsClient.sendSms({
+					phone: rendered.recipient,
+					message: rendered.content,
+					senderName: 'VashZakaz' // Default sender name, can be customized
+				});
+
+				// Extract message ID from SMS Club response
+				// Response format: { "sms_id": "phone_number" }
+				const firstMessageId = Object.keys(smsResult)[0];
+				if (firstMessageId) {
+					messageId = firstMessageId;
+				} else {
+					sendError = 'No message ID returned from SMS Club';
+				}
+			}
+		} catch (providerError) {
+			sendError = providerError instanceof Error ? providerError.message : 'Unknown provider error';
+			console.error(`[Notification] Failed to send ${channel}:`, sendError);
+		}
+
+		// Update notification log status based on send result
+		const finalStatus = messageId ? 'sent' : 'failed';
+		const now = new Date();
+		await db
+			.update(tables.notificationLog)
+			.set({
+				status: finalStatus,
+				providerId: messageId,
+				sentAt: messageId ? now : undefined,
+				failedAt: !messageId ? now : undefined,
+				error: sendError
+			})
+			.where(eq(tables.notificationLog.id, log.id));
+
+		if (messageId) {
+			console.log(`[Notification] ${channel} sent successfully:`, {
+				logId: log.id,
+				messageId,
+				recipient: rendered.recipient
+			});
+
+			return {
+				success: true,
+				logId: log.id,
+				messageId
+			};
+		} else {
+			console.error(`[Notification] Failed to send ${channel}:`, sendError);
+
+			return {
+				success: false,
+				logId: log.id,
+				error: sendError || 'Failed to send notification'
+			};
+		}
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		console.error('[Notification] Send notification error:', errorMessage);
 
 		return {
-			success: true,
-			logId: log.id,
-			messageId: crypto.randomUUID() // Placeholder for provider message ID
-		};
-	} catch (error) {
-		return {
 			success: false,
-			error: error instanceof Error ? error.message : 'Unknown error'
+			error: errorMessage
 		};
 	}
 }

@@ -4,11 +4,12 @@
 -->
 <script lang="ts">
 	import { getAllNotificationTemplates } from '$lib/remotes/notification.remote';
+	import TestNotificationDialog from './test-notification-dialog.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Edit2, Trash2, Plus } from '@lucide/svelte';
+	import { Edit2, Trash2, Plus, Send } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -26,6 +27,9 @@
 	let selectedLanguage = $state<string>('uk');
 	let currentPage = $state(1);
 	let pageSize = $state(20);
+	let testDialogOpen = $state(false);
+	let testTemplateId = $state<string>('');
+	let testTemplateName = $state<string>('');
 
 	const eventTypes = [
 		{ value: 'all', label: 'All Events' },
@@ -44,6 +48,12 @@
 	const getStatusBadgeColor = (isActive: boolean) => {
 		return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
 	};
+
+	function handleTestTemplate(templateId: string, templateName: string) {
+		testTemplateId = templateId;
+		testTemplateName = templateName;
+		testDialogOpen = true;
+	}
 </script>
 
 <div class="space-y-4">
@@ -142,7 +152,7 @@
 							<Table.Head>Name</Table.Head>
 							<Table.Head class="w-32">Event Type</Table.Head>
 							<Table.Head class="w-20">Status</Table.Head>
-							<Table.Head class="w-32 text-right">Actions</Table.Head>
+							<Table.Head class="w-40 text-right">Actions</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
@@ -170,25 +180,35 @@
 										{template.isActive ? 'Active' : 'Inactive'}
 									</Badge>
 								</Table.Cell>
-								<Table.Cell class="flex justify-end gap-2">
-									<Button
-										size="sm"
-										variant="ghost"
-										onclick={() => onEdit(template.id)}
-										title="Edit template"
-									>
-										<Edit2 size={16} />
-									</Button>
-									<Button
-										size="sm"
-										variant="ghost"
-										class="text-red-600 hover:text-red-700"
-										onclick={() => onDelete(template.id)}
-										title="Delete template"
-									>
-										<Trash2 size={16} />
-									</Button>
-								</Table.Cell>
+							<Table.Cell class="flex justify-end gap-2">
+								<Button
+									size="sm"
+									variant="outline"
+									onclick={() => handleTestTemplate(template.id, template.name)}
+									title="Send test notification"
+									class="gap-1.5"
+								>
+									<Send size={14} />
+									Test
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => onEdit(template.id)}
+									title="Edit template"
+								>
+									<Edit2 size={16} />
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									class="text-red-600 hover:text-red-700"
+									onclick={() => onDelete(template.id)}
+									title="Delete template"
+								>
+									<Trash2 size={16} />
+								</Button>
+							</Table.Cell>
 							</Table.Row>
 						{/each}
 					</Table.Body>
@@ -239,3 +259,10 @@
 		</div>
 	{/await}
 </div>
+
+<!-- Test Notification Dialog -->
+<TestNotificationDialog
+	bind:open={testDialogOpen}
+	templateId={testTemplateId}
+	templateName={testTemplateName}
+/>

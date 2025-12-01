@@ -4,6 +4,7 @@
  */
 
 import { Resend } from 'resend';
+import { RESEND_API_KEY, RESEND_FROM_EMAIL } from '$env/static/private';
 import {
 	orderConfirmationEmail,
 	orderShippedEmail,
@@ -15,13 +16,13 @@ import {
 import type { Order } from './db/schema';
 
 // Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(RESEND_API_KEY);
 
 // Default from email
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com';
+const FROM_EMAIL = RESEND_FROM_EMAIL || 'noreply@yourdomain.com';
 
 // Email enabled flag (disable in dev if no API key)
-const EMAIL_ENABLED = !!process.env.RESEND_API_KEY;
+const EMAIL_ENABLED = !!RESEND_API_KEY;
 
 interface OrderEmailPayload {
 	order: Order & {
@@ -362,7 +363,7 @@ export async function sendCustomOrderEmail(data: {
       `
 		});
 
-		console.log('[Email] Custom order email sent:', result.data?.id);
+		console.log('[Email] Custom order email sent:', result);
 		return { success: true, messageId: result.data?.id };
 	} catch (error) {
 		console.error('[Email] Failed to send custom order email:', error);
