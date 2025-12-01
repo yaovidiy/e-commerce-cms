@@ -73,7 +73,7 @@
 </script>
 
 <Dialog.Root open={true} onOpenChange={(open) => !open && onCancel()}>
-	<Dialog.Content class="max-w-3xl">
+	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>{m.page_add_block()}</Dialog.Title>
 			<Dialog.Description>

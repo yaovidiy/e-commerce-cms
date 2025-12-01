@@ -49,7 +49,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-2xl">
+	<Dialog.Content class="max-w-[90vw]! w-full">
 		<Dialog.Header>
 			<Dialog.Title>{m.page_create_page()}</Dialog.Title>
 			<Dialog.Description>{m.page_create_page_description()}</Dialog.Description>
