@@ -15,7 +15,7 @@
 
 	let searchQuery = $state('');
 	let statusFilter = $state<'all' | 'draft' | 'active' | 'archived'>('all');
-	let currentPage = $state(0);
+	let currentPage = $state(1);
 	const pageSize = 9;
 
 	// Delete dialog state

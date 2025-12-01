@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getAllOrders, updateOrderStatus } from '$lib/remotes/order.remote';
 	import { DataTableWrapper } from '$lib/components/common/data-display';
-	import { renderComponent } from '$lib/components/ui/data-table';
+	import { renderComponent, renderSnippet } from '$lib/components/ui/data-table';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
@@ -10,6 +10,7 @@
 	import OrderActionsCell from './order-actions-cell.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Search } from '@lucide/svelte';
+	import { createRawSnippet } from 'svelte';
 
 	type Order = {
 		id: string;
@@ -24,7 +25,9 @@
 	};
 
 	let searchQuery = $state('');
-	let statusFilter = $state<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'>('all');
+	let statusFilter = $state<
+		'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+	>('all');
 	let currentPage = $state(1);
 	const pageSize = 10;
 
@@ -50,8 +53,8 @@
 	}
 
 	async function handleStatusChange(orderId: string, newStatus: string) {
-		await updateOrderStatus({ 
-			id: orderId, 
+		await updateOrderStatus({
+			id: orderId,
 			status: newStatus as Order['status']
 		});
 	}
@@ -69,13 +72,20 @@
 
 	function getStatusLabel(status: Order['status']): string {
 		switch (status) {
-			case 'pending': return m.order_status_pending?.() ?? 'Pending';
-			case 'processing': return m.order_status_processing?.() ?? 'Processing';
-			case 'shipped': return m.order_status_shipped?.() ?? 'Shipped';
-			case 'delivered': return m.order_status_delivered?.() ?? 'Delivered';
-			case 'cancelled': return m.order_status_cancelled?.() ?? 'Cancelled';
-			case 'refunded': return m.order_status_refunded?.() ?? 'Refunded';
-			default: return status;
+			case 'pending':
+				return m.order_status_pending?.() ?? 'Pending';
+			case 'processing':
+				return m.order_status_processing?.() ?? 'Processing';
+			case 'shipped':
+				return m.order_status_shipped?.() ?? 'Shipped';
+			case 'delivered':
+				return m.order_status_delivered?.() ?? 'Delivered';
+			case 'cancelled':
+				return m.order_status_cancelled?.() ?? 'Cancelled';
+			case 'refunded':
+				return m.order_status_refunded?.() ?? 'Refunded';
+			default:
+				return status;
 		}
 	}
 
@@ -108,7 +118,7 @@
 
 <div class="flex flex-col gap-4">
 	<div class="flex flex-wrap items-center gap-4">
-		<div class="relative flex-1 min-w-[200px] max-w-sm">
+		<div class="relative max-w-sm min-w-[200px] flex-1">
 			<Search class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 			<Input
 				type="text"
@@ -125,7 +135,8 @@
 			<Select.Content>
 				<Select.Item value="all">{m.common_all()}</Select.Item>
 				<Select.Item value="pending">{m.order_status_pending?.() ?? 'Pending'}</Select.Item>
-				<Select.Item value="processing">{m.order_status_processing?.() ?? 'Processing'}</Select.Item>
+				<Select.Item value="processing">{m.order_status_processing?.() ?? 'Processing'}</Select.Item
+				>
 				<Select.Item value="shipped">{m.order_status_shipped?.() ?? 'Shipped'}</Select.Item>
 				<Select.Item value="delivered">{m.order_status_delivered?.() ?? 'Delivered'}</Select.Item>
 				<Select.Item value="cancelled">{m.order_status_cancelled?.() ?? 'Cancelled'}</Select.Item>
@@ -134,13 +145,7 @@
 		</Select.Root>
 	</div>
 
-	{#await getAllOrders({ 
-		status: statusFilter, 
-		customerEmail: searchQuery.includes('@') ? searchQuery : '', 
-		orderNumber: !searchQuery.includes('@') ? searchQuery : '', 
-		page: currentPage, 
-		pageSize 
-	})}
+	{#await getAllOrders( { status: statusFilter, customerEmail: searchQuery.includes('@') ? searchQuery : '', orderNumber: !searchQuery.includes('@') ? searchQuery : '', page: currentPage, pageSize } )}
 		<div class="text-muted-foreground px-4 py-8 text-center text-sm">{m.common_loading()}</div>
 	{:then response}
 		<DataTableWrapper
@@ -151,7 +156,15 @@
 					header: () => m.order_order_number?.() ?? 'Order #',
 					cell: (info: any) => {
 						const value = info.getValue() as string;
-						return `<div class="font-mono text-sm font-medium">${value}</div>`;
+						const snippet = createRawSnippet<[{ orderNumber: string }]>((getParams) => {
+							const { orderNumber } = getParams();
+							return {
+								render: () => `<div class="font-mono text-sm font-semibold">${orderNumber}</div>`
+							};
+						});
+						return renderSnippet(snippet, {
+							orderNumber: value
+						});
 					}
 				},
 				{
@@ -167,7 +180,16 @@
 					header: () => m.order_email?.() ?? 'Email',
 					cell: (info: any) => {
 						const value = info.getValue() as string;
-						return `<div class="text-muted-foreground truncate text-sm">${value}</div>`;
+						const snippet = createRawSnippet<[{ email: string }]>((getParams) => {
+							const { email } = getParams();
+							return {
+								render: () =>
+									`<a href="mailto:${email}" class="text-blue-600 hover:underline truncate text-sm">${email}</a>`
+							};
+						});
+						return renderSnippet(snippet, {
+							email: value
+						});
 					}
 				},
 				{
@@ -177,7 +199,18 @@
 						const status = info.getValue() as Order['status'];
 						const label = getStatusLabel(status);
 						const color = getStatusColor(status);
-						return `<span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${color}">${label}</span>`;
+
+						const snippet = createRawSnippet<[{ label: string; color: string }]>((getParams) => {
+							const { label, color } = getParams();
+							return {
+								render: () =>
+									`<span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${color}">${label}</span>`
+							};
+						});
+						return renderSnippet(snippet, {
+							label,
+							color
+						});
 					}
 				},
 				{
@@ -185,7 +218,15 @@
 					header: () => m.order_total?.() ?? 'Total',
 					cell: (info: any) => {
 						const value = info.getValue() as number;
-						return `<div class="font-medium">${formatCurrency(value)}</div>`;
+						const snippet = createRawSnippet<[{ value: number }]>((getParams) => {
+							const { value } = getParams();
+							return {
+								render: () => `<div class="font-medium">${formatCurrency(value)}</div>`
+							};
+						});
+						return renderSnippet(snippet, {
+							value
+						});
 					}
 				},
 				{
@@ -217,14 +258,14 @@
 			]}
 			totalPages={response.totalPages}
 			page={currentPage}
-			pageSize={pageSize}
+			{pageSize}
 			hasNextPage={response.hasNextPage}
 			hasPreviousPage={response.hasPreviousPage}
 			onPageChange={handlePageChange}
 			emptyMessage={m.order_no_orders?.() ?? 'No orders found'}
 		/>
 	{:catch error}
-		<div class="px-4 py-8 text-center text-sm text-destructive">
+		<div class="text-destructive px-4 py-8 text-center text-sm">
 			{m.common_error()}: {error.message}
 		</div>
 	{/await}
