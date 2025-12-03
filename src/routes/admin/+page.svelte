@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages';
-	import { FileText, Users } from '@lucide/svelte/icons';
+	import { FileText, Users, CreditCard } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button';
 </script>
 
@@ -27,6 +27,15 @@
 			<Users class="size-8 text-muted-foreground group-hover:text-foreground" />
 			<h3 class="text-xl font-semibold">{m.admin_users()}</h3>
 			<p class="text-sm text-muted-foreground">Manage users and permissions</p>
+		</a>
+
+		<a
+			href="/admin/liqpay"
+			class="group flex flex-col gap-2 rounded-lg border bg-card p-6 transition-colors hover:bg-accent"
+		>
+			<CreditCard class="size-8 text-muted-foreground group-hover:text-foreground" />
+			<h3 class="text-xl font-semibold">LiqPay Testing</h3>
+			<p class="text-sm text-muted-foreground">Test and manage payment integration</p>
 		</a>
 	</div>
 </div>

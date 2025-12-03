@@ -7,10 +7,10 @@ import { query, command } from '$app/server';
 import * as v from 'valibot';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
-import type { Order } from '$lib/server/db/schema';
 import { getLiqPayClient } from '$lib/server/liqpay-client';
 import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
+import { LIQPAY_PUBLIC_KEY, LIQPAY_PRIVATE_KEY, LIQPAY_SANDBOX } from '$env/static/private';
 
 /**
  * Create a payment for an order
@@ -263,4 +263,58 @@ export const createRefund = command(v.string(), async (orderId) => {
 	}
 
 	error(400, refundResult.err_description || 'Failed to process refund');
+});
+
+/**
+ * Check LiqPay integration status and test API connection
+ */
+export const testLiqPayIntegration = query(async () => {
+	try {
+		const liqpay = getLiqPayClient();
+		
+		// Check if credentials are configured
+		const publicKeyConfigured = !!LIQPAY_PUBLIC_KEY;
+		const privateKeyConfigured = !!LIQPAY_PRIVATE_KEY;
+		const isSandbox = LIQPAY_SANDBOX === 'true';
+
+		// Try a test status check with a dummy order
+		let testConnectionSuccess = false;
+		let testConnectionError: string | null = null;
+
+		if (publicKeyConfigured && privateKeyConfigured) {
+			try {
+				// Try to check status of a test order (will fail but tests connectivity)
+				const statusResponse = await liqpay.checkPaymentStatus('test-order-' + Date.now());
+				testConnectionSuccess = true;
+			} catch (err) {
+				// Connection test - we expect some error, but not a connection error
+				const errorMsg = err instanceof Error ? err.message : String(err);
+				if (errorMsg.includes('fetch') || errorMsg.includes('ECONNREFUSED')) {
+					testConnectionError = 'Failed to connect to LiqPay API: ' + errorMsg;
+				} else {
+					// Other errors indicate the API is reachable
+					testConnectionSuccess = true;
+				}
+			}
+		}
+
+		return {
+			configured: publicKeyConfigured && privateKeyConfigured,
+			sandbox: isSandbox,
+			publicKeyConfigured,
+			privateKeyConfigured,
+			testConnectionSuccess,
+			testConnectionError
+		};
+	} catch (err) {
+		const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+		return {
+			configured: false,
+			sandbox: false,
+			publicKeyConfigured: false,
+			privateKeyConfigured: false,
+			testConnectionSuccess: false,
+			testConnectionError: errorMsg
+		};
+	}
 });

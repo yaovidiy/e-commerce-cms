@@ -6,6 +6,7 @@
  */
 
 import crypto from 'crypto';
+import { LIQPAY_PRIVATE_KEY, LIQPAY_PUBLIC_KEY, LIQPAY_SANDBOX } from '$env/static/private'; 
 
 interface LiqPayConfig {
 	publicKey: string;
@@ -240,9 +241,9 @@ export class LiqPayClient {
  * Get LiqPay client instance
  */
 export function getLiqPayClient(): LiqPayClient {
-	const publicKey = process.env.LIQPAY_PUBLIC_KEY;
-	const privateKey = process.env.LIQPAY_PRIVATE_KEY;
-	const isSandbox = process.env.LIQPAY_SANDBOX === 'true';
+	const publicKey = LIQPAY_PUBLIC_KEY;
+	const privateKey = LIQPAY_PRIVATE_KEY;
+	const isSandbox = LIQPAY_SANDBOX === 'true';
 
 	if (!publicKey || !privateKey) {
 		throw new Error('LiqPay credentials not configured. Set LIQPAY_PUBLIC_KEY and LIQPAY_PRIVATE_KEY environment variables.');
