@@ -1,8 +1,16 @@
 <script lang="ts">
 	import * as Tabs from '$lib/components/ui/tabs';
+	import * as Card from '$lib/components/ui/card';
 	import * as m from '$lib/paraglide/messages';
-	import { ConnectionStatus, AddressTest } from '$lib/components/admin/features/ukrposhta-management';
+	import { ConnectionStatus } from '$lib/components/admin/features/ukrposhta-management';
+	import { UkrposhtaAddressSelector, type UkrposhtaAddressData } from '$lib/components/client/features/ukrposhta';
 	import { MapPin, Settings, TestTube } from '@lucide/svelte/icons';
+
+	let selectedAddress: UkrposhtaAddressData | null = $state(null);
+
+	function handleAddressSelect(address: UkrposhtaAddressData) {
+		selectedAddress = address;
+	}
 </script>
 
 <div class="flex flex-col gap-6">
@@ -80,7 +88,27 @@
 		</Tabs.Content>
 
 		<Tabs.Content value="test" class="space-y-6 mt-4">
-			<AddressTest />
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2">
+						<MapPin class="h-5 w-5" />
+						{m.ukrposhta_address_selector_demo?.() || 'Address Selector Demo'}
+					</Card.Title>
+					<Card.Description>
+						{m.ukrposhta_address_selector_demo_description?.() || 'This is how the address selector will appear to customers during checkout'}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<UkrposhtaAddressSelector onAddressSelect={handleAddressSelect} />
+
+					{#if selectedAddress}
+						<div class="mt-4 p-4 bg-muted rounded-lg">
+							<h4 class="font-medium mb-2">{m.ukrposhta_selected_address_data?.() || 'Selected Address Data'}</h4>
+							<pre class="text-xs overflow-auto">{JSON.stringify(selectedAddress, null, 2)}</pre>
+						</div>
+					{/if}
+				</Card.Content>
+			</Card.Root>
 		</Tabs.Content>
 	</Tabs.Root>
 </div>

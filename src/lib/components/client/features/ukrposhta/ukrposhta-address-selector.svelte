@@ -1,9 +1,12 @@
 <script lang="ts">
-	import * as Select from '$lib/components/ui/select';
+	import * as Command from '$lib/components/ui/command';
+	import * as Popover from '$lib/components/ui/popover';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
+	import { tick } from 'svelte';
 	import {
 		getAllRegions,
 		getDistrictsByRegion,
@@ -18,7 +21,7 @@
 		type UkrposhtaHouse,
 		type UkrposhtaPostOffice
 	} from '$lib/remotes/ukrposhta.remote';
-	import { Loader2, MapPin, Building, Truck, Search, Check } from '@lucide/svelte/icons';
+	import { Loader2, MapPin, Building, Truck, Search, Check, ChevronsUpDown } from '@lucide/svelte/icons';
 
 	// Props
 	interface Props {
@@ -79,6 +82,46 @@
 	let loadingStreets = $state(false);
 	let loadingPostOffices = $state(false);
 	let loadingHouse = $state(false);
+
+	// Popover open states
+	let regionPopoverOpen = $state(false);
+	let districtPopoverOpen = $state(false);
+	let cityPopoverOpen = $state(false);
+	let streetPopoverOpen = $state(false);
+	let postOfficePopoverOpen = $state(false);
+
+	// Trigger refs for focus management
+	let regionTriggerRef = $state<HTMLButtonElement | null>(null);
+	let districtTriggerRef = $state<HTMLButtonElement | null>(null);
+	let cityTriggerRef = $state<HTMLButtonElement | null>(null);
+	let streetTriggerRef = $state<HTMLButtonElement | null>(null);
+	let postOfficeTriggerRef = $state<HTMLButtonElement | null>(null);
+
+	// Close popover helpers
+	function closeRegionPopover() {
+		regionPopoverOpen = false;
+		tick().then(() => regionTriggerRef?.focus());
+	}
+
+	function closeDistrictPopover() {
+		districtPopoverOpen = false;
+		tick().then(() => districtTriggerRef?.focus());
+	}
+
+	function closeCityPopover() {
+		cityPopoverOpen = false;
+		tick().then(() => cityTriggerRef?.focus());
+	}
+
+	function closeStreetPopover() {
+		streetPopoverOpen = false;
+		tick().then(() => streetTriggerRef?.focus());
+	}
+
+	function closePostOfficePopover() {
+		postOfficePopoverOpen = false;
+		tick().then(() => postOfficeTriggerRef?.focus());
+	}
 
 	// Get current selection info
 	let selectedRegion = $derived(regions.find((r) => r.REGION_ID === selectedRegionId));
@@ -308,50 +351,104 @@
 	<!-- Region Selection -->
 	<div class="space-y-1.5">
 		<Label class="text-sm">{m.ukrposhta_region?.() || 'Region'}</Label>
-		<Select.Root
-			type="single"
-			value={selectedRegionId}
-			onValueChange={(v) => onRegionChange(v ?? '')}
-		>
-			<Select.Trigger disabled={loadingRegions} class="w-full">
-				{#if loadingRegions}
-					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-					{m.common_loading?.() || 'Loading...'}
-				{:else}
-					{selectedRegion?.REGION_UA || m.ukrposhta_select_region?.() || 'Select region...'}
-				{/if}
-			</Select.Trigger>
-			<Select.Content>
-				{#each regions as region}
-					<Select.Item value={region.REGION_ID}>{region.REGION_UA}</Select.Item>
-				{/each}
-			</Select.Content>
-		</Select.Root>
+		<Popover.Root bind:open={regionPopoverOpen}>
+			<Popover.Trigger bind:ref={regionTriggerRef}>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="outline"
+						role="combobox"
+						aria-expanded={regionPopoverOpen}
+						class="w-full justify-between"
+						disabled={loadingRegions}
+					>
+						{#if loadingRegions}
+							<span class="flex items-center gap-2">
+								<Loader2 class="h-4 w-4 animate-spin" />
+								{m.common_loading?.() || 'Loading...'}
+							</span>
+						{:else}
+							{selectedRegion?.REGION_UA || m.ukrposhta_select_region?.() || 'Select region...'}
+						{/if}
+						<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+					</Button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+				<Command.Root>
+					<Command.Input placeholder={m.ukrposhta_select_region?.() || 'Search region...'} />
+					<Command.List>
+						<Command.Empty>{m.common_no_results?.() || 'No results found.'}</Command.Empty>
+						<Command.Group>
+							{#each regions as region}
+								<Command.Item
+									value={region.REGION_UA}
+									onSelect={() => {
+										onRegionChange(region.REGION_ID);
+										closeRegionPopover();
+									}}
+								>
+									<Check class={cn('mr-2 h-4 w-4', selectedRegionId === region.REGION_ID ? 'opacity-100' : 'opacity-0')} />
+									{region.REGION_UA}
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.List>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	<!-- District Selection -->
 	{#if selectedRegionId}
 		<div class="space-y-1.5">
 			<Label class="text-sm">{m.ukrposhta_district?.() || 'District'}</Label>
-			<Select.Root
-				type="single"
-				value={selectedDistrictId}
-				onValueChange={(v) => onDistrictChange(v ?? '')}
-			>
-				<Select.Trigger disabled={loadingDistricts} class="w-full">
-					{#if loadingDistricts}
-						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						{m.common_loading?.() || 'Loading...'}
-					{:else}
-						{selectedDistrict?.DISTRICT_UA || m.ukrposhta_select_district?.() || 'Select district...'}
-					{/if}
-				</Select.Trigger>
-				<Select.Content>
-					{#each districts as district}
-						<Select.Item value={district.DISTRICT_ID}>{district.DISTRICT_UA}</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
+			<Popover.Root bind:open={districtPopoverOpen}>
+				<Popover.Trigger bind:ref={districtTriggerRef}>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="outline"
+							role="combobox"
+							aria-expanded={districtPopoverOpen}
+							class="w-full justify-between"
+							disabled={loadingDistricts}
+						>
+							{#if loadingDistricts}
+								<span class="flex items-center gap-2">
+									<Loader2 class="h-4 w-4 animate-spin" />
+									{m.common_loading?.() || 'Loading...'}
+								</span>
+							{:else}
+								{selectedDistrict?.DISTRICT_UA || m.ukrposhta_select_district?.() || 'Select district...'}
+							{/if}
+							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						</Button>
+					{/snippet}
+				</Popover.Trigger>
+				<Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+					<Command.Root>
+						<Command.Input placeholder={m.ukrposhta_select_district?.() || 'Search district...'} />
+						<Command.List>
+							<Command.Empty>{m.common_no_results?.() || 'No results found.'}</Command.Empty>
+							<Command.Group>
+								{#each districts as district}
+									<Command.Item
+										value={district.DISTRICT_UA}
+										onSelect={() => {
+											onDistrictChange(district.DISTRICT_ID);
+											closeDistrictPopover();
+										}}
+									>
+										<Check class={cn('mr-2 h-4 w-4', selectedDistrictId === district.DISTRICT_ID ? 'opacity-100' : 'opacity-0')} />
+										{district.DISTRICT_UA}
+									</Command.Item>
+								{/each}
+							</Command.Group>
+						</Command.List>
+					</Command.Root>
+				</Popover.Content>
+			</Popover.Root>
 		</div>
 	{/if}
 
@@ -359,34 +456,57 @@
 	{#if selectedDistrictId}
 		<div class="space-y-1.5">
 			<Label class="text-sm">{m.ukrposhta_city?.() || 'City/Settlement'}</Label>
-			<Select.Root
-				type="single"
-				value={selectedCityId}
-				onValueChange={(v) => onCityChange(v ?? '')}
-			>
-				<Select.Trigger disabled={loadingCities} class="w-full">
-					{#if loadingCities}
-						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						{m.common_loading?.() || 'Loading...'}
-					{:else if selectedCity}
-						{selectedCity.SHORTCITYTYPE_UA}
-						{selectedCity.CITY_UA}
-					{:else}
-						{m.ukrposhta_select_city?.() || 'Select city...'}
-					{/if}
-				</Select.Trigger>
-				<Select.Content>
-					{#each cities as city}
-						<Select.Item value={city.CITY_ID}>
-							{city.SHORTCITYTYPE_UA}
-							{city.CITY_UA}
-							{#if city.OWNOF}
-								<span class="text-muted-foreground ml-1">({city.OWNOF})</span>
+			<Popover.Root bind:open={cityPopoverOpen}>
+				<Popover.Trigger bind:ref={cityTriggerRef}>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="outline"
+							role="combobox"
+							aria-expanded={cityPopoverOpen}
+							class="w-full justify-between"
+							disabled={loadingCities}
+						>
+							{#if loadingCities}
+								<span class="flex items-center gap-2">
+									<Loader2 class="h-4 w-4 animate-spin" />
+									{m.common_loading?.() || 'Loading...'}
+								</span>
+							{:else if selectedCity}
+								{selectedCity.SHORTCITYTYPE_UA} {selectedCity.CITY_UA}
+							{:else}
+								{m.ukrposhta_select_city?.() || 'Select city...'}
 							{/if}
-						</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
+							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						</Button>
+					{/snippet}
+				</Popover.Trigger>
+				<Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+					<Command.Root>
+						<Command.Input placeholder={m.ukrposhta_select_city?.() || 'Search city...'} />
+						<Command.List>
+							<Command.Empty>{m.common_no_results?.() || 'No results found.'}</Command.Empty>
+							<Command.Group>
+								{#each cities as city}
+									<Command.Item
+										value={`${city.SHORTCITYTYPE_UA} ${city.CITY_UA} ${city.OWNOF || ''}`}
+										onSelect={() => {
+											onCityChange(city.CITY_ID);
+											closeCityPopover();
+										}}
+									>
+										<Check class={cn('mr-2 h-4 w-4', selectedCityId === city.CITY_ID ? 'opacity-100' : 'opacity-0')} />
+										{city.SHORTCITYTYPE_UA} {city.CITY_UA}
+										{#if city.OWNOF}
+											<span class="text-muted-foreground ml-1">({city.OWNOF})</span>
+										{/if}
+									</Command.Item>
+								{/each}
+							</Command.Group>
+						</Command.List>
+					</Command.Root>
+				</Popover.Content>
+			</Popover.Root>
 		</div>
 	{/if}
 
@@ -404,24 +524,44 @@
 					{m.ukrposhta_no_post_offices?.() || 'No post offices found'}
 				</p>
 			{:else}
-				<Select.Root
-					type="single"
-					value={selectedPostOfficeCode}
-					onValueChange={(v) => (selectedPostOfficeCode = v ?? '')}
-				>
-					<Select.Trigger class="w-full">
-						{selectedPostOffice?.POSTOFFICE_UA || m.ukrposhta_select_post_office?.() || 'Select post office...'}
-					</Select.Trigger>
-					<Select.Content>
-						{#each postOffices as office}
-							<Select.Item value={office.POSTCODE}>
-								<div class="flex flex-col">
-									<span>{office.POSTCODE} - {office.STREET_UA_VPZ}</span>
-								</div>
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
+				<Popover.Root bind:open={postOfficePopoverOpen}>
+					<Popover.Trigger bind:ref={postOfficeTriggerRef}>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="outline"
+								role="combobox"
+								aria-expanded={postOfficePopoverOpen}
+								class="w-full justify-between"
+							>
+								{selectedPostOffice?.POSTOFFICE_UA || m.ukrposhta_select_post_office?.() || 'Select post office...'}
+								<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+							</Button>
+						{/snippet}
+					</Popover.Trigger>
+					<Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+						<Command.Root>
+							<Command.Input placeholder={m.ukrposhta_select_post_office?.() || 'Search post office...'} />
+							<Command.List>
+								<Command.Empty>{m.common_no_results?.() || 'No results found.'}</Command.Empty>
+								<Command.Group>
+									{#each postOffices as office}
+										<Command.Item
+											value={`${office.POSTCODE} ${office.STREET_UA_VPZ}`}
+											onSelect={() => {
+												selectedPostOfficeCode = office.POSTCODE;
+												closePostOfficePopover();
+											}}
+										>
+											<Check class={cn('mr-2 h-4 w-4', selectedPostOfficeCode === office.POSTCODE ? 'opacity-100' : 'opacity-0')} />
+											{office.POSTCODE} - {office.STREET_UA_VPZ}
+										</Command.Item>
+									{/each}
+								</Command.Group>
+							</Command.List>
+						</Command.Root>
+					</Popover.Content>
+				</Popover.Root>
 			{/if}
 		</div>
 	{/if}
@@ -430,52 +570,66 @@
 	{#if deliveryType === 'courier' && selectedCityId}
 		<div class="space-y-1.5">
 			<Label class="text-sm">{m.ukrposhta_street?.() || 'Street'}</Label>
-			<div class="flex gap-2">
-				<Input
-					type="text"
-					placeholder={m.ukrposhta_search_street?.() || 'Search street...'}
-					bind:value={streetSearch}
-					onkeyup={(e: KeyboardEvent) => e.key === 'Enter' && onStreetSearch()}
-					class="flex-1"
-				/>
-				<Button
-					type="button"
-					onclick={onStreetSearch}
-					disabled={loadingStreets || streetSearch.length < 2}
-					size="icon"
-					variant="outline"
-				>
-					{#if loadingStreets}
-						<Loader2 class="h-4 w-4 animate-spin" />
-					{:else}
-						<Search class="h-4 w-4" />
-					{/if}
-				</Button>
-			</div>
-			{#if streets.length > 0}
-				<Select.Root
-					type="single"
-					value={selectedStreetId}
-					onValueChange={(v) => onStreetSelect(v ?? '')}
-				>
-					<Select.Trigger class="w-full">
-						{#if selectedStreet}
-							{selectedStreet.SHORTSTREETTYPE_UA}
-							{selectedStreet.STREET_UA}
-						{:else}
-							{m.ukrposhta_select_street?.() || 'Select street...'}
-						{/if}
-					</Select.Trigger>
-					<Select.Content>
-						{#each streets as street}
-							<Select.Item value={street.STREET_ID}>
-								{street.SHORTSTREETTYPE_UA}
-								{street.STREET_UA}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			{/if}
+			<Popover.Root bind:open={streetPopoverOpen}>
+				<Popover.Trigger bind:ref={streetTriggerRef}>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="outline"
+							role="combobox"
+							aria-expanded={streetPopoverOpen}
+							class="w-full justify-between"
+							disabled={loadingStreets}
+						>
+							{#if loadingStreets}
+								<span class="flex items-center gap-2">
+									<Loader2 class="h-4 w-4 animate-spin" />
+									{m.common_loading?.() || 'Loading...'}
+								</span>
+							{:else if selectedStreet}
+								{selectedStreet.SHORTSTREETTYPE_UA} {selectedStreet.STREET_UA}
+							{:else}
+								{m.ukrposhta_select_street?.() || 'Select street...'}
+							{/if}
+							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						</Button>
+					{/snippet}
+				</Popover.Trigger>
+				<Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+					<Command.Root shouldFilter={false}>
+						<Command.Input 
+							placeholder={m.ukrposhta_search_street?.() || 'Search street...'} 
+							bind:value={streetSearch}
+							oninput={() => {
+								if (streetSearch.length >= 2) {
+									onStreetSearch();
+								}
+							}}
+						/>
+						<Command.List>
+							{#if streets.length === 0 && streetSearch.length >= 2 && !loadingStreets}
+								<Command.Empty>No results found.</Command.Empty>
+							{:else if streets.length === 0}
+								<Command.Empty>Type at least 2 characters to search...</Command.Empty>
+							{/if}
+							<Command.Group>
+								{#each streets as street}
+									<Command.Item
+										value={`${street.SHORTSTREETTYPE_UA} ${street.STREET_UA}`}
+										onSelect={() => {
+											onStreetSelect(street.STREET_ID);
+											closeStreetPopover();
+										}}
+									>
+										<Check class={cn('mr-2 h-4 w-4', selectedStreetId === street.STREET_ID ? 'opacity-100' : 'opacity-0')} />
+										{street.SHORTSTREETTYPE_UA} {street.STREET_UA}
+									</Command.Item>
+								{/each}
+							</Command.Group>
+						</Command.List>
+					</Command.Root>
+				</Popover.Content>
+			</Popover.Root>
 		</div>
 
 		<!-- House Number -->
