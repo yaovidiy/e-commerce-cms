@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import * as Collapsible from '$lib/components/ui/collapsible';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown, MessageSquare, Bell } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown, MessageSquare, Bell, MapPin } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -70,6 +70,11 @@
 					title: () => m.discounts(),
 					url: '/admin/discounts',
 					icon: Percent
+				},
+				{
+					title: () => m.ukrposhta_management?.() || 'Ukrposhta',
+					url: '/admin/ukrposhta',
+					icon: MapPin
 				}
 			]
 		},

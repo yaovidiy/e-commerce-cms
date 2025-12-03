@@ -15,13 +15,7 @@ import { createPaginatedResponse, calculatePagination } from '$lib/server/pagina
 
 // Get all products with filters
 export const getAllProducts = query(FilterProductsSchema, async (data) => {
-	let baseQuery = db
-		.select({
-			product: tables.product,
-			category: tables.category
-		})
-		.from(tables.product)
-		.leftJoin(tables.category, eq(tables.product.categoryId, tables.category.id));
+	let baseQuery = db.select().from(tables.product);
 
 	const conditions = [];
 
@@ -53,9 +47,7 @@ export const getAllProducts = query(FilterProductsSchema, async (data) => {
 	baseQuery = baseQuery.orderBy(desc(tables.product.createdAt)) as typeof baseQuery;
 
 	// Get total count for pagination
-	let countQuery = db
-		.select({ count: count() })
-		.from(tables.product);
+	let countQuery = db.select({ count: count() }).from(tables.product);
 
 	if (conditions.length > 0) {
 		countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
