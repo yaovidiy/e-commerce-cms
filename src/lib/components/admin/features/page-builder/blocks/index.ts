@@ -4,3 +4,8 @@ export { default as ImageBlockEditor } from './image-block-editor.svelte';
 export { default as GalleryBlockEditor } from './gallery-block-editor.svelte';
 export { default as VideoBlockEditor } from './video-block-editor.svelte';
 export { default as HtmlBlockEditor } from './html-block-editor.svelte';
+export { default as SliderBlockEditor } from './slider-block-editor.svelte';
+export { default as BenefitsBlockEditor } from './benefits-block-editor.svelte';
+export { default as InstagramBlockEditor } from './instagram-block-editor.svelte';
+export { default as BlogBlockEditor } from './blog-block-editor.svelte';
+export { default as ProductCardBlockEditor } from './product-card-block-editor.svelte';

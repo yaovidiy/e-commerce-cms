@@ -4,24 +4,26 @@
 	import { goto } from '$app/navigation';
 
 	let {
-		slides = []
+		data
 	}: {
-		slides?: {
-			id: string;
-			image?: {
-				assetId: string;
-			};
-			url?: string;
-		}[];
+		data: {
+			slides?: Array<{
+				id: string;
+				image?: {
+					assetId: string;
+				};
+				url?: string;
+			}>;
+		};
 	} = $props();
 </script>
 
 <Carousel.Root>
 	<Carousel.Content class="relative">
-		{#if slides.length > 1}
+		{#if data.slides && data.slides.length > 1}
 			<Carousel.Previous class="aboslute top-1/2 left-6 -translate-y-1/2" />
 		{/if}
-		{#each slides as slide (slide.id)}
+		{#each data.slides || [] as slide (slide.id)}
 			<Carousel.Item
 				onclick={() => {
 					if (slide.url) {
@@ -32,7 +34,7 @@
 				<AssetImage assetId={slide.image?.assetId ?? ''} thumbnail={false} />
 			</Carousel.Item>
 		{/each}
-		{#if slides.length > 1}
+		{#if data.slides && data.slides.length > 1}
 			<Carousel.Next class="aboslute top-1/2 right-4 -translate-y-1/2" />
 		{/if}
 	</Carousel.Content>

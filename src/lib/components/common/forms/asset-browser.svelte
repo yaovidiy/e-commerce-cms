@@ -7,11 +7,9 @@
 	import { Check, Upload } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { Asset } from '$lib/server/db/schema';
+	import * as Pagination from '$lib/components/ui/pagination/';
 
-	let {
-		open = $bindable(false),
-		onSelect
-	} = $props<{
+	let { open = $bindable(false), onSelect } = $props<{
 		open?: boolean;
 		onSelect: (asset: Asset) => void;
 	}>();
@@ -19,6 +17,7 @@
 	let searchQuery = $state('');
 	let selectedAsset = $state<Asset | null>(null);
 	let showUpload = $state(false);
+	let currentPage = $state(1);
 
 	function handleSelect(asset: Asset) {
 		selectedAsset = asset;
@@ -33,7 +32,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-4xl max-h-[80vh]">
+	<Dialog.Content class="max-h-[80vh] max-w-4xl">
 		<Dialog.Header>
 			<Dialog.Title>{m.asset_browse()}</Dialog.Title>
 			<Dialog.Description>{m.asset_select_image()}</Dialog.Description>
@@ -68,47 +67,74 @@
 				<!-- Browse View -->
 				<Input type="text" placeholder={m.asset_search_placeholder()} bind:value={searchQuery} />
 
-				<div class="overflow-y-auto max-h-[50vh]">
-					{#await getAllAssets({ filename: searchQuery, mimeType: '' })}
-						<div class="text-center py-8 text-muted-foreground">Loading...</div>
+				<div class="max-h-[50vh] overflow-y-auto">
+					{#await getAllAssets({ filename: searchQuery, mimeType: '', page: currentPage, pageSize: 15 })}
+						<div class="text-muted-foreground py-8 text-center">Loading...</div>
 					{:then assets}
-						{#if assets.length === 0}
-							<div class="text-center py-12 text-muted-foreground">
+						{#if assets.data.length === 0}
+							<div class="text-muted-foreground py-12 text-center">
 								<p>{m.asset_no_assets()}</p>
 							</div>
 						{:else}
-							<div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-								{#each assets as asset}
+							<div class="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-5">
+								{#each assets.data as asset}
 									<button
 										type="button"
-										class="group relative aspect-square rounded-lg border bg-muted overflow-hidden hover:border-primary transition-colors"
+										class="group bg-muted hover:border-primary relative aspect-square overflow-hidden rounded-lg border transition-colors"
 										onclick={() => handleSelect(asset)}
 									>
 										{#if asset.thumbnailUrl}
 											<img
 												src={asset.thumbnailUrl}
 												alt={asset.originalFilename}
-												class="w-full h-full object-cover"
+												class="h-full w-full object-cover"
 											/>
 										{:else}
 											<img
 												src={asset.url}
 												alt={asset.originalFilename}
-												class="w-full h-full object-cover"
+												class="h-full w-full object-cover"
 											/>
 										{/if}
 
 										<div
-											class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+											class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
 										>
 											<Check class="h-8 w-8 text-white" />
 										</div>
 									</button>
 								{/each}
 							</div>
+							<div class="mt-3">
+								<Pagination.Root bind:page={currentPage} count={assets.totalCount} perPage={assets.pageSize}>
+									{#snippet children({ pages, currentPage })}
+										<Pagination.Content>
+											<Pagination.Item>
+												<Pagination.PrevButton />
+											</Pagination.Item>
+											{#each pages as page (page.key)}
+												{#if page.type === 'ellipsis'}
+													<Pagination.Item>
+														<Pagination.Ellipsis />
+													</Pagination.Item>
+												{:else}
+													<Pagination.Item>
+														<Pagination.Link {page} isActive={currentPage === page.value}>
+															{page.value}
+														</Pagination.Link>
+													</Pagination.Item>
+												{/if}
+											{/each}
+											<Pagination.Item>
+												<Pagination.NextButton />
+											</Pagination.Item>
+										</Pagination.Content>
+									{/snippet}
+								</Pagination.Root>
+							</div>
 						{/if}
 					{:catch error}
-						<div class="text-center py-12 text-destructive">
+						<div class="text-destructive py-12 text-center">
 							<p>Error loading assets: {error.message}</p>
 						</div>
 					{/await}

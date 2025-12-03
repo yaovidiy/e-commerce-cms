@@ -10,6 +10,11 @@
 	import GalleryBlockEditor from './blocks/gallery-block-editor.svelte';
 	import VideoBlockEditor from './blocks/video-block-editor.svelte';
 	import HtmlBlockEditor from './blocks/html-block-editor.svelte';
+	import SliderBlockEditor from './blocks/slider-block-editor.svelte';
+	import BenefitsBlockEditor from './blocks/benefits-block-editor.svelte';
+	import InstagramBlockEditor from './blocks/instagram-block-editor.svelte';
+	import BlogBlockEditor from './blocks/blog-block-editor.svelte';
+	import ProductCardBlockEditor from './blocks/product-card-block-editor.svelte';
 
 	type ContentBlock = {
 		id: string;
@@ -80,10 +85,20 @@
 				return m.page_block_image();
 			case 'gallery':
 				return m.page_block_gallery();
+			case 'slider':
+				return 'Slider';
 			case 'products':
 				return m.page_block_products();
+			case 'productCards':
+				return 'Product Cards';
 			case 'categories':
 				return m.page_block_categories();
+			case 'benefits':
+				return 'Benefits';
+			case 'blog':
+				return 'Blog Cards';
+			case 'instagram':
+				return 'Instagram Feed';
 			case 'video':
 				return m.page_block_video();
 			case 'html':
@@ -161,6 +176,16 @@
 								<ImageBlockEditor bind:data={editingBlock.data} />
 							{:else if editingBlock.type === 'gallery'}
 								<GalleryBlockEditor bind:data={editingBlock.data} />
+							{:else if editingBlock.type === 'slider'}
+								<SliderBlockEditor bind:data={editingBlock.data} />
+							{:else if editingBlock.type === 'benefits'}
+								<BenefitsBlockEditor bind:data={editingBlock.data} />
+							{:else if editingBlock.type === 'instagram'}
+								<InstagramBlockEditor bind:data={editingBlock.data} />
+							{:else if editingBlock.type === 'blog'}
+								<BlogBlockEditor bind:data={editingBlock.data} />
+							{:else if editingBlock.type === 'productCards'}
+								<ProductCardBlockEditor bind:data={editingBlock.data} />
 							{:else if editingBlock.type === 'video'}
 								<VideoBlockEditor bind:data={editingBlock.data} />
 							{:else if editingBlock.type === 'html'}

@@ -46,16 +46,46 @@
 			description: 'Grid of multiple images'
 		},
 		{
+			type: 'slider',
+			icon: Images,
+			label: () => 'Slider',
+			description: 'Image carousel with navigation and optional links'
+		},
+		{
 			type: 'products',
 			icon: Package,
 			label: () => m.page_block_products(),
 			description: 'Showcase selected products'
 		},
 		{
+			type: 'productCards',
+			icon: Package,
+			label: () => 'Product Cards',
+			description: 'Display product cards with pricing and sale info'
+		},
+		{
 			type: 'categories',
 			icon: FolderTree,
 			label: () => m.page_block_categories(),
 			description: 'Display product categories'
+		},
+		{
+			type: 'benefits',
+			icon: Package,
+			label: () => 'Benefits',
+			description: 'Display benefit items with icons and descriptions'
+		},
+		{
+			type: 'blog',
+			icon: Package,
+			label: () => 'Blog Cards',
+			description: 'Display blog post cards with images and content'
+		},
+		{
+			type: 'instagram',
+			icon: Package,
+			label: () => 'Instagram Feed',
+			description: 'Display Instagram feed items as a carousel'
 		},
 		{
 			type: 'video',
