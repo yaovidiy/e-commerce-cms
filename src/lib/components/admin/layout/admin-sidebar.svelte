@@ -75,6 +75,11 @@
 					title: () => m.ukrposhta_management?.() || 'Ukrposhta',
 					url: '/admin/ukrposhta',
 					icon: MapPin
+				},
+				{
+					title: () => m.novaposhta_management?.() || 'Nova Poshta',
+					url: '/admin/novaposhta',
+					icon: Truck
 				}
 			]
 		},
