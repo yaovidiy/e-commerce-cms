@@ -1141,5 +1141,8 @@
   "novaposhta_feature_2": "Вибір відділень, філій та поштоматів",
   "novaposhta_feature_3": "Валідація адреси кур'єрської доставки",
   "novaposhta_feature_4": "Відстеження відправлень",
-  "novaposhta_feature_5": "Розрахунок вартості доставки"
+  "novaposhta_feature_5": "Розрахунок вартості доставки",
+  "novaposhta_address_selector_demo": "Демо вибору адреси",
+  "novaposhta_address_selector_demo_description": "Так виглядатиме вибір адреси для клієнтів під час оформлення замовлення",
+  "novaposhta_selected_address_data": "Дані обраної адреси"
 }

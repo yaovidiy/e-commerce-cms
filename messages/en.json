@@ -1141,5 +1141,8 @@
   "novaposhta_feature_2": "Warehouse, branch, and postomat selection",
   "novaposhta_feature_3": "Courier delivery address validation",
   "novaposhta_feature_4": "Shipment tracking",
-  "novaposhta_feature_5": "Delivery cost calculation"
+  "novaposhta_feature_5": "Delivery cost calculation",
+  "novaposhta_address_selector_demo": "Address Selector Demo",
+  "novaposhta_address_selector_demo_description": "This is how the address selector will appear to customers during checkout",
+  "novaposhta_selected_address_data": "Selected Address Data"
 }
