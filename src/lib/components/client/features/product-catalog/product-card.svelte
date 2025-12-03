@@ -93,6 +93,10 @@
 		}
 	}
 
+	const priceStr = $derived(
+		Math.floor(price/100)
+	)
+
 	const isOnSale = !!(salePrice && saleStart && saleEnd) && new Date(saleEnd) > new Date() && new Date(saleStart) < new Date();
 </script>
 
@@ -112,7 +116,7 @@
 			{#if !image}
 				<div class="bg-primary h-full w-full"></div>
 			{:else}
-				<Image assetId={image} alt={title} thumbnail={true} />
+				<Image assetId={image} alt={title} thumbnail={false} class="w-full" width={280} height={280} />
 			{/if}
 		</div>
 		<div class="flex h-[125px] flex-col justify-between">
@@ -120,7 +124,7 @@
 				<span class="line-clamp-2 h-12 w-full text-base font-semibold">{title}</span>
 				<span class="text-xs">
 					{#if isOnSale}
-						<span class="text-lg font-semibold text-gray-400 line-through">{price} грн</span>
+						<span class="text-lg font-semibold text-gray-400 line-through">{priceStr} грн</span>
 						&nbsp;
 						<span class="text-dark-green text-2xl font-semibold"
 							>{salePrice}
@@ -129,7 +133,7 @@
 						>
 					{:else}
 						<span class="text-2xl font-semibold"
-							>{price}
+							>{priceStr}
 							<span class="text-dark-green">грн</span>
 							<span class="text-xs font-normal">- {weight}</span></span
 						>

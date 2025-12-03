@@ -68,7 +68,9 @@
 {:then homepageData}
 	<!-- Render dynamic content from page -->
 	{#if homepageData && Array.isArray(homepageData.content)}
-		<PageContentRenderer blocks={homepageData.content} />
+		<div class="mt-10 md:mt-20">
+			<PageContentRenderer blocks={homepageData.content} />
+		</div>
 	{:else}
 		<div class="mx-auto max-w-7xl py-12 text-center">
 			<p class="text-gray-500">No content available</p>

@@ -6,6 +6,7 @@
 	import { X } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { Asset } from '$lib/server/db/schema';
+	import AssetImage from '$lib/components/common/data-display/asset-image.svelte';
 
 	let { data = $bindable({}) } = $props<{ data: Record<string, any> }>();
 
@@ -76,21 +77,14 @@
 				<div class="space-y-3 rounded-lg border p-4">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">Slide {index + 1}</span>
-						<Button
-							size="icon-sm"
-							variant="destructive"
-							onclick={() => removeSlide(index)}
-						>
+						<Button size="icon-sm" variant="destructive" onclick={() => removeSlide(index)}>
 							<X class="h-3 w-3" />
 						</Button>
 					</div>
 
 					{#if slide.image?.assetId}
 						<div class="relative">
-							<!-- Note: In real implementation, you'd show the asset thumbnail -->
-							<div class="bg-muted flex h-32 w-full items-center justify-center rounded-md">
-								<span class="text-muted-foreground text-xs">Asset {slide.image.assetId}</span>
-							</div>
+							<AssetImage thumbnail={true} assetId={slide.image.assetId} class="w-full rounded-md" />
 							<Button
 								size="sm"
 								variant="outline"
@@ -101,11 +95,7 @@
 							</Button>
 						</div>
 					{:else}
-						<Button
-							size="sm"
-							variant="outline"
-							onclick={() => updateSlideImage(index)}
-						>
+						<Button size="sm" variant="outline" onclick={() => updateSlideImage(index)}>
 							Select Image
 						</Button>
 					{/if}
@@ -126,9 +116,7 @@
 		</div>
 	{/if}
 
-	<Button size="sm" variant="outline" onclick={addSlide}>
-		Add Slide
-	</Button>
+	<Button size="sm" variant="outline" onclick={addSlide}>Add Slide</Button>
 
 	<AssetBrowser bind:open={showAssetBrowser} onSelect={handleAssetSelect} />
 </div>

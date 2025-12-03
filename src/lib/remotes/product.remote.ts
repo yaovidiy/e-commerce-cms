@@ -15,7 +15,13 @@ import { createPaginatedResponse, calculatePagination } from '$lib/server/pagina
 
 // Get all products with filters
 export const getAllProducts = query(FilterProductsSchema, async (data) => {
-	let baseQuery = db.select().from(tables.product);
+	let baseQuery = db
+		.select({
+			product: tables.product,
+			category: tables.category
+		})
+		.from(tables.product)
+		.leftJoin(tables.category, eq(tables.product.categoryId, tables.category.id));
 
 	const conditions = [];
 
@@ -60,10 +66,10 @@ export const getAllProducts = query(FilterProductsSchema, async (data) => {
 
 	// Calculate pagination
 	const { offset, limit } = calculatePagination(data.page, data.pageSize);
-	const products = await baseQuery.limit(limit).offset(offset);
+	const results = await baseQuery.limit(limit).offset(offset);
 
 	// Return paginated response
-	return createPaginatedResponse(products, totalCount, {
+	return createPaginatedResponse(results, totalCount, {
 		page: data.page,
 		pageSize: data.pageSize
 	});

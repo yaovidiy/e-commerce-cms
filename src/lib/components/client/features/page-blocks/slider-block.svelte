@@ -18,12 +18,12 @@
 	} = $props();
 </script>
 
-<Carousel.Root>
+<Carousel.Root class="md:-mx-[220px] -mx-4">
 	<Carousel.Content class="relative">
-		{#if data.slides && data.slides.length > 1}
+		{#if (data?.slides?.length ?? 0) > 1}
 			<Carousel.Previous class="aboslute top-1/2 left-6 -translate-y-1/2" />
 		{/if}
-		{#each data.slides || [] as slide (slide.id)}
+		{#each data.slides as slide (slide.id)}
 			<Carousel.Item
 				onclick={() => {
 					if (slide.url) {
@@ -31,10 +31,10 @@
 					}
 				}}
 			>
-				<AssetImage assetId={slide.image?.assetId ?? ''} thumbnail={false} />
+				<AssetImage assetId={slide.image?.assetId ?? ''} width={1800} height={600} thumbnail={false} class="w-full" />
 			</Carousel.Item>
 		{/each}
-		{#if data.slides && data.slides.length > 1}
+		{#if (data?.slides?.length ?? 0) > 1}
 			<Carousel.Next class="aboslute top-1/2 right-4 -translate-y-1/2" />
 		{/if}
 	</Carousel.Content>
