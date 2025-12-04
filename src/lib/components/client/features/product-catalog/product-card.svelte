@@ -5,9 +5,8 @@
 	import Image from '$lib/components/common/data-display/asset-image.svelte';
 	import { Heart, ShoppingCart } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { addToCart } from '$lib/remotes/cart.remote';
+	import { addToCart, getCart } from '$lib/remotes/cart.remote';
 	import { addToWishlist, removeFromWishlist, getWishlist } from '$lib/remotes/wishlist.remote';
-	import { onMount } from 'svelte';
 
 	let {
 		title = 'long product title loooong',
@@ -37,23 +36,7 @@
 
 	let showPanel = $state(false);
 	let addedToCart = $state(false);
-	let wishlist = $state<{ items: any[] }>({ items: [] });
 	let wishlistLoading = $state(false);
-	let wishlistError = $state('');
-	let wishlistItem = $state(false);
-
-	// Fetch wishlist on mount
-	onMount( async () => {
-		try {
-			wishlistLoading = true;
-			wishlist = await getWishlist();
-			wishlistItem = wishlist.items.some((item) => item.id === id);
-		} catch (e) {
-			wishlistError = 'Error loading wishlist';
-		} finally {
-			wishlistLoading = false;
-		}
-	});
 
 	function handleClick() {
 		goto(url);
@@ -63,9 +46,11 @@
 		e.stopPropagation();
 		e.preventDefault();
 		try {
+			console.log('Adding to cart:', id);
 			await addToCart({ productId: id, quantity: 1 });
 			addedToCart = true;
 			toast.success('Товар додано до кошика');
+			// Refresh cart query on server (addToCart command already does this)
 			setTimeout(() => {
 				addedToCart = false;
 			}, 500);
@@ -77,19 +62,22 @@
 	async function handleWishlist(e: Event) {
 		e.stopPropagation();
 		e.preventDefault();
+		wishlistLoading = true;
 		try {
-			if (!wishlistItem) {
+			const wishlistData = await getWishlist();
+			const isInWishlist = wishlistData.items.some((item) => item.id === id);
+			
+			if (!isInWishlist) {
 				await addToWishlist({ productId: id });
 				toast.success('Додано до бажаного');
 			} else {
 				await removeFromWishlist({ productId: id });
 				toast.success('Видалено з бажаного');
 			}
-			// Refresh wishlist state
-			wishlist = await getWishlist();
-			wishlistItem = wishlist.items.some((item) => item.id === id);
 		} catch (err) {
 			toast.error('Не вдалося оновити бажане');
+		} finally {
+			wishlistLoading = false;
 		}
 	}
 
@@ -98,6 +86,26 @@
 	)
 
 	const isOnSale = !!(salePrice && saleStart && saleEnd) && new Date(saleEnd) > new Date() && new Date(saleStart) < new Date();
+
+	// Check if product is in wishlist when needed (reactive)
+	let isInWishlist = $state(false);
+	
+	$effect.pre(() => {
+		// Re-check wishlist status when wishlist or id changes
+		if (id) {
+			checkWishlistStatus();
+		}
+	});
+
+	async function checkWishlistStatus() {
+		try {
+			const wishlistData = await getWishlist();
+			isInWishlist = wishlistData.items.some((item) => item.id === id);
+		} catch (err) {
+			// Guest user - wishlist not available
+			isInWishlist = false;
+		}
+	}
 </script>
 
 <Card.Root
@@ -145,7 +153,7 @@
 				<div class="flex items-center gap-3">
 					<button
 						onclick={handleAddToCart}
-						class="relative flex items-center gap-1 text-sm"
+						class="relative flex items-center gap-1 text-sm cursor-pointer"
 						aria-label="Додати до кошика"
 					>
 						<ShoppingCart class={addedToCart ? 'text-primary' : ''} size={24} />
@@ -161,11 +169,11 @@
 					</button>
 					<button
 						onclick={handleWishlist}
-						class="flex items-center gap-1 text-sm"
-						aria-label={wishlistItem ? 'Видалити з бажаного' : 'Додати до бажаного'}
+						class="flex items-center gap-1 text-sm cursor-pointer"
+						aria-label={isInWishlist ? 'Видалити з бажаного' : 'Додати до бажаного'}
 						disabled={wishlistLoading}
 					>
-						<Heart size={24} class={wishlistItem ? 'text-primary' : ''} />
+						<Heart size={24} class={isInWishlist ? 'text-red-500' : 'text-yellow-500'} />
 					</button>
 				</div>
 			</div>

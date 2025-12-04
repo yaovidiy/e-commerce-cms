@@ -149,6 +149,9 @@ export const addToCart = command(AddToCartSchema, async (data) => {
 	const [product] = await db.select()
 		.from(tables.product)
 		.where(eq(tables.product.id, data.productId));
+
+	console.log('Product fetched for adding to cart:', product);
+	console.log('Cart before adding item:', data);
 	
 	if (!product) {
 		throw new Error('Product not found');

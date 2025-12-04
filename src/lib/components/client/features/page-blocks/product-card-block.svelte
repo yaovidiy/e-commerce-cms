@@ -27,21 +27,21 @@
 <div class="container py-12">
 	<Carousel.Root>
 		<Carousel.Content>
-			{#each data.products || [] as product (product.id)}
-				<Carousel.Item class="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-					<ProductCard
-						id={product.id}
-						title={product.title}
-						price={product.price}
-						image={product.image}
-						category={product.category}
-						weight={product.weight}
-						url={product.url}
-						categoryId={product.categoryId}
-						salePrice={product.salePrice}
-						saleStart={product.saleStart}
-						saleEnd={product.saleEnd}
-					/>
+		{#each data.products ?? [] as product (product.id)}
+			<Carousel.Item class="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+				<ProductCard
+					id={product.productId}
+					title={product.title}
+					price={product.price}
+					image={product.image}
+					category={product.category}
+					weight={product.weight}
+					url={product.url}
+					categoryId={product.categoryId}
+					salePrice={product.salePrice}
+					saleStart={product.saleStart}
+					saleEnd={product.saleEnd}
+				/>
 				</Carousel.Item>
 			{/each}
 		</Carousel.Content>
