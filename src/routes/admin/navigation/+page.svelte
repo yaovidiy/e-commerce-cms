@@ -48,12 +48,14 @@
 			createNavigationMenu.fields.set({
 				name: menu.name,
 				location: menu.location,
+				type: menu.type,
 				isActive: menu.isActive
 			});
 		} else {
 			createNavigationMenu.fields.set({
 				name: '',
 				location: 'header',
+				type: 'single',
 				isActive: true
 			});
 		}
@@ -172,6 +174,7 @@
 		createNavigationMenu.fields.set({
 			name: '',
 			location: 'header',
+			type: 'single',
 			isActive: true
 		});
 
@@ -230,6 +233,15 @@
 											<h3 class="font-semibold">{menu.name}</h3>
 											<span class="bg-secondary rounded-full px-2 py-1 text-xs">
 												{menu.location}
+											</span>
+											<span
+												class={`rounded-full px-2 py-1 text-xs ${
+													menu.type === 'nested'
+														? 'bg-blue-100 text-blue-700'
+														: 'bg-purple-100 text-purple-700'
+												}`}
+											>
+												{menu.type === 'nested' ? m.nav_menu_type_nested() : m.nav_menu_type_single()}
 											</span>
 											{#if !menu.isActive}
 												<span
@@ -368,9 +380,18 @@
 							</Table.Header>
 							<Table.Body>
 								{#each items as item}
-									<Table.Row>
+									<Table.Row class={item.parentId ? 'bg-blue-50' : ''}>
 										<Table.Cell>{item.displayOrder}</Table.Cell>
-										<Table.Cell class="font-medium">{item.label}</Table.Cell>
+										<Table.Cell class="font-medium">
+											{#if item.parentId}
+												<div class="flex items-center gap-2">
+													<span class="text-muted-foreground">→</span>
+													<span>{item.label}</span>
+												</div>
+											{:else}
+												{item.label}
+											{/if}
+										</Table.Cell>
 										<Table.Cell class="text-muted-foreground">{item.url}</Table.Cell>
 										<Table.Cell>
 											{#if item.isVisible}
@@ -494,6 +515,57 @@
 					/>
 				</div>
 
+				<div>
+					<Label>{m.nav_menu_type()}</Label>
+					<Select.Root
+						type="single"
+						value={(editingMenu
+							? updateNavigationMenu
+							: createNavigationMenu
+						).fields.type.value() ?? 'single'}
+						onValueChange={(value) => {
+							(editingMenu ? updateNavigationMenu : createNavigationMenu).fields.type.set(
+								value as 'single' | 'nested'
+							);
+						}}
+					>
+						<Select.Trigger>
+							{((editingMenu
+								? updateNavigationMenu
+								: createNavigationMenu
+							).fields.type.value() ?? 'single') === 'nested'
+								? m.nav_menu_type_nested()
+								: m.nav_menu_type_single()}
+						</Select.Trigger>
+						<Select.Content class="bg-white">
+							<Select.Item value="single">
+								<div class="flex flex-col gap-1">
+									<span>{m.nav_menu_type_single()}</span>
+									<span class="text-xs text-muted-foreground">{m.nav_menu_type_single_description()}</span>
+								</div>
+							</Select.Item>
+							<Select.Item value="nested">
+								<div class="flex flex-col gap-1">
+									<span>{m.nav_menu_type_nested()}</span>
+									<span class="text-xs text-muted-foreground">{m.nav_menu_type_nested_description()}</span>
+								</div>
+							</Select.Item>
+						</Select.Content>
+					</Select.Root>
+					<input
+						{...(editingMenu ? updateNavigationMenu : createNavigationMenu).fields.type.as('text')}
+						type="hidden"
+					/>
+					<p class="text-xs text-muted-foreground mt-2">
+						{((editingMenu
+							? updateNavigationMenu
+							: createNavigationMenu
+						).fields.type.value() ?? 'single') === 'nested'
+							? m.nav_menu_type_nested_description()
+							: m.nav_menu_type_single_description()}
+					</p>
+				</div>
+
 				<div class="flex items-center space-x-2">
 					<Checkbox
 						{...(editingMenu ? updateNavigationMenu : createNavigationMenu).fields.isActive.as(
@@ -554,57 +626,117 @@
 				value={selectedMenu?.id || ''}
 			/>
 
-			<div class="space-y-4">
+		<div class="space-y-4">
+			<div>
+				<Label>{m.nav_label()}</Label>
+				<Input
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.label.as('text')}
+				/>
+			</div>
+
+			<div>
+				<Label>{m.nav_url()}</Label>
+				<Input
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.url.as('text')}
+					placeholder={m.nav_url_placeholder()}
+				/>
+			</div>
+
+			<div>
+				<Label>{m.nav_display_order()}</Label>
+				<Input
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.displayOrder.as('number')}
+				/>
+			</div>
+
+			{#if selectedMenu && selectedMenu.type === 'nested'}
 				<div>
-					<Label>{m.nav_label()}</Label>
-					<Input
-						{...(editingMenuItem
-							? updateNavigationMenuItem
-							: createNavigationMenuItem
-						).fields.label.as('text')}
-					/>
+					<Label>{m.nav_parent_item_optional()}</Label>
+					{#await getNavigationMenuItems(selectedMenu.id)}
+						<p class="text-muted-foreground text-sm">{m.nav_loading_items()}</p>
+					{:then allItems}
+						<Select.Root
+							type="single"
+							value={(editingMenuItem
+								? updateNavigationMenuItem
+								: createNavigationMenuItem
+							).fields.parentId.value() ?? ''}
+							onValueChange={(value) => {
+								(editingMenuItem ? updateNavigationMenuItem : createNavigationMenuItem).fields.parentId.set(
+									value || ''
+								);
+							}}
+						>
+							<Select.Trigger>
+								{((editingMenuItem
+									? updateNavigationMenuItem
+									: createNavigationMenuItem
+								).fields.parentId.value() ?? '') === ''
+									? m.nav_no_parent()
+									: allItems.find(
+										(i) =>
+											i.id ===
+											((editingMenuItem
+												? updateNavigationMenuItem
+												: createNavigationMenuItem
+											).fields.parentId.value() ?? '')
+									)?.label}
+							</Select.Trigger>
+							<Select.Content class="bg-white">
+								<Select.Item value="">{m.nav_no_parent()}</Select.Item>
+								{#each allItems.filter((i) => !i.parentId) as parent}
+									<Select.Item value={parent.id}>{parent.label}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+						<input
+							{...(editingMenuItem
+								? updateNavigationMenuItem
+								: createNavigationMenuItem
+							).fields.parentId.as('text')}
+							type="hidden"
+						/>
+					{/await}
 				</div>
+			{:else if editingMenuItem && editingMenuItem.parentId}
+				<input
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.parentId.as('text')}
+					type="hidden"
+					value={editingMenuItem.parentId}
+				/>
+			{/if}
 
-				<div>
-					<Label>{m.nav_url()}</Label>
-					<Input
-						{...(editingMenuItem
-							? updateNavigationMenuItem
-							: createNavigationMenuItem
-						).fields.url.as('text')}
-						placeholder={m.nav_url_placeholder()}
-					/>
-				</div>
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.isVisible.as('checkbox')}
+				/>
+				<Label>{m.nav_visible()}</Label>
+			</div>
 
-				<div>
-					<Label>{m.nav_display_order()}</Label>
-					<Input
-						{...(editingMenuItem
-							? updateNavigationMenuItem
-							: createNavigationMenuItem
-						).fields.displayOrder.as('number')}
-					/>
-				</div>
-
-				<div class="flex items-center space-x-2">
-					<Checkbox
-						{...(editingMenuItem
-							? updateNavigationMenuItem
-							: createNavigationMenuItem
-						).fields.isVisible.as('checkbox')}
-					/>
-					<Label>{m.nav_visible()}</Label>
-				</div>
-
-				<div class="flex items-center space-x-2">
-					<Checkbox
-						{...(editingMenuItem
-							? updateNavigationMenuItem
-							: createNavigationMenuItem
-						).fields.openInNewTab.as('checkbox')}
-					/>
-					<Label>{m.nav_open_in_new_tab()}</Label>
-				</div>
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					{...(editingMenuItem
+						? updateNavigationMenuItem
+						: createNavigationMenuItem
+					).fields.openInNewTab.as('checkbox')}
+				/>
+				<Label>{m.nav_open_in_new_tab()}</Label>
+			</div>
 
 				<Button
 					type="submit"

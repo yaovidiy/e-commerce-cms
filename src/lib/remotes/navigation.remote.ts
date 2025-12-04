@@ -9,6 +9,7 @@ import * as v from 'valibot';
 const CreateNavigationMenuSchema = v.object({
 	name: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
 	location: v.picklist(['header', 'footer', 'mobile']),
+	type: v.optional(v.picklist(['single', 'nested']), 'single'),
 	isActive: v.optional(v.boolean(), true)
 });
 
@@ -16,6 +17,7 @@ const UpdateNavigationMenuSchema = v.object({
 	id: v.string(),
 	name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
 	location: v.optional(v.picklist(['header', 'footer', 'mobile'])),
+	type: v.optional(v.picklist(['single', 'nested'])),
 	isActive: v.optional(v.boolean())
 });
 
@@ -180,6 +182,7 @@ export const createNavigationMenu = form(CreateNavigationMenuSchema, async (data
 			id: crypto.randomUUID(),
 			name: data.name,
 			location: data.location,
+			type: data.type ?? 'single',
 			isActive: data.isActive ?? true,
 			createdAt: new Date(),
 			updatedAt: new Date()
@@ -211,6 +214,7 @@ export const updateNavigationMenu = form(UpdateNavigationMenuSchema, async (data
 
 	if (data.name !== undefined) updateData.name = data.name;
 	if (data.location !== undefined) updateData.location = data.location;
+	if (data.type !== undefined) updateData.type = data.type;
 	if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
 	const [updated] = await db
@@ -283,6 +287,38 @@ export const createNavigationMenuItem = form(CreateNavigationMenuItemSchema, asy
 
 	if (!user.isAdmin) {
 		throw new Error('Admin access required');
+	}
+
+	// Get the menu to check its type
+	const [menu] = await db
+		.select()
+		.from(tables.navigationMenu)
+		.where(eq(tables.navigationMenu.id, data.menuId));
+
+	if (!menu) {
+		throw new Error('Menu not found');
+	}
+
+	// Validate: can only have parentId if menu type is 'nested'
+	if (data.parentId && menu.type === 'single') {
+		throw new Error('Cannot add nested items to a single-level menu. Change menu type to "nested" first.');
+	}
+
+	// Validate: if parentId is provided, it must exist and belong to the same menu
+	if (data.parentId) {
+		const [parent] = await db
+			.select()
+			.from(tables.navigationMenuItem)
+			.where(
+				and(
+					eq(tables.navigationMenuItem.id, data.parentId),
+					eq(tables.navigationMenuItem.menuId, data.menuId)
+				)
+			);
+
+		if (!parent) {
+			throw new Error('Parent item not found or does not belong to this menu');
+		}
 	}
 
 	const [item] = await db

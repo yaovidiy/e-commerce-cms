@@ -548,6 +548,11 @@ export const navigationMenu = sqliteTable('navigation_menu', {
 	})
 		.notNull()
 		.default('header'),
+	type: text('type', {
+		enum: ['single', 'nested']
+	})
+		.notNull()
+		.default('single'), // 'single' for flat structure, 'nested' for hierarchical
 	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
