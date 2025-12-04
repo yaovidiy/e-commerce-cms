@@ -486,6 +486,12 @@
 							<Select.Item value="mobile">{m.nav_location_mobile()}</Select.Item>
 						</Select.Content>
 					</Select.Root>
+					<input
+						{...(editingMenu ? updateNavigationMenu : createNavigationMenu).fields.location.as(
+							'text'
+						)}
+						type="hidden"
+					/>
 				</div>
 
 				<div class="flex items-center space-x-2">
@@ -536,8 +542,17 @@
 			)}
 		>
 			{#if editingMenuItem}
-				<input {...updateNavigationMenuItem.fields.id.as('text')} value={editingMenuItem.id} />
+				<input {...updateNavigationMenuItem.fields.id.as('text')} value={editingMenuItem.id} type="hidden" />
 			{/if}
+
+			<input
+				{...(editingMenuItem
+					? updateNavigationMenuItem
+					: createNavigationMenuItem
+				).fields.menuId.as('text')}
+				type="hidden"
+				value={selectedMenu?.id || ''}
+			/>
 
 			<div class="space-y-4">
 				<div>
