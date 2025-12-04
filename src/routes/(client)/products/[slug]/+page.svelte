@@ -4,6 +4,7 @@
 	import { addToCart, getCartItemCount } from '$lib/remotes/cart.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { WishlistButton } from '$lib/components/client/features/wishlist';
+	import SeoHead from '$lib/components/common/utility/seo-head.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { ShoppingCart, Minus, Plus } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
@@ -14,6 +15,8 @@
 	let addedToCart = $state(false);
 
 	const slug = $derived(page.params.slug);
+	const seo = data?.seo;
+	const structuredData = data?.structuredData;
 
 	// Helper to format price
 	function formatPrice(cents: number) {
@@ -29,7 +32,7 @@
 		try {
 			await addToCart({ productId, quantity });
 			addedToCart = true;
-			
+
 			// Reset after 2 seconds
 			setTimeout(() => {
 				addedToCart = false;
@@ -69,6 +72,32 @@
 		</div>
 	</div>
 {:then product}
+	<!-- Render SEO Head with full server data -->
+	{#if seo && product}
+		<SeoHead
+			title={seo.title}
+			description={seo.description}
+			keywords={seo.keywords}
+			image={seo.image}
+			imageAlt={seo.imageAlt}
+			type={seo.type}
+			canonical={seo.canonical}
+			noindex={seo.noindex}
+			nofollow={seo.nofollow}
+			productPrice={seo.productPrice}
+			productCurrency={seo.productCurrency}
+			productAvailability={seo.productAvailability}
+			productBrand={seo.productBrand}
+			structuredData={structuredData?.product}
+			breadcrumbs={[
+				{ name: 'Home', url: '/' },
+				{ name: 'Products', url: '/products' },
+				...(product.category ? [{ name: product.category.name, url: `/products?category=${product.category.slug}` }] : []),
+				{ name: product.name, url: `/products/${slug}` }
+			]}
+		/>
+	{/if}
+
 	{#if !product}
 		<div class="container mx-auto px-4 py-8 text-center">
 			<h1 class="text-2xl font-bold mb-4">Product not found</h1>
@@ -87,9 +116,10 @@
 									src="/api/assets/{imageIds[0]}"
 									alt={product.name}
 									class="w-full h-full object-cover"
+									loading="lazy"
 								/>
 							</div>
-							
+
 							<!-- Thumbnails if multiple images -->
 							{#if imageIds.length > 1}
 								<div class="grid grid-cols-4 gap-2 mt-4">
@@ -99,6 +129,7 @@
 												src="/api/assets/{imageId}"
 												alt={product.name}
 												class="w-full h-full object-cover"
+												loading="lazy"
 											/>
 										</div>
 									{/each}
@@ -172,9 +203,9 @@
 								>
 									<Minus class="w-4 h-4" />
 								</Button>
-								
+
 								<span class="text-xl font-semibold w-12 text-center">{quantity}</span>
-								
+
 								<Button
 									variant="outline"
 									size="icon"
@@ -203,7 +234,7 @@
 									{m.shop_add_to_cart()}
 								{/if}
 							</Button>
-							
+
 							<WishlistButton productId={product.id} size="lg" variant="outline" />
 						</div>
 					{/if}

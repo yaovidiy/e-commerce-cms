@@ -3,9 +3,30 @@
 	import { getPageByName } from '$lib/remotes/page.remote';
 	import { PageContentRenderer } from '$lib/components/client/features/page-blocks';
 	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import SeoHead from '$lib/components/common/utility/seo-head.svelte';
+
+	let { data } = $props();
+
+	// Use server-side SEO data
+	const seo = data?.seo;
+	const structuredData = data?.structuredData;
 </script>
 
-{#await getPageByName('homepage')}
+<SeoHead
+	title={seo?.title}
+	description={seo?.description}
+	keywords={seo?.keywords}
+	image={seo?.image}
+	imageAlt={seo?.imageAlt}
+	type={seo?.type}
+	canonical={seo?.canonical}
+	noindex={seo?.noindex}
+	nofollow={seo?.nofollow}
+	locale={seo?.locale}
+	alternateLocales={seo?.alternateLocales}
+	structuredData={structuredData?.website || structuredData?.organization}
+	breadcrumbs={[{ name: 'Home', url: '/' }]}
+/>{#await getPageByName('homepage')}
 	<section class="-mx-8 mb-10 lg:mb-32">
 		<Skeleton class="h-[150px] w-full md:h-[450px] lg:h-[650px]" />
 	</section>

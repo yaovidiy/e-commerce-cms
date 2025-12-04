@@ -341,7 +341,7 @@
 					<Tabs.Trigger value="general">{m.settings_category_general()}</Tabs.Trigger>
 					<Tabs.Trigger value="store">{m.settings_category_store()}</Tabs.Trigger>
 					<Tabs.Trigger value="checkout">{m.settings_category_checkout()}</Tabs.Trigger>
-					<Tabs.Trigger value="email">{m.settings_category_email()}</Tabs.Trigger>
+					<!-- <Tabs.Trigger value="email">{m.settings_category_email()}</Tabs.Trigger> -->
 					<Tabs.Trigger value="seo">{m.settings_category_seo()}</Tabs.Trigger>
 					<Tabs.Trigger value="advanced">{m.settings_category_advanced()}</Tabs.Trigger>
 				</Tabs.List>
