@@ -4,7 +4,7 @@
  */
 
 import { Resend } from 'resend';
-import { RESEND_API_KEY, RESEND_FROM_EMAIL } from '$env/static/private';
+import { RESEND_API_KEY } from '$env/static/private';
 import {
 	orderConfirmationEmail,
 	orderShippedEmail,
@@ -13,13 +13,11 @@ import {
 	passwordResetEmail,
 	welcomeEmail
 } from './email-templates';
+import { getEmailSettingsConfig, isEmailTypeEnabled, getEmailSenderInfo } from './email-settings';
 import type { Order } from './db/schema';
 
 // Initialize Resend client
 const resend = new Resend(RESEND_API_KEY);
-
-// Default from email
-const FROM_EMAIL = RESEND_FROM_EMAIL || 'noreply@yourdomain.com';
 
 // Email enabled flag (disable in dev if no API key)
 const EMAIL_ENABLED = !!RESEND_API_KEY;
@@ -45,7 +43,14 @@ export async function sendOrderConfirmationEmail(payload: OrderEmailPayload) {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if order confirmation emails are enabled
+	if (!(await isEmailTypeEnabled('orderConfirmation'))) {
+		console.log('[Email] Skipped: Order confirmation (disabled in settings)');
+		return { success: false, message: 'Order confirmation emails are disabled' };
+	}
+
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const html = orderConfirmationEmail({
 			orderNumber: payload.order.orderNumber,
 			customerName: `${payload.order.customerFirstName} ${payload.order.customerLastName}`,
@@ -62,8 +67,9 @@ export async function sendOrderConfirmationEmail(payload: OrderEmailPayload) {
 		});
 
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: payload.order.customerEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: `Order Confirmation - ${payload.order.orderNumber}`,
 			html
 		});
@@ -88,7 +94,14 @@ export async function sendOrderShippedEmail(payload: OrderEmailPayload) {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if order shipped emails are enabled
+	if (!(await isEmailTypeEnabled('orderShipped'))) {
+		console.log('[Email] Skipped: Order shipped (disabled in settings)');
+		return { success: false, message: 'Order shipped emails are disabled' };
+	}
+
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const html = orderShippedEmail({
 			orderNumber: payload.order.orderNumber,
 			customerName: `${payload.order.customerFirstName} ${payload.order.customerLastName}`,
@@ -103,8 +116,9 @@ export async function sendOrderShippedEmail(payload: OrderEmailPayload) {
 		});
 
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: payload.order.customerEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: `Your Order Has Shipped - ${payload.order.orderNumber}`,
 			html
 		});
@@ -129,7 +143,14 @@ export async function sendOrderDeliveredEmail(payload: OrderEmailPayload) {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if order delivered emails are enabled
+	if (!(await isEmailTypeEnabled('orderDelivered'))) {
+		console.log('[Email] Skipped: Order delivered (disabled in settings)');
+		return { success: false, message: 'Order delivered emails are disabled' };
+	}
+
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const html = orderDeliveredEmail({
 			orderNumber: payload.order.orderNumber,
 			customerName: `${payload.order.customerFirstName} ${payload.order.customerLastName}`,
@@ -143,8 +164,9 @@ export async function sendOrderDeliveredEmail(payload: OrderEmailPayload) {
 		});
 
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: payload.order.customerEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: `Order Delivered - ${payload.order.orderNumber}`,
 			html
 		});
@@ -169,6 +191,12 @@ export async function sendOrderCancelledEmail(payload: OrderEmailPayload) {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if order cancelled emails are enabled
+	if (!(await isEmailTypeEnabled('orderCancelled'))) {
+		console.log('[Email] Skipped: Order cancelled (disabled in settings)');
+		return { success: false, message: 'Order cancelled emails are disabled' };
+	}
+
 	try {
 		const html = orderCancelledEmail({
 			orderNumber: payload.order.orderNumber,
@@ -183,9 +211,11 @@ export async function sendOrderCancelledEmail(payload: OrderEmailPayload) {
 			reason: payload.cancellationReason
 		});
 
+		const senderInfo = await getEmailSenderInfo();
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: payload.order.customerEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: `Order Cancelled - ${payload.order.orderNumber}`,
 			html
 		});
@@ -214,7 +244,14 @@ export async function sendPasswordResetEmail(data: {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if password reset emails are enabled
+	if (!(await isEmailTypeEnabled('passwordReset'))) {
+		console.log('[Email] Skipped: Password reset (disabled in settings)');
+		return { success: false, message: 'Password reset emails are disabled' };
+	}
+
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const html = passwordResetEmail({
 			email: data.email,
 			resetToken: data.resetToken,
@@ -222,8 +259,9 @@ export async function sendPasswordResetEmail(data: {
 		});
 
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: data.email,
+			replyTo: senderInfo.replyToEmail,
 			subject: 'Password Reset Request',
 			html
 		});
@@ -248,12 +286,20 @@ export async function sendWelcomeEmail(data: { name: string; email: string }) {
 		return { success: false, message: 'Email service not configured' };
 	}
 
+	// Check if welcome emails are enabled
+	if (!(await isEmailTypeEnabled('welcome'))) {
+		console.log('[Email] Skipped: Welcome (disabled in settings)');
+		return { success: false, message: 'Welcome emails are disabled' };
+	}
+
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const html = welcomeEmail(data);
 
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: data.email,
+			replyTo: senderInfo.replyToEmail,
 			subject: 'Welcome to Your Store!',
 			html
 		});
@@ -279,9 +325,11 @@ export async function sendTestEmail(toEmail: string) {
 	}
 
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: toEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: 'Test Email - E-commerce CMS',
 			html: `
 <!DOCTYPE html>
@@ -296,14 +344,14 @@ export async function sendTestEmail(toEmail: string) {
   <p>If you're seeing this, your email configuration is working correctly!</p>
   <p><strong>Sent at:</strong> ${new Date().toISOString()}</p>
   <p style="color: #666; font-size: 14px; margin-top: 30px;">
-    This email was sent from ${FROM_EMAIL}
+    This email was sent from ${senderInfo.fromEmail}
   </p>
 </body>
 </html>
       `
 		});
 
-		return { success: true, messageId: result.data?.id };
+		return { success: true, messageId: result.data?.id, fromEmail: senderInfo.fromEmail  };
 	} catch (error) {
 		return {
 			success: false,
@@ -328,9 +376,11 @@ export async function sendCustomOrderEmail(data: {
 	}
 
 	try {
+		const senderInfo = await getEmailSenderInfo();
 		const result = await resend.emails.send({
-			from: FROM_EMAIL,
+			from: senderInfo.fromEmail,
 			to: data.toEmail,
+			replyTo: senderInfo.replyToEmail,
 			subject: `${data.subject} - Order #${data.orderNumber}`,
 			html: `
 <!DOCTYPE html>
@@ -356,7 +406,7 @@ export async function sendCustomOrderEmail(data: {
   </p>
   
   <p style="color: #999; font-size: 12px; margin-top: 20px;">
-    This email was sent from ${FROM_EMAIL}
+    This email was sent from ${senderInfo.fromEmail}
   </p>
 </body>
 </html>

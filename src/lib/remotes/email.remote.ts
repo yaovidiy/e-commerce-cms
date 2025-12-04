@@ -64,8 +64,19 @@ export const updateEmailSettings = form(UpdateEmailSettingsSchema, async (data) 
 			.where(eq(tables.emailSettings.id, existingSettings.id))
 			.returning();
 
-		// Refresh query
+		// Refresh query and set form data
 		await getEmailSettings().refresh();
+		await updateEmailSettings.fields.set({
+			fromEmail: updated.fromEmail,
+			fromName: updated.fromName,
+			replyToEmail: updated.replyToEmail ?? undefined,
+			enableOrderConfirmation: updated.enableOrderConfirmation,
+			enableOrderShipped: updated.enableOrderShipped,
+			enableOrderDelivered: updated.enableOrderDelivered,
+			enableOrderCancelled: updated.enableOrderCancelled,
+			enablePasswordReset: updated.enablePasswordReset,
+			enableWelcome: updated.enableWelcome
+		});
 
 		return updated;
 	} else {
@@ -81,8 +92,19 @@ export const updateEmailSettings = form(UpdateEmailSettingsSchema, async (data) 
 			})
 			.returning();
 
-		// Refresh query
+		// Refresh query and set form data
 		await getEmailSettings().refresh();
+		await updateEmailSettings.fields.set({
+			fromEmail: created.fromEmail,
+			fromName: created.fromName,
+			replyToEmail: created.replyToEmail ?? undefined,
+			enableOrderConfirmation: created.enableOrderConfirmation,
+			enableOrderShipped: created.enableOrderShipped,
+			enableOrderDelivered: created.enableOrderDelivered,
+			enableOrderCancelled: created.enableOrderCancelled,
+			enablePasswordReset: created.enablePasswordReset,
+			enableWelcome: created.enableWelcome
+		});
 
 		return created;
 	}
@@ -101,7 +123,7 @@ export const sendTestEmail = form(TestEmailSchema, async (data) => {
 		if (result.success) {
 			return {
 				success: true,
-				message: `Test email sent successfully to ${data.toEmail}`,
+				message: `Test email sent successfully to ${data.toEmail} from ${result.fromEmail}`,
 				messageId: result.messageId
 			};
 		} else {
