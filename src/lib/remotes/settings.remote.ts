@@ -640,6 +640,7 @@ async function updateMultipleSettingsHelper(
 	// Get all keys we're updating
 	const keys = settings.map((s) => s.key);
 
+	console.log('Updating multiple settings:', keys);
 	// Get existing settings
 	const existingSettings = await db
 		.select()
@@ -832,6 +833,7 @@ export const updateStoreInfoSettings = form(UpdateStoreInfoSettingsSchema, async
  * Update SEO settings
  */
 export const updateSeoSettings = form(UpdateSeoSettingsSchema, async (data) => {
+	console.log('Updating SEO settings with data:', data);
 	requireAdminUser();
 
 	const settingsToUpdate = [];

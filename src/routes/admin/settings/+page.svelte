@@ -9,6 +9,8 @@
 	import * as m from '$lib/paraglide/messages';
 	import { AssetBrowser } from '$lib/components/common/forms';
 	import { ImageIcon, X } from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
+	import { watch } from 'runed';
 	import type { Asset } from '$lib/server/db/schema';
 	import {
 		getAllSettings,
@@ -66,7 +68,7 @@
 	function getSettingValue(key: string, defaultValue: any = '') {
 		const settings = settingsQuery.current;
 		if (!settings) return defaultValue;
-		
+
 		const setting = settings.find((s) => s.key === key);
 		return setting ? setting.parsedValue : defaultValue;
 	}
@@ -147,87 +149,164 @@
 	});
 
 	// Load settings into state when data is available
-	$effect(() => {
-		if (settingsQuery.current) {
-			// General settings
-			generalSettings.storeName = getSettingValue('store_name', 'My E-commerce Store');
-			generalSettings.storeLogo = getSettingValue('store_logo', '');
-			generalSettings.storeFavicon = getSettingValue('store_favicon', '');
-			generalSettings.storeEmail = getSettingValue('store_email', 'contact@example.com');
-			generalSettings.storePhone = getSettingValue('store_phone', '');
-			generalSettings.timezone = getSettingValue('timezone', 'UTC');
-			generalSettings.currency = getSettingValue('currency', 'USD');
-			generalSettings.currencySymbol = getSettingValue('currency_symbol', '$');
-			generalSettings.defaultLanguage = getSettingValue('default_language', 'en');
+	watch(
+		() => settingsQuery.current,
+		() => {
+			if (settingsQuery.current) {
+				// General settings
+				generalSettings.storeName = getSettingValue('store_name', 'My E-commerce Store');
+				generalSettings.storeLogo = getSettingValue('store_logo', '');
+				generalSettings.storeFavicon = getSettingValue('store_favicon', '');
+				generalSettings.storeEmail = getSettingValue('store_email', 'contact@example.com');
+				generalSettings.storePhone = getSettingValue('store_phone', '');
+				generalSettings.timezone = getSettingValue('timezone', 'UTC');
+				generalSettings.currency = getSettingValue('currency', 'USD');
+				generalSettings.currencySymbol = getSettingValue('currency_symbol', '$');
+				generalSettings.defaultLanguage = getSettingValue('default_language', 'en');
 
-			// Store info settings
-			storeInfoSettings.storeAddress1 = getSettingValue('store_address_1', '');
-			storeInfoSettings.storeAddress2 = getSettingValue('store_address_2', '');
-			storeInfoSettings.storeCity = getSettingValue('store_city', '');
-			storeInfoSettings.storeState = getSettingValue('store_state', '');
-			storeInfoSettings.storePostalCode = getSettingValue('store_postal_code', '');
-			storeInfoSettings.storeCountry = getSettingValue('store_country', '');
-			storeInfoSettings.facebookUrl = getSettingValue('facebook_url', '');
-			storeInfoSettings.instagramUrl = getSettingValue('instagram_url', '');
-			storeInfoSettings.twitterUrl = getSettingValue('twitter_url', '');
-			storeInfoSettings.youtubeUrl = getSettingValue('youtube_url', '');
-			storeInfoSettings.linkedinUrl = getSettingValue('linkedin_url', '');
+				// Store info settings
+				storeInfoSettings.storeAddress1 = getSettingValue('store_address_1', '');
+				storeInfoSettings.storeAddress2 = getSettingValue('store_address_2', '');
+				storeInfoSettings.storeCity = getSettingValue('store_city', '');
+				storeInfoSettings.storeState = getSettingValue('store_state', '');
+				storeInfoSettings.storePostalCode = getSettingValue('store_postal_code', '');
+				storeInfoSettings.storeCountry = getSettingValue('store_country', '');
+				storeInfoSettings.facebookUrl = getSettingValue('facebook_url', '');
+				storeInfoSettings.instagramUrl = getSettingValue('instagram_url', '');
+				storeInfoSettings.twitterUrl = getSettingValue('twitter_url', '');
+				storeInfoSettings.youtubeUrl = getSettingValue('youtube_url', '');
+				storeInfoSettings.linkedinUrl = getSettingValue('linkedin_url', '');
 
-			// Checkout settings
-			checkoutSettings.enableGuestCheckout = getSettingValue('enable_guest_checkout', true);
-			checkoutSettings.requirePhoneNumber = getSettingValue('require_phone_number', false);
-			checkoutSettings.enableOrderNotes = getSettingValue('enable_order_notes', true);
-			checkoutSettings.termsAndConditionsUrl = getSettingValue('terms_and_conditions_url', '');
-			checkoutSettings.privacyPolicyUrl = getSettingValue('privacy_policy_url', '');
-			checkoutSettings.returnPolicyUrl = getSettingValue('return_policy_url', '');
-			checkoutSettings.enableNewsletterSignup = getSettingValue('enable_newsletter_signup', true);
+				// Checkout settings
+				checkoutSettings.enableGuestCheckout = getSettingValue('enable_guest_checkout', true);
+				checkoutSettings.requirePhoneNumber = getSettingValue('require_phone_number', false);
+				checkoutSettings.enableOrderNotes = getSettingValue('enable_order_notes', true);
+				checkoutSettings.termsAndConditionsUrl = getSettingValue('terms_and_conditions_url', '');
+				checkoutSettings.privacyPolicyUrl = getSettingValue('privacy_policy_url', '');
+				checkoutSettings.returnPolicyUrl = getSettingValue('return_policy_url', '');
+				checkoutSettings.enableNewsletterSignup = getSettingValue('enable_newsletter_signup', true);
 
-			// Email settings
-			emailSettings.emailSmtpHost = getSettingValue('email_smtp_host', '');
-			emailSettings.emailSmtpPort = getSettingValue('email_smtp_port', 587);
-			emailSettings.emailSmtpUsername = getSettingValue('email_smtp_username', '');
-			emailSettings.emailSmtpPassword = getSettingValue('email_smtp_password', '');
-			emailSettings.emailSmtpSecure = getSettingValue('email_smtp_secure', true);
-			emailSettings.emailFromName = getSettingValue('email_from_name', 'My Store');
-			emailSettings.emailFromAddress = getSettingValue('email_from_address', 'noreply@example.com');
-			emailSettings.emailReplyToAddress = getSettingValue('email_reply_to_address', '');
+				// Email settings
+				emailSettings.emailSmtpHost = getSettingValue('email_smtp_host', '');
+				emailSettings.emailSmtpPort = getSettingValue('email_smtp_port', 587);
+				emailSettings.emailSmtpUsername = getSettingValue('email_smtp_username', '');
+				emailSettings.emailSmtpPassword = getSettingValue('email_smtp_password', '');
+				emailSettings.emailSmtpSecure = getSettingValue('email_smtp_secure', true);
+				emailSettings.emailFromName = getSettingValue('email_from_name', 'My Store');
+				emailSettings.emailFromAddress = getSettingValue('email_from_address', 'noreply@example.com');
+				emailSettings.emailReplyToAddress = getSettingValue('email_reply_to_address', '');
 
-			// SEO settings
-			seoSettings.seoDefaultTitle = getSettingValue('seo_default_title', 'My E-commerce Store');
-			seoSettings.seoDefaultDescription = getSettingValue(
-				'seo_default_description',
-				'Shop the best products online'
-			);
-			seoSettings.seoDefaultKeywords = getSettingValue('seo_default_keywords', '');
-			seoSettings.seoDefaultOgImage = getSettingValue('seo_default_og_image', '');
-			seoSettings.seoGoogleAnalyticsId = getSettingValue('seo_google_analytics_id', '');
-			seoSettings.seoGoogleSearchConsoleId = getSettingValue('seo_google_search_console_id', '');
-			seoSettings.seoFacebookPixelId = getSettingValue('seo_facebook_pixel_id', '');
-			seoSettings.enableStructuredData = getSettingValue('enable_structured_data', true);
-			seoSettings.enableSitemap = getSettingValue('enable_sitemap', true);
+				// SEO settings
+				seoSettings.seoDefaultTitle = getSettingValue('seo_default_title', 'My E-commerce Store');
+				seoSettings.seoDefaultDescription = getSettingValue(
+					'seo_default_description',
+					'Shop the best products online'
+				);
+				seoSettings.seoDefaultKeywords = getSettingValue('seo_default_keywords', '');
+				seoSettings.seoDefaultOgImage = getSettingValue('seo_default_og_image', '');
+				seoSettings.seoGoogleAnalyticsId = getSettingValue('seo_google_analytics_id', '');
+				seoSettings.seoGoogleSearchConsoleId = getSettingValue('seo_google_search_console_id', '');
+				seoSettings.seoFacebookPixelId = getSettingValue('seo_facebook_pixel_id', '');
+				seoSettings.enableStructuredData = getSettingValue('enable_structured_data', true);
+				seoSettings.enableSitemap = getSettingValue('enable_sitemap', true);
 
-			// Advanced settings
-			advancedSettings.maintenanceMode = getSettingValue('maintenance_mode', false);
-			advancedSettings.maintenanceMessage = getSettingValue(
-				'maintenance_message',
-				'We are currently performing maintenance. Please check back soon.'
-			);
-			advancedSettings.customHeadScripts = getSettingValue('custom_head_scripts', '');
-			advancedSettings.customBodyScripts = getSettingValue('custom_body_scripts', '');
-			advancedSettings.enableDebugMode = getSettingValue('enable_debug_mode', false);
-			advancedSettings.enableCaching = getSettingValue('enable_caching', true);
-			advancedSettings.cacheDuration = getSettingValue('cache_duration', 3600);
+				// Advanced settings
+				advancedSettings.maintenanceMode = getSettingValue('maintenance_mode', false);
+				advancedSettings.maintenanceMessage = getSettingValue(
+					'maintenance_message',
+					'We are currently performing maintenance. Please check back soon.'
+				);
+				advancedSettings.customHeadScripts = getSettingValue('custom_head_scripts', '');
+				advancedSettings.customBodyScripts = getSettingValue('custom_body_scripts', '');
+				advancedSettings.enableDebugMode = getSettingValue('enable_debug_mode', false);
+				advancedSettings.enableCaching = getSettingValue('enable_caching', true);
+				advancedSettings.cacheDuration = getSettingValue('cache_duration', 3600);
+			}
 		}
-	});
+	);
 
 	// Initialize default settings
 	async function handleInitialize() {
 		await initializeDefaultSettings({});
 		await settingsQuery.refresh();
 	}
+
+	// Error handling for form submissions
+	watch(
+		() => updateGeneralSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save general settings');
+			}
+			if (result?.success === true) {
+				toast.success('General settings saved successfully');
+			}
+		}
+	);
+
+	watch(
+		() => updateStoreInfoSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save store info settings');
+			}
+			if (result?.success === true) {
+				toast.success('Store info settings saved successfully');
+			}
+		}
+	);
+
+	watch(
+		() => updateCheckoutSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save checkout settings');
+			}
+			if (result?.success === true) {
+				toast.success('Checkout settings saved successfully');
+			}
+		}
+	);
+
+	watch(
+		() => updateEmailConfigSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save email settings');
+			}
+			if (result?.success === true) {
+				toast.success('Email settings saved successfully');
+			}
+		}
+	);
+
+	watch(
+		() => updateSeoSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save SEO settings');
+			}
+			if (result?.success === true) {
+				toast.success('SEO settings saved successfully');
+			}
+		}
+	);
+
+	watch(
+		() => updateAdvancedSettings.result,
+		(result) => {
+			if (result?.success === false) {
+				toast.error(result.message || 'Failed to save advanced settings');
+			}
+			if (result?.success === true) {
+				toast.success('Advanced settings saved successfully');
+			}
+		}
+	);
+
 </script>
 
-<div class="container mx-auto py-6 space-y-6">
+<div class="container mx-auto space-y-6 py-6">
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-3xl font-bold">{m.settings_title()}</h1>
@@ -240,7 +319,7 @@
 	</div>
 
 	{#await settingsQuery}
-		<div class="text-center py-12">
+		<div class="py-12 text-center">
 			<p class="text-muted-foreground">Loading settings...</p>
 		</div>
 	{:then settings}
@@ -285,26 +364,22 @@
 										bind:value={generalSettings.storeName}
 										placeholder="My E-commerce Store"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_general_store_name_help()}
 									</p>
 									{#each updateGeneralSettings.fields.storeName.issues() as issue}
-										<p class="text-sm text-destructive">{issue.message}</p>
+										<p class="text-destructive text-sm">{issue.message}</p>
 									{/each}
 								</div>
 
 								<!-- Store Logo -->
 								<div class="space-y-2">
 									<Label>{m.settings_general_store_logo()}</Label>
-									<input
-										type="hidden"
-										name="storeLogo"
-										value={generalSettings.storeLogo}
-									/>
+									<input type="hidden" name="storeLogo" value={generalSettings.storeLogo} />
 									<div class="flex items-start gap-4">
 										{#if generalSettings.storeLogo}
 											<div class="relative">
-												<div class="relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+												<div class="bg-muted relative h-24 w-40 overflow-hidden rounded-lg border">
 													<img
 														src={generalSettings.storeLogo}
 														alt="Store Logo"
@@ -314,40 +389,42 @@
 												<button
 													type="button"
 													onclick={clearLogo}
-													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+													class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
 												>
 													<X class="h-4 w-4" />
 												</button>
 											</div>
 										{:else}
-											<div class="flex h-24 w-40 items-center justify-center rounded-lg border border-dashed bg-muted">
-												<ImageIcon class="h-8 w-8 text-muted-foreground" />
+											<div
+												class="bg-muted flex h-24 w-40 items-center justify-center rounded-lg border border-dashed"
+											>
+												<ImageIcon class="text-muted-foreground h-8 w-8" />
 											</div>
 										{/if}
-										<Button type="button" variant="outline" onclick={() => (logoBrowserOpen = true)}>
+										<Button
+											type="button"
+											variant="outline"
+											onclick={() => (logoBrowserOpen = true)}
+										>
 											{generalSettings.storeLogo ? m.common_change() : m.common_select()}
 										</Button>
 									</div>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_general_store_logo_help()}
 									</p>
 									{#each updateGeneralSettings.fields.storeLogo.issues() as issue}
-										<p class="text-sm text-destructive">{issue.message}</p>
+										<p class="text-destructive text-sm">{issue.message}</p>
 									{/each}
 								</div>
 
 								<!-- Store Favicon -->
 								<div class="space-y-2">
 									<Label>{m.settings_general_store_favicon()}</Label>
-									<input
-										type="hidden"
-										name="storeFavicon"
-										value={generalSettings.storeFavicon}
-									/>
+									<input type="hidden" name="storeFavicon" value={generalSettings.storeFavicon} />
 									<div class="flex items-start gap-4">
 										{#if generalSettings.storeFavicon}
 											<div class="relative">
-												<div class="relative h-16 w-16 overflow-hidden rounded-lg border bg-muted">
+												<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
 													<img
 														src={generalSettings.storeFavicon}
 														alt="Favicon"
@@ -357,25 +434,31 @@
 												<button
 													type="button"
 													onclick={clearFavicon}
-													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+													class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
 												>
 													<X class="h-4 w-4" />
 												</button>
 											</div>
 										{:else}
-											<div class="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed bg-muted">
-												<ImageIcon class="h-6 w-6 text-muted-foreground" />
+											<div
+												class="bg-muted flex h-16 w-16 items-center justify-center rounded-lg border border-dashed"
+											>
+												<ImageIcon class="text-muted-foreground h-6 w-6" />
 											</div>
 										{/if}
-										<Button type="button" variant="outline" onclick={() => (faviconBrowserOpen = true)}>
+										<Button
+											type="button"
+											variant="outline"
+											onclick={() => (faviconBrowserOpen = true)}
+										>
 											{generalSettings.storeFavicon ? m.common_change() : m.common_select()}
 										</Button>
 									</div>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_general_store_favicon_help()}
 									</p>
 									{#each updateGeneralSettings.fields.storeFavicon.issues() as issue}
-										<p class="text-sm text-destructive">{issue.message}</p>
+										<p class="text-destructive text-sm">{issue.message}</p>
 									{/each}
 								</div>
 
@@ -388,11 +471,11 @@
 										bind:value={generalSettings.storeEmail}
 										placeholder="contact@example.com"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_general_store_email_help()}
 									</p>
 									{#each updateGeneralSettings.fields.storeEmail.issues() as issue}
-										<p class="text-sm text-destructive">{issue.message}</p>
+										<p class="text-destructive text-sm">{issue.message}</p>
 									{/each}
 								</div>
 
@@ -405,7 +488,7 @@
 										bind:value={generalSettings.storePhone}
 										placeholder="+1 (555) 123-4567"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_general_store_phone_help()}
 									</p>
 								</div>
@@ -420,7 +503,7 @@
 											bind:value={generalSettings.timezone}
 											placeholder="UTC"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_general_timezone_help()}
 										</p>
 									</div>
@@ -434,7 +517,7 @@
 											bind:value={generalSettings.currency}
 											placeholder="USD"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_general_currency_help()}
 										</p>
 									</div>
@@ -448,7 +531,7 @@
 											bind:value={generalSettings.currencySymbol}
 											placeholder="$"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_general_currency_symbol_help()}
 										</p>
 									</div>
@@ -462,7 +545,7 @@
 											bind:value={generalSettings.defaultLanguage}
 											placeholder="en"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_general_default_language_help()}
 										</p>
 									</div>
@@ -495,7 +578,7 @@
 										bind:value={storeInfoSettings.storeAddress1}
 										placeholder="123 Main Street"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_store_address_1_help()}
 									</p>
 								</div>
@@ -509,7 +592,7 @@
 										bind:value={storeInfoSettings.storeAddress2}
 										placeholder="Suite 100"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_store_address_2_help()}
 									</p>
 								</div>
@@ -561,7 +644,7 @@
 								</div>
 
 								<div class="pt-6">
-									<h3 class="text-lg font-semibold mb-4">Social Media</h3>
+									<h3 class="mb-4 text-lg font-semibold">Social Media</h3>
 									<div class="space-y-4">
 										<!-- Facebook -->
 										<div class="space-y-2">
@@ -572,7 +655,7 @@
 												bind:value={storeInfoSettings.facebookUrl}
 												placeholder="https://facebook.com/yourstore"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_store_facebook_help()}
 											</p>
 										</div>
@@ -586,7 +669,7 @@
 												bind:value={storeInfoSettings.instagramUrl}
 												placeholder="https://instagram.com/yourstore"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_store_instagram_help()}
 											</p>
 										</div>
@@ -600,7 +683,7 @@
 												bind:value={storeInfoSettings.twitterUrl}
 												placeholder="https://twitter.com/yourstore"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_store_twitter_help()}
 											</p>
 										</div>
@@ -614,7 +697,7 @@
 												bind:value={storeInfoSettings.youtubeUrl}
 												placeholder="https://youtube.com/c/yourstore"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_store_youtube_help()}
 											</p>
 										</div>
@@ -628,7 +711,7 @@
 												bind:value={storeInfoSettings.linkedinUrl}
 												placeholder="https://linkedin.com/company/yourstore"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_store_linkedin_help()}
 											</p>
 										</div>
@@ -653,62 +736,75 @@
 								<Card.Description>Configure checkout and payment options</Card.Description>
 							</Card.Header>
 							<Card.Content class="space-y-6">
-								<!-- Enable Guest Checkout -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_checkout_guest_checkout()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_checkout_guest_checkout_help()}
-										</p>
-									</div>
-									<Switch
-										name="enableGuestCheckout"
-										bind:checked={checkoutSettings.enableGuestCheckout}
-									/>
+							<!-- Enable Guest Checkout -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_checkout_guest_checkout()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_checkout_guest_checkout_help()}
+									</p>
 								</div>
+								<input
+									{...updateCheckoutSettings.fields.enableGuestCheckout.as('checkbox')}
+									bind:checked={checkoutSettings.enableGuestCheckout}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={checkoutSettings.enableGuestCheckout} />
+							</div>
 
-								<!-- Require Phone -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_checkout_require_phone()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_checkout_require_phone_help()}
-										</p>
-									</div>
-									<Switch
-										name="requirePhoneNumber"
-										bind:checked={checkoutSettings.requirePhoneNumber}
-									/>
+							<!-- Require Phone -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_checkout_require_phone()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_checkout_require_phone_help()}
+									</p>
 								</div>
+								<input
+									{...updateCheckoutSettings.fields.requirePhoneNumber.as('checkbox')}
+									bind:checked={checkoutSettings.requirePhoneNumber}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={checkoutSettings.requirePhoneNumber} />
+							</div>
 
-								<!-- Enable Order Notes -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_checkout_order_notes()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_checkout_order_notes_help()}
-										</p>
-									</div>
-									<Switch
-										name="enableOrderNotes"
-										bind:checked={checkoutSettings.enableOrderNotes}
-									/>
+							<!-- Enable Order Notes -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_checkout_order_notes()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_checkout_order_notes_help()}
+									</p>
 								</div>
+								<input
+									{...updateCheckoutSettings.fields.enableOrderNotes.as('checkbox')}
+									bind:checked={checkoutSettings.enableOrderNotes}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={checkoutSettings.enableOrderNotes} />
+							</div>
 
-								<!-- Enable Newsletter Signup -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_checkout_newsletter()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_checkout_newsletter_help()}
-										</p>
-									</div>
-									<Switch
-										name="enableNewsletterSignup"
-										bind:checked={checkoutSettings.enableNewsletterSignup}
-									/>
-								</div>								<div class="pt-6">
-									<h3 class="text-lg font-semibold mb-4">Policy Links</h3>
+							<!-- Enable Newsletter Signup -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_checkout_newsletter()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_checkout_newsletter_help()}
+									</p>
+								</div>
+								<input
+									{...updateCheckoutSettings.fields.enableNewsletterSignup.as('checkbox')}
+									bind:checked={checkoutSettings.enableNewsletterSignup}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={checkoutSettings.enableNewsletterSignup} />
+							</div>
+								<div class="pt-6">
+									<h3 class="mb-4 text-lg font-semibold">Policy Links</h3>
 									<div class="space-y-4">
 										<!-- Terms & Conditions URL -->
 										<div class="space-y-2">
@@ -719,7 +815,7 @@
 												bind:value={checkoutSettings.termsAndConditionsUrl}
 												placeholder="/terms"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_checkout_terms_url_help()}
 											</p>
 										</div>
@@ -733,7 +829,7 @@
 												bind:value={checkoutSettings.privacyPolicyUrl}
 												placeholder="/privacy"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_checkout_privacy_url_help()}
 											</p>
 										</div>
@@ -747,7 +843,7 @@
 												bind:value={checkoutSettings.returnPolicyUrl}
 												placeholder="/returns"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_checkout_return_url_help()}
 											</p>
 										</div>
@@ -782,7 +878,7 @@
 											bind:value={emailSettings.emailSmtpHost}
 											placeholder="smtp.example.com"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_email_smtp_host_help()}
 										</p>
 									</div>
@@ -796,7 +892,7 @@
 											bind:value={emailSettings.emailSmtpPort}
 											placeholder="587"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_email_smtp_port_help()}
 										</p>
 									</div>
@@ -810,7 +906,7 @@
 											bind:value={emailSettings.emailSmtpUsername}
 											placeholder="user@example.com"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_email_smtp_username_help()}
 										</p>
 									</div>
@@ -824,28 +920,29 @@
 											bind:value={emailSettings.emailSmtpPassword}
 											placeholder="••••••••"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_email_smtp_password_help()}
 										</p>
 									</div>
 								</div>
 
-								<!-- Use SSL/TLS -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_email_smtp_secure()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_email_smtp_secure_help()}
-										</p>
-									</div>
-									<Switch
-										name="emailSmtpSecure"
-										bind:checked={emailSettings.emailSmtpSecure}
-									/>
+							<!-- Use SSL/TLS -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_email_smtp_secure()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_email_smtp_secure_help()}
+									</p>
 								</div>
-
-								<div class="pt-6">
-									<h3 class="text-lg font-semibold mb-4">Email Configuration</h3>
+								<input
+									{...updateEmailConfigSettings.fields.emailSmtpSecure.as('checkbox')}
+									bind:checked={emailSettings.emailSmtpSecure}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={emailSettings.emailSmtpSecure} />
+							</div>								<div class="pt-6">
+									<h3 class="mb-4 text-lg font-semibold">Email Configuration</h3>
 									<div class="space-y-4">
 										<!-- From Name -->
 										<div class="space-y-2">
@@ -856,7 +953,7 @@
 												bind:value={emailSettings.emailFromName}
 												placeholder="My Store"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_email_from_name_help()}
 											</p>
 										</div>
@@ -870,7 +967,7 @@
 												bind:value={emailSettings.emailFromAddress}
 												placeholder="noreply@example.com"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_email_from_address_help()}
 											</p>
 										</div>
@@ -884,7 +981,7 @@
 												bind:value={emailSettings.emailReplyToAddress}
 												placeholder="support@example.com"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_email_reply_to_help()}
 											</p>
 										</div>
@@ -902,7 +999,10 @@
 
 				<!-- SEO Settings Tab -->
 				<Tabs.Content value="seo">
-					<form {...updateSeoSettings}>
+					<form {...updateSeoSettings.enhance(async ({submit, data}) => {
+						console.log('Submitting SEO settings:', data);
+						await submit();
+					})}>
 						<Card.Root>
 							<Card.Header>
 								<Card.Title>{m.settings_category_seo()}</Card.Title>
@@ -919,7 +1019,7 @@
 										placeholder="My E-commerce Store"
 										maxlength={60}
 									/>
-									<p class="text-sm text-muted-foreground">{m.settings_seo_default_title_help()}</p>
+									<p class="text-muted-foreground text-sm">{m.settings_seo_default_title_help()}</p>
 								</div>
 
 								<!-- Default Description -->
@@ -933,7 +1033,7 @@
 										maxlength={160}
 										rows={3}
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_seo_default_description_help()}
 									</p>
 								</div>
@@ -947,7 +1047,7 @@
 										bind:value={seoSettings.seoDefaultKeywords}
 										placeholder="ecommerce, shopping, products"
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_seo_default_keywords_help()}
 									</p>
 								</div>
@@ -963,7 +1063,7 @@
 									<div class="flex items-start gap-4">
 										{#if seoSettings.seoDefaultOgImage}
 											<div class="relative">
-												<div class="relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+												<div class="bg-muted relative h-24 w-40 overflow-hidden rounded-lg border">
 													<img
 														src={seoSettings.seoDefaultOgImage}
 														alt="Open Graph preview"
@@ -973,30 +1073,36 @@
 												<button
 													type="button"
 													onclick={clearOgImage}
-													class="absolute -top-2 -right-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+													class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
 												>
 													<X class="h-4 w-4" />
 												</button>
 											</div>
 										{:else}
-											<div class="flex h-24 w-40 items-center justify-center rounded-lg border border-dashed bg-muted">
-												<ImageIcon class="h-8 w-8 text-muted-foreground" />
+											<div
+												class="bg-muted flex h-24 w-40 items-center justify-center rounded-lg border border-dashed"
+											>
+												<ImageIcon class="text-muted-foreground h-8 w-8" />
 											</div>
 										{/if}
-										<Button type="button" variant="outline" onclick={() => (ogImageBrowserOpen = true)}>
+										<Button
+											type="button"
+											variant="outline"
+											onclick={() => (ogImageBrowserOpen = true)}
+										>
 											{seoSettings.seoDefaultOgImage ? m.common_change() : m.common_select()}
 										</Button>
 									</div>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_seo_default_og_image_help()}
 									</p>
 									{#each updateSeoSettings.fields.seoDefaultOgImage.issues() as issue}
-										<p class="text-sm text-destructive">{issue.message}</p>
+										<p class="text-destructive text-sm">{issue.message}</p>
 									{/each}
 								</div>
 
 								<div class="pt-6">
-									<h3 class="text-lg font-semibold mb-4">Analytics & Tracking</h3>
+									<h3 class="mb-4 text-lg font-semibold">Analytics & Tracking</h3>
 									<div class="space-y-4">
 										<!-- Google Analytics -->
 										<div class="space-y-2">
@@ -1007,7 +1113,7 @@
 												bind:value={seoSettings.seoGoogleAnalyticsId}
 												placeholder="G-XXXXXXXXXX"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_seo_google_analytics_help()}
 											</p>
 										</div>
@@ -1021,7 +1127,7 @@
 												bind:value={seoSettings.seoGoogleSearchConsoleId}
 												placeholder="verification_code"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_seo_google_console_help()}
 											</p>
 										</div>
@@ -1035,38 +1141,44 @@
 												bind:value={seoSettings.seoFacebookPixelId}
 												placeholder="123456789012345"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_seo_facebook_pixel_help()}
 											</p>
 										</div>
 									</div>
 								</div>
 
-								<div class="pt-6 space-y-4">
+								<div class="space-y-4 pt-6">
 									<!-- Enable Structured Data -->
 									<div class="flex items-center justify-between">
 										<div class="space-y-0.5">
 											<Label>{m.settings_seo_structured_data()}</Label>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_seo_structured_data_help()}
 											</p>
 										</div>
-										<Switch
-											name="enableStructuredData"
+										<input
+											{...updateSeoSettings.fields.enableStructuredData.as('checkbox')}
 											bind:checked={seoSettings.enableStructuredData}
+											type="checkbox"
+											class="hidden"
 										/>
+										<Switch bind:checked={seoSettings.enableStructuredData} />
 									</div>
 
 									<!-- Enable Sitemap -->
 									<div class="flex items-center justify-between">
 										<div class="space-y-0.5">
 											<Label>{m.settings_seo_sitemap()}</Label>
-											<p class="text-sm text-muted-foreground">{m.settings_seo_sitemap_help()}</p>
+											<p class="text-muted-foreground text-sm">{m.settings_seo_sitemap_help()}</p>
 										</div>
-										<Switch
-											name="enableSitemap"
+										<input
+											{...updateSeoSettings.fields.enableSitemap.as('checkbox')}
 											bind:checked={seoSettings.enableSitemap}
+											type="checkbox"
+											class="hidden"
 										/>
+										<Switch bind:checked={seoSettings.enableSitemap} />
 									</div>
 								</div>
 							</Card.Content>
@@ -1088,21 +1200,22 @@
 								<Card.Description>Advanced configuration options</Card.Description>
 							</Card.Header>
 							<Card.Content class="space-y-6">
-								<!-- Maintenance Mode -->
-								<div class="flex items-center justify-between">
-									<div class="space-y-0.5">
-										<Label>{m.settings_advanced_maintenance_mode()}</Label>
-										<p class="text-sm text-muted-foreground">
-											{m.settings_advanced_maintenance_mode_help()}
-										</p>
-									</div>
-									<Switch
-										name="maintenanceMode"
-										bind:checked={advancedSettings.maintenanceMode}
-									/>
+							<!-- Maintenance Mode -->
+							<div class="flex items-center justify-between">
+								<div class="space-y-0.5">
+									<Label>{m.settings_advanced_maintenance_mode()}</Label>
+									<p class="text-muted-foreground text-sm">
+										{m.settings_advanced_maintenance_mode_help()}
+									</p>
 								</div>
-
-								<!-- Maintenance Message -->
+								<input
+									{...updateAdvancedSettings.fields.maintenanceMode.as('checkbox')}
+									bind:checked={advancedSettings.maintenanceMode}
+									type="checkbox"
+									class="hidden"
+								/>
+								<Switch bind:checked={advancedSettings.maintenanceMode} />
+							</div>								<!-- Maintenance Message -->
 								<div class="space-y-2">
 									<Label for="maintenance-msg">{m.settings_advanced_maintenance_message()}</Label>
 									<Textarea
@@ -1112,13 +1225,13 @@
 										placeholder="We are currently performing maintenance. Please check back soon."
 										rows={3}
 									/>
-									<p class="text-sm text-muted-foreground">
+									<p class="text-muted-foreground text-sm">
 										{m.settings_advanced_maintenance_message_help()}
 									</p>
 								</div>
 
 								<div class="pt-6">
-									<h3 class="text-lg font-semibold mb-4">Custom Scripts</h3>
+									<h3 class="mb-4 text-lg font-semibold">Custom Scripts</h3>
 									<div class="space-y-4">
 										<!-- Custom Head Scripts -->
 										<div class="space-y-2">
@@ -1131,7 +1244,7 @@
 												rows={6}
 												class="font-mono text-sm"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_advanced_custom_head_help()}
 											</p>
 										</div>
@@ -1147,40 +1260,46 @@
 												rows={6}
 												class="font-mono text-sm"
 											/>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_advanced_custom_body_help()}
 											</p>
 										</div>
 									</div>
 								</div>
 
-								<div class="pt-6 space-y-4">
+								<div class="space-y-4 pt-6">
 									<!-- Debug Mode -->
 									<div class="flex items-center justify-between">
 										<div class="space-y-0.5">
 											<Label>{m.settings_advanced_debug_mode()}</Label>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_advanced_debug_mode_help()}
 											</p>
 										</div>
-										<Switch
-											name="enableDebugMode"
+										<input
+											{...updateAdvancedSettings.fields.enableDebugMode.as('checkbox')}
 											bind:checked={advancedSettings.enableDebugMode}
+											type="checkbox"
+											class="hidden"
 										/>
+										<Switch bind:checked={advancedSettings.enableDebugMode} />
 									</div>
 
 									<!-- Enable Caching -->
 									<div class="flex items-center justify-between">
 										<div class="space-y-0.5">
 											<Label>{m.settings_advanced_caching()}</Label>
-											<p class="text-sm text-muted-foreground">
+											<p class="text-muted-foreground text-sm">
 												{m.settings_advanced_caching_help()}
 											</p>
 										</div>
-										<Switch
-											name="enableCaching"
+										<input
+											{...updateAdvancedSettings.fields.enableCaching.as('checkbox')}
 											bind:checked={advancedSettings.enableCaching}
+											type="checkbox"
+											class="hidden"
 										/>
+										<Switch bind:checked={advancedSettings.enableCaching} />
 									</div>
 
 									<!-- Cache Duration -->
@@ -1192,7 +1311,7 @@
 											bind:value={advancedSettings.cacheDuration}
 											placeholder="3600"
 										/>
-										<p class="text-sm text-muted-foreground">
+										<p class="text-muted-foreground text-sm">
 											{m.settings_advanced_cache_duration_help()}
 										</p>
 									</div>
