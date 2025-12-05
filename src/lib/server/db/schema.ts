@@ -386,6 +386,32 @@ export const notificationVariable = sqliteTable('notification_variable', {
 export type NotificationVariable = typeof notificationVariable.$inferSelect;
 export type InsertNotificationVariable = typeof notificationVariable.$inferInsert;
 
+// Order item template - defines how to display individual order items in notifications
+export const orderItemTemplate = sqliteTable('order_item_template', {
+	id: text('id').primaryKey(),
+	notificationTemplateId: text('notification_template_id')
+		.notNull()
+		.references(() => notificationTemplate.id, { onDelete: 'cascade' }),
+	
+	// Template for individual item display (e.g., "{{quantity}}x {{productName}} - {{price}} грн.")
+	itemTemplate: text('item_template').notNull(),
+	
+	// Separator between items (e.g., "\n" or "<br/>")
+	itemSeparator: text('item_separator').notNull().default('\n'),
+	
+	// Wrapper for the entire list (e.g., "<ul>{{items}}</ul>" for HTML emails)
+	wrapperTemplate: text('wrapper_template'), // null = no wrapper
+	
+	// Whether to wrap each item in HTML tags for email formatting
+	useHtmlFormatting: integer('use_html_formatting', { mode: 'boolean' }).notNull().default(false),
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type OrderItemTemplate = typeof orderItemTemplate.$inferSelect;
+export type InsertOrderItemTemplate = typeof orderItemTemplate.$inferInsert;
+
 export const address = sqliteTable('address', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')

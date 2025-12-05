@@ -41,7 +41,21 @@ async function sendOrderNotifications(
 		});
 
 		if (emailTemplates.length > 0) {
-			const context = buildOrderNotificationContext(order, orderItems, additionalVars);
+			// Fetch item template for this notification
+			const [itemTemplate] = await db
+				.select()
+				.from(tables.orderItemTemplate)
+				.where(eq(tables.orderItemTemplate.notificationTemplateId, emailTemplates[0].id));
+
+			const context = buildOrderNotificationContext(
+				order,
+				orderItems,
+				additionalVars,
+				itemTemplate?.itemTemplate,
+				itemTemplate?.itemSeparator,
+				itemTemplate?.wrapperTemplate,
+				itemTemplate?.useHtmlFormatting
+			);
 			await sendNotification(emailTemplates[0].id, context);
 			console.log(`✅ [Order] ${eventType} email sent to ${order.customerEmail}`);
 		}
@@ -55,7 +69,21 @@ async function sendOrderNotifications(
 			});
 
 			if (smsTemplates.length > 0) {
-				const context = buildOrderNotificationContext(order, orderItems, additionalVars);
+				// Fetch item template for this notification
+				const [itemTemplate] = await db
+					.select()
+					.from(tables.orderItemTemplate)
+					.where(eq(tables.orderItemTemplate.notificationTemplateId, smsTemplates[0].id));
+
+				const context = buildOrderNotificationContext(
+					order,
+					orderItems,
+					additionalVars,
+					itemTemplate?.itemTemplate,
+					itemTemplate?.itemSeparator,
+					itemTemplate?.wrapperTemplate,
+					itemTemplate?.useHtmlFormatting
+				);
 				await sendNotification(smsTemplates[0].id, context);
 				console.log(`✅ [Order] ${eventType} SMS sent to ${order.customerPhone}`);
 			}
@@ -335,10 +363,24 @@ export const checkout = form(CheckoutSchema, async (data) => {
 
 		if (ibanTemplates.length > 0) {
 			try {
-				const context = buildOrderNotificationContext(order, orderItems, {
-					iban: 'UA623052990000026004010405791', // TODO: Get from settings
-					bank_details: 'PJSC "Raiffeisen Bank Aval", Kyiv' // TODO: Get from settings
-				});
+				// Fetch item template for this notification
+				const [itemTemplate] = await db
+					.select()
+					.from(tables.orderItemTemplate)
+					.where(eq(tables.orderItemTemplate.notificationTemplateId, ibanTemplates[0].id));
+
+				const context = buildOrderNotificationContext(
+					order,
+					orderItems,
+					{
+						iban: 'UA623052990000026004010405791', // TODO: Get from settings
+						bank_details: 'PJSC "Raiffeisen Bank Aval", Kyiv' // TODO: Get from settings
+					},
+					itemTemplate?.itemTemplate,
+					itemTemplate?.itemSeparator,
+					itemTemplate?.wrapperTemplate,
+					itemTemplate?.useHtmlFormatting
+				);
 				await sendNotification(ibanTemplates[0].id, context);
 				console.log(`✅ [Order] IBAN payment instructions sent to ${order.customerEmail}`);
 			} catch (error) {

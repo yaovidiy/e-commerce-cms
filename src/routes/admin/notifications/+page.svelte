@@ -20,7 +20,10 @@
 		try {
 			if (editingTemplateId) {
 				// Update
-				const result = await updateNotificationTemplate(formData);
+				const result = await updateNotificationTemplate({
+					...formData,
+					id: editingTemplateId
+				});
 				if (result.success) {
 					toast.success(`Template "${result?.template?.name}" updated successfully`);
 					handleCloseEditor();

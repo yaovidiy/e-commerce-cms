@@ -388,6 +388,7 @@ export const getAvailableVariables = query(async () => {
 
 /**
  * Initialize default variables in database
+ * Allows re-seeding if no variables exist
  */
 export const initializeDefaultVariables = command(v.object({}), async () => {
 	auth.requireAdminUser();
@@ -398,7 +399,8 @@ export const initializeDefaultVariables = command(v.object({}), async () => {
 	if (existing.length > 0) {
 		return {
 			success: false,
-			message: 'Variables already initialized'
+			message: `Variables already initialized (${existing.length} variables found)`,
+			count: existing.length
 		};
 	}
 
@@ -435,7 +437,15 @@ export const initializeDefaultVariables = command(v.object({}), async () => {
 		{ key: 'tracking_number', label: 'Tracking Number (TTN)', category: 'shipping', dataType: 'string', exampleValue: '20240001234567' },
 		{ key: 'shipping_address', label: 'Shipping Address', category: 'shipping', dataType: 'string', exampleValue: '123 Main St, City' },
 		{ key: 'estimated_delivery', label: 'Estimated Delivery Date', category: 'shipping', dataType: 'date', exampleValue: '3-5 business days' },
-		{ key: 'carrier_name', label: 'Carrier Name', category: 'shipping', dataType: 'string', exampleValue: 'Nova Poshta' }
+		{ key: 'carrier_name', label: 'Carrier Name', category: 'shipping', dataType: 'string', exampleValue: 'Nova Poshta' },
+		
+		// Item-specific variables (for order item templates)
+		{ key: 'quantity', label: 'Item Quantity', category: 'item', dataType: 'number', exampleValue: '3' },
+		{ key: 'productName', label: 'Product Name', category: 'item', dataType: 'string', exampleValue: 'Cinnamon' },
+		{ key: 'productImage', label: 'Product Image URL', category: 'item', dataType: 'string', exampleValue: 'https://example.com/image.jpg' },
+		{ key: 'productSlug', label: 'Product Slug', category: 'item', dataType: 'string', exampleValue: 'cinnamon' },
+		{ key: 'price', label: 'Item Price (per unit)', category: 'item', dataType: 'string', exampleValue: '150.00 грн.' },
+		{ key: 'subtotal', label: 'Item Subtotal', category: 'item', dataType: 'string', exampleValue: '450.00 грн.' }
 	];
 
 	const inserted = await db
@@ -456,13 +466,15 @@ export const initializeDefaultVariables = command(v.object({}), async () => {
 
 	return {
 		success: true,
-		message: `${inserted.length} default variables initialized`,
-		variables: inserted
+		message: `${inserted.length} default variables initialized (including item-specific variables for order item templates)`,
+		variables: inserted,
+		count: inserted.length
 	};
 });
 
 /**
  * Seed default notification templates based on The Spice Room communication flow
+ * Only seeds if no templates exist
  */
 export const seedDefaultTemplates = command(v.object({}), async () => {
 	auth.requireAdminUser();
@@ -474,7 +486,8 @@ export const seedDefaultTemplates = command(v.object({}), async () => {
 	if (existing.length > 0) {
 		return {
 			success: false,
-			message: `Found ${existing.length} existing templates. Templates already initialized.`
+			message: `Found ${existing.length} existing templates. Templates already initialized. Delete templates first to re-seed.`,
+			count: existing.length
 		};
 	}
 
@@ -730,8 +743,9 @@ export const seedDefaultTemplates = command(v.object({}), async () => {
 
 	return {
 		success: true,
-		message: `Successfully seeded ${inserted.length} default notification templates from The Spice Room communication flow`,
-		templatesCount: inserted.length
+		message: `Successfully seeded ${inserted.length} default notification templates from The Spice Room communication flow. You can now customize order item templates for each email template.`,
+		templatesCount: inserted.length,
+		note: 'Email templates can have custom order item templates - edit each template and click "Edit Items Template" to customize item formatting.'
 	};
 });
 
@@ -881,8 +895,22 @@ export const sendTestNotification = command(
 			};
 		}
 
-		// Build notification context
-		const context = buildOrderNotificationContext(order, orderItems);
+		// Fetch order item template for this notification
+		const [itemTemplate] = await db
+			.select()
+			.from(tables.orderItemTemplate)
+			.where(eq(tables.orderItemTemplate.notificationTemplateId, data.templateId));
+
+		// Build notification context with item template
+		const context = buildOrderNotificationContext(
+			order,
+			orderItems,
+			{},
+			itemTemplate?.itemTemplate,
+			itemTemplate?.itemSeparator,
+			itemTemplate?.wrapperTemplate,
+			itemTemplate?.useHtmlFormatting
+		);
 
 		// Send notification
 		const result = await sendNotification(data.templateId, context);
@@ -957,5 +985,148 @@ export const getOrderItemsForTesting = query(
 		const items = await db.select().from(tables.orderItem).where(and(...conditions));
 
 		return items;
+	}
+);
+
+/**
+ * Get order item template for a notification template
+ */
+export const getOrderItemTemplate = query(
+	v.object({
+		notificationTemplateId: v.string()
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const [itemTemplate] = await db
+			.select()
+			.from(tables.orderItemTemplate)
+			.where(eq(tables.orderItemTemplate.notificationTemplateId, data.notificationTemplateId));
+
+		return itemTemplate || null;
+	}
+);
+
+/**
+ * Create order item template
+ */
+export const createOrderItemTemplate = command(
+	v.object({
+		notificationTemplateId: v.string(),
+		itemTemplate: v.pipe(v.string(), v.minLength(1)),
+		itemSeparator: v.optional(v.string(), '\n'),
+		wrapperTemplate: v.optional(v.string()),
+		useHtmlFormatting: v.optional(v.boolean(), false)
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		// Check if item template already exists
+		const [existing] = await db
+			.select()
+			.from(tables.orderItemTemplate)
+			.where(eq(tables.orderItemTemplate.notificationTemplateId, data.notificationTemplateId));
+
+		if (existing) {
+			return {
+				success: false,
+				error: 'Order item template already exists for this notification template'
+			};
+		}
+
+		const [created] = await db
+			.insert(tables.orderItemTemplate)
+			.values({
+				id: crypto.randomUUID(),
+				notificationTemplateId: data.notificationTemplateId,
+				itemTemplate: data.itemTemplate,
+				itemSeparator: data.itemSeparator,
+				wrapperTemplate: data.wrapperTemplate || null,
+				useHtmlFormatting: data.useHtmlFormatting,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			})
+			.returning();
+
+		return {
+			success: true,
+			itemTemplate: created
+		};
+	}
+);
+
+/**
+ * Update order item template
+ */
+export const updateOrderItemTemplate = command(
+	v.object({
+		id: v.string(),
+		itemTemplate: v.pipe(v.string(), v.minLength(1)),
+		itemSeparator: v.optional(v.string(), '\n'),
+		wrapperTemplate: v.optional(v.string()),
+		useHtmlFormatting: v.optional(v.boolean(), false)
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const [existing] = await db
+			.select()
+			.from(tables.orderItemTemplate)
+			.where(eq(tables.orderItemTemplate.id, data.id));
+
+		if (!existing) {
+			return {
+				success: false,
+				error: 'Order item template not found'
+			};
+		}
+
+		const [updated] = await db
+			.update(tables.orderItemTemplate)
+			.set({
+				itemTemplate: data.itemTemplate,
+				itemSeparator: data.itemSeparator,
+				wrapperTemplate: data.wrapperTemplate || null,
+				useHtmlFormatting: data.useHtmlFormatting,
+				updatedAt: new Date()
+			})
+			.where(eq(tables.orderItemTemplate.id, data.id))
+			.returning();
+
+		return {
+			success: true,
+			itemTemplate: updated
+		};
+	}
+);
+
+/**
+ * Delete order item template
+ */
+export const deleteOrderItemTemplate = command(
+	v.object({
+		id: v.string()
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const [existing] = await db
+			.select()
+			.from(tables.orderItemTemplate)
+			.where(eq(tables.orderItemTemplate.id, data.id));
+
+		if (!existing) {
+			return {
+				success: false,
+				error: 'Order item template not found'
+			};
+		}
+
+		await db.delete(tables.orderItemTemplate).where(eq(tables.orderItemTemplate.id, data.id));
+
+		return {
+			success: true,
+			message: 'Order item template deleted successfully'
+		};
 	}
 );

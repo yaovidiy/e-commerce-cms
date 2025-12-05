@@ -3,16 +3,26 @@
   Edit and create notification templates with dynamic variable support
 -->
 <script lang="ts">
-	import { getNotificationTemplate, createNotificationTemplate, updateNotificationTemplate, getAvailableVariables } from '$lib/remotes/notification.remote';
+	import {
+		getNotificationTemplate,
+		createNotificationTemplate,
+		updateNotificationTemplate,
+		getAvailableVariables,
+		getOrderItemTemplate,
+		createOrderItemTemplate,
+		updateOrderItemTemplate,
+		deleteOrderItemTemplate
+	} from '$lib/remotes/notification.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
-	import { X, Copy, Eye } from '@lucide/svelte';
+	import { X, Copy, Eye, Trash2 } from '@lucide/svelte';
 	import { watch } from 'runed';
 	import * as m from '$lib/paraglide/messages';
 	import type { NotificationTemplate } from '$lib/server/db/schema';
+	import { toast } from 'svelte-sonner';
 
 	interface Props {
 		templateId?: string;
@@ -24,6 +34,7 @@
 
 	let showPreview = $state(false);
 	let selectedCategory = $state('all');
+	let showItemTemplateEditor = $state(false);
 
 	// Form state
 	let form = createNotificationTemplate;
@@ -38,6 +49,15 @@
 		isActive: true,
 		variables: '[]',
 		language: 'en'
+	});
+
+	// Order item template state
+	let itemTemplateData = $state({
+		id: '',
+		itemTemplate: '{{quantity}}x {{productName}} - {{price}} грн.',
+		itemSeparator: '\n',
+		wrapperTemplate: '',
+		useHtmlFormatting: false
 	});
 
 	let selectedVariables = $state<string[]>([]);
@@ -62,6 +82,19 @@
 							language: template.language
 						};
 						selectedVariables = template.variables || [];
+
+						// Load order item template if exists
+						getOrderItemTemplate({ notificationTemplateId: id }).then((itemTemplate) => {
+							if (itemTemplate) {
+								itemTemplateData = {
+									id: itemTemplate.id,
+									itemTemplate: itemTemplate.itemTemplate,
+									itemSeparator: itemTemplate.itemSeparator || '\n',
+									wrapperTemplate: itemTemplate.wrapperTemplate || '',
+									useHtmlFormatting: itemTemplate.useHtmlFormatting
+								};
+							}
+						});
 					}
 				});
 			}
@@ -76,7 +109,24 @@
 			const before = formData.content.substring(0, start);
 			const after = formData.content.substring(end);
 			formData.content = `${before}{{${variableKey}}}${after}`;
-			
+
+			// Move cursor after inserted variable
+			setTimeout(() => {
+				textarea.focus();
+				textarea.setSelectionRange(start + variableKey.length + 4, start + variableKey.length + 4);
+			}, 0);
+		}
+	}
+
+	function insertItemVariable(variableKey: string) {
+		const textarea = document.querySelector('textarea[data-item-template]') as HTMLTextAreaElement;
+		if (textarea) {
+			const start = textarea.selectionStart;
+			const end = textarea.selectionEnd;
+			const before = itemTemplateData.itemTemplate.substring(0, start);
+			const after = itemTemplateData.itemTemplate.substring(end);
+			itemTemplateData.itemTemplate = `${before}{{${variableKey}}}${after}`;
+
 			// Move cursor after inserted variable
 			setTimeout(() => {
 				textarea.focus();
@@ -93,8 +143,68 @@
 	}
 
 	function removeVariable(variableKey: string) {
-		selectedVariables = selectedVariables.filter(v => v !== variableKey);
+		selectedVariables = selectedVariables.filter((v) => v !== variableKey);
 		formData.variables = JSON.stringify(selectedVariables);
+	}
+
+	async function handleSaveItemTemplate() {
+		try {
+			if (!templateId) {
+				toast.error('Please save the notification template first');
+				return;
+			}
+
+			let result;
+			if (itemTemplateData.id) {
+				result = await updateOrderItemTemplate({
+					id: itemTemplateData.id,
+					itemTemplate: itemTemplateData.itemTemplate,
+					itemSeparator: itemTemplateData.itemSeparator,
+					wrapperTemplate: itemTemplateData.wrapperTemplate || undefined,
+					useHtmlFormatting: itemTemplateData.useHtmlFormatting
+				});
+			} else {
+				result = await createOrderItemTemplate({
+					notificationTemplateId: templateId,
+					itemTemplate: itemTemplateData.itemTemplate,
+					itemSeparator: itemTemplateData.itemSeparator,
+					wrapperTemplate: itemTemplateData.wrapperTemplate || undefined,
+					useHtmlFormatting: itemTemplateData.useHtmlFormatting
+				});
+			}
+
+			if (result.success) {
+				itemTemplateData.id = result.itemTemplate.id;
+				toast.success('Order item template saved successfully');
+				showItemTemplateEditor = false;
+			} else {
+				toast.error(result.error || 'Failed to save item template');
+			}
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'An error occurred');
+		}
+	}
+
+	async function handleDeleteItemTemplate() {
+		if (!itemTemplateData.id) return;
+
+		try {
+			const result = await deleteOrderItemTemplate({ id: itemTemplateData.id });
+			if (result.success) {
+				itemTemplateData = {
+					id: '',
+					itemTemplate: '{{quantity}}x {{productName}} - {{price}} грн.',
+					itemSeparator: '\n',
+					wrapperTemplate: '',
+					useHtmlFormatting: false
+				};
+				toast.success('Order item template deleted successfully');
+			} else {
+				toast.error(result.error || 'Failed to delete item template');
+			}
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'An error occurred');
+		}
 	}
 
 	function renderPreview(content: string): string {
@@ -104,15 +214,16 @@
 </script>
 
 <div class="space-y-6">
-	{#await getAvailableVariables({})}
+	{#await getAvailableVariables()}
 		<div>{m.common_loading()}</div>
 	{:then variablesData}
 		<div class="grid gap-6 md:grid-cols-3">
 			<!-- Main Editor -->
-			<div class="md:col-span-2 space-y-4">
-			<!-- Basic Info -->
-			<div class="space-y-4 rounded-lg border p-4">
-				<h3 class="font-semibold">{m.notification_template_information()}</h3>					<div class="grid gap-3 md:grid-cols-2">
+			<div class="space-y-4 md:col-span-2">
+				<!-- Basic Info -->
+				<div class="space-y-4 rounded-lg border p-4">
+					<h3 class="font-semibold">{m.notification_template_information()}</h3>
+					<div class="grid gap-3 md:grid-cols-2">
 						<div>
 							<Label for="code">{m.notification_template_code()}</Label>
 							<Input
@@ -137,11 +248,7 @@
 					<div class="grid gap-3 md:grid-cols-2">
 						<div>
 							<Label for="channel">{m.notification_template_channel()}</Label>
-							<select
-								id="channel"
-								bind:value={formData.channel}
-								class="w-full rounded border p-2"
-							>
+							<select id="channel" bind:value={formData.channel} class="w-full rounded border p-2">
 								<option value="email">{m.notification_channel_email()}</option>
 								<option value="sms">{m.notification_channel_sms()}</option>
 							</select>
@@ -156,7 +263,9 @@
 							>
 								<option value="order_created">{m.notification_event_order_created()}</option>
 								<option value="order_confirmed">{m.notification_event_order_confirmed()}</option>
-								<option value="payment_pending_reminder">{m.notification_event_payment_pending()}</option>
+								<option value="payment_pending_reminder"
+									>{m.notification_event_payment_pending()}</option
+								>
 								<option value="order_shipped">{m.notification_event_order_shipped()}</option>
 								<option value="order_delivered">{m.notification_event_order_delivered()}</option>
 								<option value="post_delivery_review">{m.notification_event_post_delivery()}</option>
@@ -174,12 +283,10 @@
 					</div>
 
 					<div class="flex items-center gap-2">
-						<input
-							id="isActive"
-							type="checkbox"
-							bind:checked={formData.isActive}
-						/>
-						<Label for="isActive" class="cursor-pointer">{m.notification_template_is_active()}</Label>
+						<input id="isActive" type="checkbox" bind:checked={formData.isActive} />
+						<Label for="isActive" class="cursor-pointer"
+							>{m.notification_template_is_active()}</Label
+						>
 					</div>
 				</div>
 
@@ -190,9 +297,13 @@
 						<Input
 							id="subject"
 							bind:value={formData.subject}
-							placeholder={m.notification_template_subject_placeholder({ "{order_number": "{order_number" })}
+							placeholder={m.notification_template_subject_placeholder({
+								'{order_number': '{order_number'
+							})}
 						/>
-						<p class="text-xs text-gray-600">{m.notification_template_content_placeholder({ "{variable_name": "{order_number" })}</p>
+						<p class="text-xs text-gray-600">
+							{m.notification_template_content_placeholder({ '{variable_name': '{order_number' })}
+						</p>
 					</div>
 				{/if}
 
@@ -216,18 +327,47 @@
 						data-content
 						bind:value={formData.content}
 						class="min-h-64 w-full rounded border p-3 font-mono text-sm"
-						placeholder={m.notification_template_content_placeholder({ "{variable_name": "{variable_name" })}
+						placeholder={m.notification_template_content_placeholder({
+							'{variable_name': '{variable_name'
+						})}
 					></textarea>
 
-				{#if showPreview}
-					<div class="mt-4 rounded-lg bg-gray-100 p-4">
-						<p class="mb-2 text-xs font-semibold text-gray-600">{m.notification_preview()}</p>
+					{#if showPreview}
+						<div class="mt-4 rounded-lg bg-gray-100 p-4">
+							<p class="mb-2 text-xs font-semibold text-gray-600">{m.notification_preview()}</p>
 							<div class="prose max-w-none rounded bg-white p-4 text-sm">
 								{@html renderPreview(formData.content)}
 							</div>
 						</div>
 					{/if}
 				</div>
+
+				<!-- Order Items Template (email only) -->
+				{#if formData.channel === 'email' && templateId}
+					<div class="space-y-2 rounded-lg border p-4">
+						<div class="flex items-center justify-between">
+							<h4 class="text-sm font-semibold">{m.notification_template_order_items_header()}</h4>
+							<Button
+								size="sm"
+								variant="outline"
+								onclick={() => (showItemTemplateEditor = !showItemTemplateEditor)}
+							>
+								{showItemTemplateEditor ? m.common_close() : m.common_edit()}
+								{m.notification_template_order_items_label()}
+							</Button>
+						</div>
+						{#if itemTemplateData.id}
+							<p class="text-xs text-gray-500">
+								{m.notification_template_configured()} • {m.notification_template_format_label()}: {itemTemplateData.itemTemplate.substring(
+									0,
+									50
+								)}...
+							</p>
+						{:else}
+							<p class="text-xs text-gray-500">{m.notification_template_no_custom()}</p>
+						{/if}
+					</div>
+				{/if}
 			</div>
 
 			<!-- Variables Panel -->
@@ -236,10 +376,7 @@
 
 				<!-- Category Filter -->
 				<div>
-					<select
-						bind:value={selectedCategory}
-						class="w-full rounded border p-2 text-sm"
-					>
+					<select bind:value={selectedCategory} class="w-full rounded border p-2 text-sm">
 						<option value="all">{m.common_all()}</option>
 						{#each Object.keys(variablesData) as category}
 							<option value={category}>{category.replace(/_/g, ' ').toUpperCase()}</option>
@@ -253,7 +390,7 @@
 						{#if selectedCategory === 'all' || selectedCategory === category}
 							<div class="space-y-2">
 								{#if selectedCategory === 'all'}
-									<p class="text-xs font-semibold uppercase text-gray-600">{category}</p>
+									<p class="text-xs font-semibold text-gray-600 uppercase">{category}</p>
 								{/if}
 								{#each vars as variable}
 									<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -275,8 +412,11 @@
 											</Button>
 										</div>
 										<p class="text-gray-600">{variable.label}</p>
-									{#if variable.exampleValue}
-										<p class="mt-1 text-gray-500">{m.notification_example()} {variable.exampleValue}</p>
+										{#if variable.exampleValue}
+											<p class="mt-1 text-gray-500">
+												{m.notification_example()}
+												{variable.exampleValue}
+											</p>
 										{/if}
 									</div>
 								{/each}
@@ -308,19 +448,170 @@
 		</div>
 
 		<!-- Action Buttons -->
-		<div class="flex gap-3 border-t pt-4 sticky -bottom-5 bg-white py-4">
+		<div class="sticky -bottom-5 flex gap-3 border-t bg-white py-4 pt-4">
 			<Button onclick={onCancel} variant="outline">{m.common_cancel()}</Button>
 			<Button onclick={() => onSave(formData)} class="flex-1">
 				{templateId ? m.notification_update_template() : m.notification_create_template()}
 			</Button>
 		</div>
+
+		<!-- Order Items Template Editor Dialog -->
+		{#if showItemTemplateEditor && formData.channel === 'email' && templateId}
+			<Dialog.Root
+				open={showItemTemplateEditor}
+				onOpenChange={(open) => {
+					if (!open) showItemTemplateEditor = false;
+				}}
+			>
+				<Dialog.Content class="max-h-screen max-w-2xl overflow-y-auto">
+					<Dialog.Header>
+						<Dialog.Title>{m.notification_template_order_items_title()}</Dialog.Title>
+					</Dialog.Header>
+					<div class="space-y-4">
+						<!-- Item Template -->
+						<div class="space-y-2">
+							<Label for="item-template">{m.notification_template_item_format_label()}</Label>
+							<p class="text-xs text-gray-500">{m.notification_template_item_format_help({
+								'quantity': '{quantity}',
+								'productName': '{productName}',
+								'productImage': '{productImage}',
+								'price': '{price}',
+								'subtotal': '{subtotal}'
+							})}</p>
+							<textarea
+								id="item-template"
+								data-item-template
+								bind:value={itemTemplateData.itemTemplate}
+								class="min-h-24 w-full rounded border p-3 font-mono text-sm"
+								placeholder="1x Example Product - 100.00 грн."
+							></textarea>
+							<div class="flex flex-wrap gap-2">
+								<Button size="sm" variant="outline" onclick={() => insertItemVariable('quantity')}
+									>+ {'{quantity}'}</Button
+								>
+								<Button
+									size="sm"
+									variant="outline"
+									onclick={() => insertItemVariable('productImage')}>+ {'{productImage}'}</Button
+								>
+								<Button
+									size="sm"
+									variant="outline"
+									onclick={() => insertItemVariable('productName')}>+ {'{productName}'}</Button
+								>
+								<Button size="sm" variant="outline" onclick={() => insertItemVariable('price')}
+									>+ {'{price}'}</Button
+								>
+								<Button size="sm" variant="outline" onclick={() => insertItemVariable('subtotal')}
+									>+ {'{subtotal}'}</Button
+								>
+							</div>
+						</div>
+
+						<!-- Item Separator -->
+						<div class="space-y-2">
+							<Label for="item-separator">{m.notification_template_item_separator_label()}</Label>
+							<p class="text-xs text-gray-500">{m.notification_template_item_separator_help()}</p>
+							<select
+								id="item-separator"
+								bind:value={itemTemplateData.itemSeparator}
+								class="w-full rounded border p-2"
+							>
+								<option value="\n">{m.notification_separator_newline()}</option>
+								<option value="<br/>">{m.notification_separator_html_break()}</option>
+								<option value=" | ">{m.notification_separator_pipe()}</option>
+								<option value=", ">{m.notification_separator_comma()}</option>
+								<option value="\n---\n">{m.notification_separator_dashed()}</option>
+							</select>
+						</div>
+
+						<!-- Wrapper Template -->
+						<div class="space-y-2">
+							<Label for="wrapper-template">{m.notification_template_wrapper_label()}</Label>
+							<p class="text-xs text-gray-500">
+								{m.notification_template_wrapper_help({ items: '{items}' })}
+							</p>
+							<textarea
+								id="wrapper-template"
+								bind:value={itemTemplateData.wrapperTemplate}
+								class="min-h-20 w-full rounded border p-3 font-mono text-sm"
+								placeholder={'<ul>{{items}}</ul>'}
+							></textarea>
+						</div>
+
+						<!-- HTML Formatting -->
+						<div class="flex items-center gap-2">
+							<input
+								id="use-html"
+								type="checkbox"
+								bind:checked={itemTemplateData.useHtmlFormatting}
+							/>
+							<Label for="use-html" class="cursor-pointer"
+								>{m.notification_template_use_html()}</Label
+							>
+						</div>
+
+						<!-- Preview -->
+						<div class="space-y-2 rounded-lg bg-gray-50 p-4">
+							<p class="text-xs font-semibold text-gray-600">{m.notification_preview()}:</p>
+							<div class="space-y-1 rounded bg-white p-3 font-mono text-sm text-gray-700">
+								{#if itemTemplateData.itemTemplate}
+									{@html (() => {
+										const sampleItems = [
+											{ quantity: 3, productName: 'Cinnamon', productImage: 'https://example.com/cinnamon.jpg', productSlug: 'cinnamon', price: '50.00', subtotal: '150.00' },
+											{ quantity: 2, productName: 'Cardamom', productImage: 'https://example.com/cardamom.jpg', productSlug: 'cardamom', price: '100.00', subtotal: '200.00' },
+											{ quantity: 1, productName: 'Saffron', productImage: 'https://example.com/saffron.jpg', productSlug: 'saffron', price: '500.00', subtotal: '500.00' }
+										];
+										
+										const rendered = sampleItems.map(item => {
+											let template = itemTemplateData.itemTemplate;
+											const placeholderRegex = /\{\{([a-z_]+)\}\}/gi;
+											template = template.replace(placeholderRegex, (match, variableName) => {
+												return (item as Record<string, any>)[variableName] || match;
+											});
+											return template;
+										});
+										
+										let preview = rendered.join(itemTemplateData.itemSeparator === '\n' ? '<br/>' : itemTemplateData.itemSeparator);
+										
+										if (itemTemplateData.wrapperTemplate) {
+											preview = itemTemplateData.wrapperTemplate.replace('{{items}}', preview);
+										}
+										
+										return preview;
+									})()}
+								{:else}
+									<div>3x Cinnamon - 150.00 грн.</div>
+									<div>2x Cardamom - 200.00 грн.</div>
+									<div>1x Saffron - 500.00 грн.</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<Dialog.Footer>
+						<Button variant="outline" onclick={() => (showItemTemplateEditor = false)}>
+							{m.common_cancel()}
+						</Button>
+						{#if itemTemplateData.id}
+							<Button variant="destructive" onclick={handleDeleteItemTemplate} class="gap-2">
+								<Trash2 size={16} />
+								{m.notification_delete_template()}
+							</Button>
+						{/if}
+						<Button onclick={handleSaveItemTemplate}>
+							{m.common_save()}
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog.Root>
+		{/if}
 	{:catch error}
 		<div class="text-red-600">{m.common_error()}: {error.message}</div>
 	{/await}
 </div>
 
 <style>
-
 	:global(.prose) {
 		white-space: pre-wrap;
 		word-break: break-word;

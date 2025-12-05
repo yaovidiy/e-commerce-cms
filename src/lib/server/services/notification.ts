@@ -214,20 +214,81 @@ export async function sendNotification(
 }
 
 /**
+ * Render order items list using custom template or default format
+ */
+export function renderOrderItemsList(
+	orderItems: OrderItem[] = [],
+	itemTemplate?: string,
+	itemSeparator?: string,
+	wrapperTemplate?: string,
+	useHtmlFormatting: boolean = false
+): string {
+	if (orderItems.length === 0) {
+		return '';
+	}
+
+	// Use custom template if provided, otherwise use default
+	const template = itemTemplate || (useHtmlFormatting 
+		? '<tr><td>{{quantity}}x</td><td>{{productName}}</td><td>{{price}} грн.</td></tr>'
+		: '{{quantity}}x {{productName}} - {{price}} грн.');
+
+	const separator = itemSeparator || (useHtmlFormatting ? '' : '\n');
+
+	// Render each item using the template
+	const renderedItems = orderItems.map((item) => {
+		const price = (item.price / 100).toFixed(2);
+		const subtotal = (item.subtotal / 100).toFixed(2);
+		// Ensure all values are properly stringified
+		const itemVars: Record<string, string> = {
+			quantity: String(item.quantity),
+			productName: String(item.productName),
+			productSlug: String(item.productSlug),
+			productImage: String(item.productImage || ''),
+			price: String(price),
+			subtotal: String(subtotal)
+		};
+
+		// Replace all {{variable}} placeholders
+		let rendered = template;
+		const placeholderRegex = /\{\{([a-z_]+)\}\}/gi;
+		rendered = rendered.replace(placeholderRegex, (match, variableName) => {
+			const value = itemVars[variableName];
+			return value !== undefined && value !== 'undefined' ? value : match;
+		});
+
+		return rendered;
+	});
+
+	let itemsList = renderedItems.join(separator);
+
+	// Wrap with wrapper template if provided
+	if (wrapperTemplate) {
+		itemsList = wrapperTemplate.replace('{{items}}', itemsList);
+	}
+
+	return itemsList;
+}
+
+/**
  * Build context variables for different order events
  */
 export function buildOrderNotificationContext(
 	order: Order,
 	orderItems: OrderItem[] = [],
-	additionalVars: Record<string, string | number | boolean> = {}
+	additionalVars: Record<string, string | number | boolean> = {},
+	itemTemplate?: string,
+	itemSeparator?: string,
+	wrapperTemplate?: string,
+	useHtmlFormatting: boolean = false
 ): NotificationContext {
-	// Format order items list
-	const itemsList = orderItems
-		.map((item) => {
-			const price = (item.price / 100).toFixed(2);
-			return `${item.quantity}x ${item.productName} - ${price} грн.`;
-		})
-		.join('\n');
+	// Format order items list using custom template or default
+	const itemsList = renderOrderItemsList(
+		orderItems,
+		itemTemplate,
+		itemSeparator,
+		wrapperTemplate,
+		useHtmlFormatting
+	);
 
 	// Format totals
 	const total = (order.total / 100).toFixed(2);
@@ -303,4 +364,16 @@ export async function getTemplateWithVariables(templateId: string): Promise<(Not
 		...template,
 		variables: JSON.parse(template.variables || '[]')
 	};
+}
+
+/**
+ * Get order item template for a notification template
+ */
+export async function getOrderItemTemplate(notificationTemplateId: string) {
+	const [itemTemplate] = await db
+		.select()
+		.from(tables.orderItemTemplate)
+		.where(eq(tables.orderItemTemplate.notificationTemplateId, notificationTemplateId));
+
+	return itemTemplate || null;
 }
