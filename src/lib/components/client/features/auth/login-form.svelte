@@ -5,16 +5,19 @@
 	import { login } from '$lib/remotes/user.remote';
 	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
+
+	
 </script>
 
 <form
 	{...login.enhance(async ({ submit, form }) => {
 		try {
 			await submit();
-			goto('/');
 			form.reset();
 		} catch (error) {
 			console.error('Login error:', error);
+			toast.error((error instanceof Error ? error.message : 'An unknown error occurred during login.'));
 		}
 	})}
 >

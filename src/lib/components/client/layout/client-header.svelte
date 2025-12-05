@@ -17,7 +17,7 @@
 	// Fetch dynamic data
 	const headerMenuPromise = getNavigationMenuByLocation('header');
 	const contactPhonesPromise = getAllContactPhones();
-	const categoriesPromise = getAllCategories();
+	const categoriesPromise = getAllCategories({ search: '', page: 1, pageSize: 10 });
 	const storeNamePromise = getSetting({ key: 'store_name' });
 
 	// Check if user is authenticated
@@ -60,7 +60,7 @@
 						{#each headerMenu.items as link}
 							<a
 								href={link.url}
-								class="hover:text-primary text-sm transition-colors {$page.url.pathname === link.url
+								class="hover:text-primary text-sm transition-colors {page.url.pathname === link.url
 									? 'text-foreground font-medium'
 									: 'text-foreground/60'}"
 								target={link.openInNewTab ? '_blank' : '_self'}
@@ -73,7 +73,7 @@
 						<!-- Fallback navigation -->
 						<a
 							href="/"
-							class="hover:text-primary text-sm transition-colors {$page.url.pathname === '/'
+							class="hover:text-primary text-sm transition-colors {page.url.pathname === '/'
 								? 'text-foreground font-medium'
 								: 'text-foreground/60'}"
 						>
@@ -81,7 +81,7 @@
 						</a>
 						<a
 							href="/products"
-							class="hover:text-primary text-sm transition-colors {$page.url.pathname ===
+							class="hover:text-primary text-sm transition-colors {page.url.pathname ===
 							'/products'
 								? 'text-foreground font-medium'
 								: 'text-foreground/60'}"
@@ -107,19 +107,19 @@
 							<span>Categories</span>
 						</Button>
 					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="start" class="w-56">
-						{#await categoriesPromise then categories}
-							{#if categories && categories.length > 0}
-								{#each categories.filter((c) => c.isVisible).slice(0, 10) as category}
-									<DropdownMenu.Item onclick={() => goto(`/products?category=${category?.slug}`)}>
-										{category?.name}
-									</DropdownMenu.Item>
-								{/each}
-								<DropdownMenu.Separator />
-							{/if}
-						{/await}
-						<DropdownMenu.Item onclick={() => goto('/products')}>View All</DropdownMenu.Item>
-					</DropdownMenu.Content>
+				<DropdownMenu.Content align="start" class="w-56">
+					{#await categoriesPromise then response}
+						{#if response?.data && response.data.length > 0}
+							{#each response.data.filter((c) => c.isVisible) as category}
+								<DropdownMenu.Item onclick={() => goto(`/products?category=${category?.slug}`)}>
+									{category?.name}
+								</DropdownMenu.Item>
+							{/each}
+							<DropdownMenu.Separator />
+						{/if}
+					{/await}
+					<DropdownMenu.Item onclick={() => goto('/products')}>View All</DropdownMenu.Item>
+				</DropdownMenu.Content>
 				</DropdownMenu.Root>
 
 				<!-- Search Bar -->

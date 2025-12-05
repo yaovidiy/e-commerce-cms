@@ -33,7 +33,17 @@ async function getOrCreateWishlist(userId: string) {
 
 // Query: Get user's wishlist with full product details
 export const getWishlist = query(async () => {
-	const user = auth.getUser();
+	const event = getRequestEvent();
+	const user = event?.locals?.user;
+
+	// Return empty wishlist for unauthenticated users (don't redirect)
+	if (!user) {
+		return {
+			id: null,
+			items: [],
+			count: 0
+		};
+	}
 
 	const wishlist = await getOrCreateWishlist(user.id);
 

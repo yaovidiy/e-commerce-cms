@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPageBySlug } from '$lib/remotes/page.remote';
+	import { getPublishedPageBySlug } from '$lib/remotes/page.remote';
 	import { error } from '@sveltejs/kit';
 	import {
 		HeroBlock,
@@ -16,7 +16,7 @@
 	const pageData = $derived(
 		(async () => {
 			try {
-				const page = await getPageBySlug(params.slug);
+				const page = await getPublishedPageBySlug(params.slug);
 
 				// Check if page is published
 				if (page.status !== 'published') {

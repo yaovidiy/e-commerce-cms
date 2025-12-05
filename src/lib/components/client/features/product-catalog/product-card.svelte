@@ -65,6 +65,13 @@
 		wishlistLoading = true;
 		try {
 			const wishlistData = await getWishlist();
+			
+			// Check if user is logged in (wishlist.id will be null if not)
+			if (wishlistData.id === null) {
+				goto('/auth/login?redirect=' + encodeURIComponent(url));
+				return;
+			}
+			
 			const isInWishlist = wishlistData.items.some((item) => item.id === id);
 			
 			if (!isInWishlist) {

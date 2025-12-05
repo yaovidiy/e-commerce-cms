@@ -183,7 +183,12 @@ export const login = form(LoginSchema, async (data, invalid) => {
 	const session = await auth.createSession(sessionToken, existingUser.id);
 	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-	redirect(303, '/');
+	// Check for redirect parameter in URL
+	const url = new URL(event.request.url);
+	const redirectUrl = url.searchParams.get('redirect');
+	
+	// Redirect to the specified URL or default to dashboard
+	redirect(303, redirectUrl || '/dashboard');
 });
 
 export const register = form(RegisterSchema, async (data, invalid) => {

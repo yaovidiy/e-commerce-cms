@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
-	import { getPageByName } from '$lib/remotes/page.remote';
+	import { getPublishedPageByName } from '$lib/remotes/page.remote';
 	import { PageContentRenderer } from '$lib/components/client/features/page-blocks';
 	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
 	import SeoHead from '$lib/components/common/utility/seo-head.svelte';
@@ -26,7 +26,8 @@
 	alternateLocales={seo?.alternateLocales}
 	structuredData={structuredData?.website || structuredData?.organization}
 	breadcrumbs={[{ name: 'Home', url: '/' }]}
-/>{#await getPageByName('homepage')}
+/>
+{#await getPublishedPageByName('homepage')}
 	<section class="-mx-8 mb-10 lg:mb-32">
 		<Skeleton class="h-[150px] w-full md:h-[450px] lg:h-[650px]" />
 	</section>

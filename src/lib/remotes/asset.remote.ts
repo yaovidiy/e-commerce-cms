@@ -130,12 +130,15 @@ export const getAllAssets = query(FilterAssetsSchema, async (data) => {
  * Get a single asset by ID
  */
 export const getAssetById = query(v.string(), async (id) => {
-	requireAdminUser();
+	// Return null if no ID provided
+	if (!id) {
+		return null;
+	}
 
 	const [asset] = await db.select().from(tables.asset).where(eq(tables.asset.id, id));
 
 	if (!asset) {
-		throw new Error('Asset not found');
+		return null;
 	}
 
 	return asset;

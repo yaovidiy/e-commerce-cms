@@ -13,6 +13,40 @@ import {
 import { requireAdminUser } from '$lib/server/auth';
 import { error } from '@sveltejs/kit';
 
+// ===== PUBLIC QUERIES (No Auth Required) =====
+
+/**
+ * Get a published page by slug (Customer-facing)
+ */
+export const getPublishedPageBySlug = query(v.string(), async (slug) => {
+	const [page] = await db
+		.select()
+		.from(tables.page)
+		.where(and(eq(tables.page.slug, slug), eq(tables.page.status, 'published')));
+
+	if (!page) error(404, 'Page not found');
+	return page;
+});
+
+/**
+ * Get published page by name (Customer-facing)
+ */
+export const getPublishedPageByName = query(v.string(), async (name) => {
+	const [page] = await db
+		.select()
+		.from(tables.page)
+		.where(and(eq(tables.page.title, name), eq(tables.page.status, 'published')));
+
+	if (!page) error(404, 'Page not found');
+
+	const content = JSON.parse(page.content ?? '[]');
+	page.content = content;
+
+	return page;
+});
+
+// ===== ADMIN QUERIES (Require Admin Auth) =====
+
 /**
  * Get all pages with optional filtering, sorting, and pagination (Admin)
  */
@@ -104,15 +138,34 @@ export const getPageById = query(v.string(), async (id) => {
 });
 
 /**
- * Get a published page by slug (Customer-facing)
+ * Get a published page by slug (Admin - kept for backward compatibility)
  */
 export const getPageBySlug = query(v.string(), async (slug) => {
+	requireAdminUser();
 	const [page] = await db
 		.select()
 		.from(tables.page)
 		.where(and(eq(tables.page.slug, slug), eq(tables.page.status, 'published')));
 
 	if (!page) error(404, 'Page not found');
+	return page;
+});
+
+/**
+ * Get page by name (Admin - kept for backward compatibility)
+ */
+export const getPageByName = query(v.string(), async (name) => {
+	requireAdminUser();
+	const [page] = await db
+		.select()
+		.from(tables.page)
+		.where(and(eq(tables.page.title, name), eq(tables.page.status, 'published')));
+
+	if (!page) error(404, 'Page not found');
+
+	const content = JSON.parse(page.content ?? '[]');
+	page.content = content;
+
 	return page;
 });
 
@@ -290,18 +343,4 @@ export const togglePageStatus = command(PublishPageSchema, async (data) => {
 	}).refresh();
 
 	return { success: true, status: newStatus };
-});
-
-export const getPageByName = query(v.string(), async (name) => {
-	const [page] = await db
-		.select()
-		.from(tables.page)
-		.where(and(eq(tables.page.title, name), eq(tables.page.status, 'published')));
-
-	if (!page) error(404, 'Page not found');
-
-	const content = JSON.parse(page.content ?? '[]');
-	page.content = content;
-
-	return page;
 });

@@ -7,6 +7,57 @@ import { CreateBlogSchema, UpdateBlogSchema, DeleteBlogSchema, GetBlogsSchema } 
 import { requireAdminUser } from "$lib/server/auth";
 import { createPaginatedResponse, calculatePagination } from "$lib/server/pagination-utils";
 
+// ===== PUBLIC QUERIES (No Auth Required) =====
+
+export const getAllPublishedBlogs = query(GetBlogsSchema, async (data) => {
+    let baseQuery = db.select().from(tables.blog);
+    const conditions = [];
+    
+    // Search in title
+    if (data.search) {
+        conditions.push(like(tables.blog.title, `%${data.search}%`));
+    }
+    
+    // Apply conditions
+    if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+    }
+    
+    // Order by newest first
+    baseQuery = baseQuery.orderBy(desc(tables.blog.createdAt)) as typeof baseQuery;
+    
+    // Count
+    let countQuery = db.select({ count: count() }).from(tables.blog);
+    if (conditions.length > 0) {
+        countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+    }
+    
+    const [countResult] = await countQuery;
+    const totalCount = Number(countResult?.count) || 0;
+    
+    // Paginate
+    const { offset, limit } = calculatePagination(data.page, data.pageSize);
+    const blogs = await baseQuery.limit(limit).offset(offset);
+    
+    // Return
+    return createPaginatedResponse(blogs, totalCount, {
+        page: data.page,
+        pageSize: data.pageSize
+    });
+});
+
+export const getPublishedBlog = query(v.string(), async (slug) => {
+    const [blog] = await db.select().from(tables.blog).where(eq(tables.blog.slug, slug));
+    return blog;
+});
+
+export const getPublishedBlogById = query(v.string(), async (id) => {
+    const [blog] = await db.select().from(tables.blog).where(eq(tables.blog.id, id));
+    return blog;
+});
+
+// ===== ADMIN QUERIES (Require Admin Auth) =====
+
 export const getAllBlogs = query(GetBlogsSchema, async (data) => {
     requireAdminUser();
     
@@ -81,7 +132,7 @@ export const createBlog = form(CreateBlogSchema, async (data) => {
         createdAt: new Date()
     }).returning();
 
-    await getAllBlogs().refresh();
+    await getAllBlogs({ search: '', page: 1, pageSize: 10 }).refresh();
     return newBlog[0];
 });
 
@@ -93,13 +144,13 @@ export const updateBlog = form(UpdateBlogSchema, async ({ id, title, content, sl
         slug
     }).where(eq(tables.blog.id, id)).returning();
 
-    await getAllBlogs().refresh();
+    await getAllBlogs({ search: '', page: 1, pageSize: 10 }).refresh();
     return updatedBlog;
 })
 
 export const deleteBlog = form(DeleteBlogSchema, async ({ id }) => {
     requireAdminUser();
     await db.delete(tables.blog).where(eq(tables.blog.id, id));
-    await getAllBlogs().refresh();
+    await getAllBlogs({ search: '', page: 1, pageSize: 10 }).refresh();
     return { success: true };
 })

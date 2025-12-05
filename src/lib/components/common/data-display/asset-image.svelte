@@ -29,25 +29,37 @@
 	}: Props = $props();
 </script>
 
-{#await getAssetById(assetId)}
-	<div class="bg-muted animate-pulse {className}" style:width="{width}px" style:height="{height}px"></div>
-{:then asset}
-	<OptimizedImage
-		src={thumbnail ? asset.thumbnailUrl || asset.url : asset.url}
-		{alt}
-		{width}
-		{height}
-		{loading}
-		{sizes}
-		{srcset}
-		class={className}
-		{priority}
-		{placeholder}
-		{onError}
-		{...restProps}
-	/>
-{:catch}
+{#if assetId}
+	{#await getAssetById(assetId)}
+		<div class="bg-muted animate-pulse {className}" style:width="{width}px" style:height="{height}px"></div>
+	{:then asset}
+		{#if asset?.url}
+			<OptimizedImage
+				src={thumbnail ? asset.thumbnailUrl || asset.url : asset.url}
+				{alt}
+				{width}
+				{height}
+				{loading}
+				{sizes}
+				{srcset}
+				class={className}
+				{priority}
+				{placeholder}
+				{onError}
+				{...restProps}
+			/>
+		{:else}
+			<div class="bg-muted flex items-center justify-center {className}" style:width="{width}px" style:height="{height}px">
+				<span class="text-muted-foreground text-xs">?</span>
+			</div>
+		{/if}
+	{:catch}
+		<div class="bg-muted flex items-center justify-center {className}" style:width="{width}px" style:height="{height}px">
+			<span class="text-muted-foreground text-xs">?</span>
+		</div>
+	{/await}
+{:else}
 	<div class="bg-muted flex items-center justify-center {className}" style:width="{width}px" style:height="{height}px">
 		<span class="text-muted-foreground text-xs">?</span>
 	</div>
-{/await}
+{/if}
