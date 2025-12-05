@@ -37,7 +37,7 @@ export const getPublishedPageByName = query(v.string(), async (name) => {
 		.from(tables.page)
 		.where(and(eq(tables.page.title, name), eq(tables.page.status, 'published')));
 
-	if (!page) error(404, 'Page not found');
+	if (!page) return null;
 
 	const content = JSON.parse(page.content ?? '[]');
 	page.content = content;
