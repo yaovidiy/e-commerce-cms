@@ -10,9 +10,11 @@
 		CheckCircle,
 		XCircle,
 		Clock,
-		RefreshCw
+		RefreshCw,
+		Download
 	} from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
+	import PDFDownloadButton from './pdf-download-button.svelte';
 
 	interface Props {
 		order: {
@@ -60,6 +62,8 @@
 </script>
 
 <div class="flex items-center justify-end gap-2">
+	<PDFDownloadButton orderId={order.id} orderNumber={order.orderNumber} />
+
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			<Button variant="ghost" size="icon">
