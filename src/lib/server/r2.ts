@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { env } from '$env/dynamic/private';
 
 if (!env.CLOUDFLARE_ACCOUNT_ID) {
@@ -109,4 +109,24 @@ export function extractKeyFromUrl(url: string): string {
 	// Fallback for non-public URLs
 	const urlParts = url.split('/');
 	return urlParts[urlParts.length - 1];
+}
+
+/**
+ * List all objects in the R2 bucket
+ * @param prefix - Optional prefix to filter objects
+ * @returns Array of object keys
+ */
+export async function listObjectsInR2(prefix?: string): Promise<string[]> {
+	const command = new ListObjectsV2Command({
+		Bucket: BUCKET_NAME,
+		Prefix: prefix
+	});
+
+	const response = await r2Client.send(command);
+
+	if (!response.Contents) {
+		return [];
+	}
+
+	return response.Contents.map((item) => item.Key || '').filter((key) => key);
 }

@@ -1,18 +1,12 @@
 <script lang="ts">
-	import {
-		createCategoryIfNotExists,
-		uploadFileFromUrl,
-		createProduct,
-		createBlogCommand
-	} from '$lib/remotes/migration.remote';
-	import { me } from '$lib/remotes/user.remote';
-import { Button } from '$lib/components/ui/button';
-import { Progress } from '$lib/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-import { Input } from '$lib/components/ui/input';
-import { Label } from '$lib/components/ui/label';
-import * as m from '$lib/paraglide/messages';
-	import { sleep } from '$lib/utils';
+	import { Button } from '$lib/components/ui/button';
+	import { Progress } from '$lib/components/ui/progress';
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import * as m from '$lib/paraglide/messages';
+	import { AlertCircle, Upload } from '@lucide/svelte';
 
 	let file: File | null = $state(null);
 	let baseUrl: string = $state('https://crm.thespiceroom.com.ua');
@@ -22,10 +16,135 @@ import * as m from '$lib/paraglide/messages';
 	let processedItems = $state(0);
 	let currentItem = $state('');
 	let logs = $state<string[]>([]);
-	let timings = $state<{ item: string; time: number }[]>([]);
+	let error = $state<string | null>(null);
+	let success = $state(false);
+	let eventSource: EventSource | null = null;
+	let showAbortDialog = $state(false);
+	let hasActiveMigration = $state(false);
+	let activeMigrationStatus: any = $state(null);
 
 	function addLog(message: string) {
-		logs.push(`${new Date().toLocaleTimeString()}: ${message}`);
+		logs = [...logs, `${new Date().toLocaleTimeString()}: ${message}`];
+	}
+
+	// Check for active migration on mount
+	$effect(() => {
+		checkActiveMigration();
+	});
+
+	async function checkActiveMigration() {
+		try {
+			const response = await fetch('/api/admin/migration');
+			const data = await response.json();
+
+			if (data.status && data.status !== 'no-migration') {
+				hasActiveMigration = true;
+				activeMigrationStatus = data;
+				addLog(`Found active migration: ${data.processedItems}/${data.totalItems} items processed`);
+			}
+		} catch (err) {
+			console.error('Failed to check migration status:', err);
+		}
+	}
+
+	async function resumeMigration() {
+		if (!activeMigrationStatus) return;
+
+		isProcessing = true;
+		progress = (activeMigrationStatus.processedItems / activeMigrationStatus.totalItems) * 100;
+		processedItems = activeMigrationStatus.processedItems;
+		totalItems = activeMigrationStatus.totalItems;
+		logs = [];
+		error = null;
+		success = false;
+		hasActiveMigration = false;
+
+		addLog('Resuming migration...');
+
+		try {
+			// Reconnect to the server migration stream
+			// Note: This will start a fresh migration but skip already processed items
+			const formData = new FormData();
+			formData.append('baseUrl', baseUrl);
+
+			const response = await fetch('/api/admin/migration', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (!response.ok) {
+				error = `Server error: ${response.status} ${response.statusText}`;
+				isProcessing = false;
+				addLog(`❌ Error: ${error}`);
+				return;
+			}
+
+			if (!response.body) {
+				error = 'No response body from server';
+				isProcessing = false;
+				addLog(`❌ Error: ${error}`);
+				return;
+			}
+
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = '';
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
+
+				for (const line of lines) {
+					if (line.startsWith('data: ')) {
+						try {
+							const data = JSON.parse(line.slice(6));
+
+							if (data.type === 'progress') {
+								processedItems = data.current;
+								progress = (processedItems / totalItems) * 100;
+								currentItem = data.item;
+							} else if (data.type === 'complete') {
+								processedItems = data.processed;
+								progress = 100;
+								success = true;
+								addLog(`✅ Migration resumed and completed! Processed ${data.processed}/${data.total} items`);
+
+								// Clear migration state
+								await clearMigrationState();
+
+								setTimeout(() => {
+									isProcessing = false;
+								}, 2000);
+								return;
+							} else if (data.type === 'error') {
+								error = data.message;
+								addLog(`❌ Error: ${data.message}`);
+							}
+						} catch (parseError) {
+							console.error('Error parsing response:', parseError);
+						}
+					}
+				}
+			}
+
+			isProcessing = false;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to resume migration';
+			addLog(`Fatal error: ${error}`);
+			isProcessing = false;
+		}
+	}
+
+	async function clearMigrationState() {
+		try {
+			await fetch('/api/admin/migration', { method: 'DELETE' });
+		} catch (err) {
+			console.error('Failed to clear migration state:', err);
+		}
 	}
 
 	async function processMigration() {
@@ -35,229 +154,242 @@ import * as m from '$lib/paraglide/messages';
 		progress = 0;
 		processedItems = 0;
 		logs = [];
-		timings = [];
+		error = null;
+		success = false;
+		totalItems = 0;
 
 		try {
-			const text = await file.text();
-			const data = JSON.parse(text)?.data;
+			addLog('Starting migration via server...');
 
-			console.log('Imported data:', data);
+			// Create FormData with file and baseUrl
+			const formData = new FormData();
+			formData.append('file', file);
+			formData.append('baseUrl', baseUrl);
 
-			// Extract data
-			const categories = Object.values(data['api::category.category'] || {});
-			const files = Object.values(data['plugin::upload.file'] || {});
-			const products = Object.values(data['api::product.product'] || {});
-			const blogs = Object.values(data['api::blog.blog'] || {});
+			// POST request to initiate migration
+			const response = await fetch('/api/admin/migration', {
+				method: 'POST',
+				body: formData
+			});
 
-			addLog(
-				`Starting migration of ${categories.length} categories, ${files.length} files, ${products.length} products, and ${blogs.length} blogs.`
-			);
-
-			totalItems = categories.length + files.length + products.length + blogs.length;
-
-			// Maps for IDs
-			const categoryIdMap = new Map<string, string>();
-			const fileIdMap = new Map<string, string>();
-
-			addLog(`Processing categories... ${categories.length} to process.`);
-
-			// Process categories
-			for (const category of categories as any[]) {
-				const start = Date.now();
-				currentItem = `Processing category: ${category.title}`;
-
-				try {
-					const result = await createCategoryIfNotExists({ name: category.title });
-					categoryIdMap.set(category.id, result.id);
-					addLog(`Category "${category.title}": ${result.created ? 'created' : 'already exists'}`);
-				} catch (error) {
-					addLog(`Error processing category "${category.title}": ${error}`);
-				}
-
-				const time = Date.now() - start;
-				timings.push({ item: `Category: ${category.title}`, time });
-				processedItems++;
-				progress = (processedItems / totalItems) * 100;
+			if (!response.ok) {
+				error = `Server error: ${response.status} ${response.statusText}`;
+				isProcessing = false;
+				addLog(`❌ Error: ${error}`);
+				return;
 			}
 
-			// Process files
-			for (const fileData of files as any[]) {
-				const start = Date.now();
-				currentItem = `Processing file: ${fileData.name}`;
-
-				await sleep(100); // Add a small delay to avoid overwhelming the server
-
-				try {
-					const result = await uploadFileFromUrl({
-						url: fileData.url,
-						filename: fileData.name,
-						baseUrl: baseUrl
-					});
-					fileIdMap.set(fileData.id, result.id);
-					addLog(`File "${fileData.name}": uploaded`);
-				} catch (error) {
-					addLog(`Error processing file "${fileData.name}": ${error}`);
-				}
-
-				const time = Date.now() - start;
-				timings.push({ item: `File: ${fileData.name}`, time });
-				processedItems++;
-				progress = (processedItems / totalItems) * 100;
+			// Handle SSE response
+			if (!response.body) {
+				error = 'No response body from server';
+				isProcessing = false;
+				addLog(`❌ Error: ${error}`);
+				return;
 			}
 
-			// Process products
-			for (const product of products as any[]) {
-				console.log('Processing product:', product);
-				const start = Date.now();
-				currentItem = `Processing product: ${product.title}`;
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = '';
 
-				await sleep(500); // Add a small delay to avoid overwhelming the server
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
 
-				try {
-					// Map category ID
-					const categoryId = product.category ? categoryIdMap.get(product.category) : undefined;
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
 
-					// Map image IDs
-					const images = product.images
-						? product.images.map((imgId: string) => fileIdMap.get(imgId)).filter(Boolean)
-						: [];
+				for (const line of lines) {
+					if (line.startsWith('data: ')) {
+						try {
+							const data = JSON.parse(line.slice(6));
 
-					const result = await createProduct({
-						name: product.title,
-						description: product.description || '',
-						slug: product.slug,
-						price: product.price || 0,
-						categoryId,
-						images,
-						status: 'draft'
-					});
+							if (data.type === 'start') {
+								totalItems = data.total;
+								addLog(`Migration started. Total items to process: ${totalItems}`);
+							} else if (data.type === 'progress') {
+								processedItems = data.current;
+								progress = (processedItems / totalItems) * 100;
+								currentItem = data.item;
+						} else if (data.type === 'complete') {
+							processedItems = data.processed;
+							progress = 100;
+							success = true;
+							addLog(`✅ Migration completed successfully! Processed ${data.processed}/${data.total} items`);
 
-					addLog(`Product "${result.name}": created`);
-				} catch (error) {
-					addLog(`Error processing product "${product.title}": ${error}`);
+							// Clear migration state
+							await clearMigrationState();
+
+							// Close dialog after 2 seconds
+							setTimeout(() => {
+								isProcessing = false;
+							}, 2000);
+							return;
+							} else if (data.type === 'error') {
+								error = data.message;
+								addLog(`❌ Error: ${data.message}`);
+							}
+						} catch (parseError) {
+							console.error('Error parsing response:', parseError);
+						}
+					}
 				}
-
-				const time = Date.now() - start;
-				timings.push({ item: `Product: ${product.name}`, time });
-				processedItems++;
-				progress = (processedItems / totalItems) * 100;
 			}
 
-			// Process blogs
-			for (const blog of blogs as any[]) {
-				const start = Date.now();
-				currentItem = `Processing blog: ${blog.title}`;
-
-				try {
-					const user = await me();
-					if (!user) throw new Error('No admin user found');
-
-					const result = await createBlogCommand({
-						title: blog.title,
-						content: blog.content,
-						slug: blog.slug,
-						authorId: user.id
-					});
-
-					addLog(`Blog "${blog.title}": created`);
-				} catch (error) {
-					addLog(`Error processing blog "${blog.title}": ${error}`);
-				}
-
-				const time = Date.now() - start;
-				timings.push({ item: `Blog: ${blog.title}`, time });
-				processedItems++;
-				progress = (processedItems / totalItems) * 100;
-			}
-
-			addLog('Migration completed successfully!');
-		} catch (error) {
-			addLog(`Migration failed: ${error}`);
-		} finally {
+			isProcessing = false;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to start migration';
+			addLog(`Fatal error: ${error}`);
 			isProcessing = false;
 		}
 	}
+
+	function stopMigration() {
+		if (eventSource) {
+			eventSource.close();
+			eventSource = null;
+		}
+
+		isProcessing = false;
+		addLog('Migration stopped by user');
+		showAbortDialog = false;
+	}
+
+	function handleAbortClick() {
+		showAbortDialog = true;
+	}
 </script>
+
 
 <div class="container mx-auto py-8">
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold">{m.migration()}</h1>
-		<p class="text-muted-foreground">Import data from JSON export file</p>
+		<h1 class="text-3xl font-bold">{m.migration_title()}</h1>
+		<p class="text-muted-foreground">{m.migration_description()}</p>
 	</div>
 
-	<Card class="mb-6">
-		<CardHeader>
-			<CardTitle>Upload JSON File</CardTitle>
-		</CardHeader>
-		<CardContent>
-			<div class="space-y-4">
-				<div>
-					<Label for="base-url">Base URL for Images</Label>
-					<Input
-						id="base-url"
-						type="text"
-						bind:value={baseUrl}
-						placeholder="https://crm.thespiceroom.com.ua"
-						disabled={isProcessing}
-					/>
-					<p class="text-xs text-muted-foreground mt-1">Enter the base URL from which images will be downloaded</p>
-				</div>
-
-				<input
-					type="file"
-					accept=".json"
-					onchange={(e) => {
-						const fileInput = e.target as HTMLInputElement;
-
-						if (fileInput.files?.length) {
-							file = fileInput.files[0];
-						}
-					}}
-					disabled={isProcessing}
-					class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-				/>
-
-				<Button onclick={processMigration} disabled={!file || isProcessing}>
-					{isProcessing ? 'Processing...' : 'Start Migration'}
-				</Button>
-			</div>
-		</CardContent>
-	</Card>
-
-	{#if isProcessing || progress > 0}
-		<Card class="mb-6">
+	{#if hasActiveMigration && activeMigrationStatus}
+		<Card class="mb-6 border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/20">
 			<CardHeader>
-				<CardTitle>Progress</CardTitle>
+				<CardTitle class="text-blue-800 dark:text-blue-200">{m.migration_active_found()}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-4">
-					<Progress value={progress} class="w-full" />
-					<div class="text-muted-foreground flex justify-between text-sm">
-						<span>{processedItems} / {totalItems} items processed</span>
-						<span>{progress.toFixed(1)}%</span>
+					<p class="text-blue-700 dark:text-blue-300">
+						{m.migration_active_description()}
+					</p>
+					<div class="text-sm text-blue-600 dark:text-blue-400">
+						<p>{m.migration_active_progress({ processed: activeMigrationStatus.processedItems, total: activeMigrationStatus.totalItems })}</p>
+						<p>{m.migration_active_started({ date: new Date(activeMigrationStatus.startedAt).toLocaleString() })}</p>
 					</div>
-					{#if currentItem}
-						<p class="text-sm">Current: {currentItem}</p>
-					{/if}
+					<div class="flex gap-2">
+						<Button onclick={resumeMigration} variant="default">
+							{m.migration_resume()}
+						</Button>
+						<Button
+							onclick={async () => {
+								await clearMigrationState();
+								hasActiveMigration = false;
+								addLog(m.migration_state_cleared());
+							}}
+							variant="outline"
+						>
+							{m.migration_clear_state()}
+						</Button>
+					</div>
 				</div>
 			</CardContent>
 		</Card>
 	{/if}
 
-	{#if timings.length > 0}
+	{#if !isProcessing && !success && !hasActiveMigration}
 		<Card class="mb-6">
 			<CardHeader>
-				<CardTitle>Processing Times</CardTitle>
+				<CardTitle>{m.migration_upload_file()}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div class="max-h-60 space-y-2 overflow-y-auto">
-					{#each timings as timing}
-						<div class="flex justify-between text-sm">
-							<span class="mr-4 truncate">{timing.item}</span>
-							<span>{timing.time}ms</span>
-						</div>
-					{/each}
+				<div class="space-y-4">
+					<div>
+						<Label for="base-url">{m.migration_base_url()}</Label>
+						<Input
+							id="base-url"
+							type="text"
+							bind:value={baseUrl}
+							placeholder="https://crm.thespiceroom.com.ua"
+							disabled={isProcessing}
+						/>
+						<p class="text-xs text-muted-foreground mt-1">{m.migration_base_url_help()}</p>
+					</div>
+
+					<input
+						type="file"
+						accept=".json"
+						onchange={(e) => {
+							const fileInput = e.target as HTMLInputElement;
+
+							if (fileInput.files?.length) {
+								file = fileInput.files[0];
+							}
+						}}
+						disabled={isProcessing}
+						class="block w-full text-sm text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 disabled:hover:file:bg-blue-50"
+					/>
+
+					<Button onclick={processMigration} disabled={!file || isProcessing}>
+						<Upload class="mr-2 h-4 w-4" />
+						{isProcessing ? m.migration_processing() : m.migration_start()}
+					</Button>
 				</div>
+			</CardContent>
+		</Card>
+	{/if}
+
+	{#if isProcessing}
+		<Card class="mb-6">
+			<CardHeader>
+				<CardTitle>{m.migration_progress()}</CardTitle>
+			</CardHeader>
+		<CardContent>
+			<div class="space-y-4">
+				<Progress value={progress} class="w-full" />
+				<div class="text-muted-foreground flex justify-between text-sm">
+					<span>{m.migration_items_processed({ current: processedItems, total: totalItems })}</span>
+					<span>{progress.toFixed(1)}%</span>
+				</div>
+				{#if currentItem}
+					<p class="text-sm text-muted-foreground">{m.migration_current_item({ item: currentItem })}</p>
+				{/if}
+
+				<Button variant="destructive" size="sm" onclick={handleAbortClick}>
+					{m.migration_abort()}
+				</Button>
+			</div>
+		</CardContent>
+		</Card>
+	{/if}
+
+	{#if success}
+		<Card class="mb-6 border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/20">
+			<CardHeader>
+				<CardTitle class="text-green-800 dark:text-green-200">{m.migration_success_title()}</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<p class="text-green-700 dark:text-green-300">
+					{m.migration_success_message({ processed: processedItems })}
+				</p>
+			</CardContent>
+		</Card>
+	{/if}
+
+	{#if error}
+		<Card class="mb-6 border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/20">
+			<CardHeader>
+				<CardTitle class="flex items-center gap-2 text-red-800 dark:text-red-200">
+					<AlertCircle class="h-5 w-5" />
+					{m.migration_error_title()}
+				</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<p class="text-red-700 dark:text-red-300">{error}</p>
 			</CardContent>
 		</Card>
 	{/if}
@@ -265,15 +397,32 @@ import * as m from '$lib/paraglide/messages';
 	{#if logs.length > 0}
 		<Card>
 			<CardHeader>
-				<CardTitle>Logs</CardTitle>
+				<CardTitle>{m.migration_logs()}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div class="max-h-96 space-y-1 overflow-y-auto font-mono text-sm">
+				<div class="max-h-96 space-y-1 overflow-y-auto font-mono text-sm bg-muted p-3 rounded">
 					{#each logs as log}
-						<p>{log}</p>
+						<p class="text-muted-foreground">{log}</p>
 					{/each}
 				</div>
 			</CardContent>
 		</Card>
 	{/if}
+
+	<AlertDialog.Root bind:open={showAbortDialog}>
+		<AlertDialog.Content>
+			<AlertDialog.Header>
+				<AlertDialog.Title>{m.migration_confirm_abort_title()}</AlertDialog.Title>
+				<AlertDialog.Description>
+					{m.migration_confirm_abort_description()}
+				</AlertDialog.Description>
+			</AlertDialog.Header>
+			<AlertDialog.Footer>
+				<AlertDialog.Cancel>{m.migration_confirm_abort_cancel()}</AlertDialog.Cancel>
+				<AlertDialog.Action onclick={stopMigration} class="bg-destructive hover:bg-destructive/90">
+					{m.migration_confirm_abort_confirm()}
+				</AlertDialog.Action>
+			</AlertDialog.Footer>
+		</AlertDialog.Content>
+	</AlertDialog.Root>
 </div>

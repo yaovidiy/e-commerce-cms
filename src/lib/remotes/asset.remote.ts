@@ -180,3 +180,4 @@ export const deleteAsset = form(DeleteAssetSchema, async (data) => {
 
 	return { success: true };
 });
+
