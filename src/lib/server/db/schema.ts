@@ -627,6 +627,83 @@ export type InsertContactPhone = typeof contactPhone.$inferInsert;
 // CREATE TRIGGER product_fts_insert AFTER INSERT ON product BEGIN
 //   INSERT INTO product_fts(rowid, id, name, description, sku) VALUES (new.id, new.id, new.name, new.description, new.sku);
 // END;
+// In-app notifications for users
+export const userNotification = sqliteTable('user_notification', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	
+	// Notification metadata
+	title: text('title').notNull(),
+	message: text('message').notNull(),
+	type: text('type', { 
+		enum: ['success', 'error', 'info', 'warning', 'task'] 
+	}).notNull().default('info'),
+	
+	// Task tracking
+	taskId: text('task_id').references(() => backgroundTask.id, { onDelete: 'cascade' }),
+	
+	// Notification status
+	isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+	readAt: integer('read_at', { mode: 'timestamp' }),
+	
+	// Optional action URL
+	actionUrl: text('action_url'),
+	actionLabel: text('action_label'),
+	
+	// Metadata
+	metadata: text('metadata').default('{}'), // JSON for additional data
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }) // Auto-delete after this time
+});
+
+export type UserNotification = typeof userNotification.$inferSelect;
+export type InsertUserNotification = typeof userNotification.$inferInsert;
+
+// Background tasks that can continue running even if user leaves
+export const backgroundTask = sqliteTable('background_task', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	
+	// Task metadata
+	name: text('name').notNull(), // e.g., "data_migration", "bulk_export", "image_processing"
+	description: text('description'),
+	
+	// Task status
+	status: text('status', {
+		enum: ['pending', 'running', 'completed', 'failed', 'cancelled']
+	}).notNull().default('pending'),
+	
+	// Progress tracking
+	progress: integer('progress').notNull().default(0), // 0-100
+	totalItems: integer('total_items'),
+	processedItems: integer('processed_items').default(0),
+	
+	// Error handling
+	error: text('error'), // Error message if failed
+	errorCode: text('error_code'),
+	
+	// Result data
+	result: text('result').default('{}'), // JSON with task result data
+	
+	// Metadata
+	metadata: text('metadata').default('{}'), // JSON for task-specific data
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	startedAt: integer('started_at', { mode: 'timestamp' }),
+	completedAt: integer('completed_at', { mode: 'timestamp' }),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }) // Auto-delete after this time
+});
+
+export type BackgroundTask = typeof backgroundTask.$inferSelect;
+export type InsertBackgroundTask = typeof backgroundTask.$inferInsert;
+
 // 
 // CREATE TRIGGER product_fts_delete AFTER DELETE ON product BEGIN
 //   INSERT INTO product_fts(product_fts, rowid, id, name, description, sku) VALUES('delete', old.id, old.id, old.name, old.description, old.sku);

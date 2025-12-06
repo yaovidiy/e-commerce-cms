@@ -18,6 +18,7 @@ import {
 } from '$lib/server/schemas';
 import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
 import { sendNotification, buildOrderNotificationContext } from '$lib/server/services/notification';
+import { createNotification } from '$lib/server/services/notification-manager';
 import * as v from 'valibot';
 
 /**
@@ -916,6 +917,22 @@ export const sendTestNotification = command(
 		const result = await sendNotification(data.templateId, context);
 
 		if (result.success) {
+			// Create in-app notification for admin about test notification sent
+			const user = auth.getUser();
+			if (user && user.id) {
+				await createNotification(user.id, {
+					title: 'Test Notification Sent',
+					message: `Test ${template.channel} notification sent successfully to ${context.customerEmail}. Template: ${template.name}`,
+					type: 'success',
+					metadata: {
+						templateId: data.templateId,
+						templateName: template.name,
+						channel: template.channel,
+						logId: result.logId
+					}
+				});
+			}
+
 			return {
 				success: true,
 				message: `Test notification sent successfully to ${context.customerEmail}`,

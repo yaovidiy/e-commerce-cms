@@ -1,8 +1,36 @@
 import { command, form, query } from '$app/server';
 import * as v from 'valibot';
 import { getSMSClubClient } from '$lib/server/services/sms-club';
-import { requireAdminUser } from '$lib/server/auth';
+import { requireAdminUser, getUser } from '$lib/server/auth';
 import { error } from '@sveltejs/kit';
+import { createNotification } from '$lib/server/services/notification-manager';
+
+/**
+ * Check SMS balance and create notification if low
+ * Low balance threshold: 100 UAH
+ */
+async function checkAndNotifyLowBalance(balance: number, currency: string): Promise<void> {
+	const LOW_BALANCE_THRESHOLD = 100; // 100 UAH
+	
+	if (balance < LOW_BALANCE_THRESHOLD) {
+		const user = getUser();
+		if (user && user.id) {
+			await createNotification(user.id, {
+				title: 'Low SMS Balance Warning',
+				message: `Your SMS Club account balance is low: ${balance} ${currency}. Please top up your account to continue sending SMS messages.`,
+				type: 'warning',
+				actionUrl: '/admin/sms',
+				actionLabel: 'View SMS Settings',
+				metadata: {
+					balance,
+					currency,
+					threshold: LOW_BALANCE_THRESHOLD,
+					type: 'sms_low_balance'
+				}
+			});
+		}
+	}
+}
 
 /**
  * Send test SMS message
@@ -24,6 +52,10 @@ export const sendTestSms = form(
 				message: data.message,
 				senderName: data.senderName
 			});
+
+			// Check balance after sending SMS
+			const balance = await client.getBalance();
+			await checkAndNotifyLowBalance(balance.money, balance.currency);
 
 			return {
 				success: true,
@@ -66,6 +98,10 @@ export const sendPersonalizedSms = form(
 				lifetime: data.lifetime
 			});
 
+			// Check balance after sending SMS
+			const balance = await client.getBalance();
+			await checkAndNotifyLowBalance(balance.money, balance.currency);
+
 			return {
 				success: true,
 				messageIds: result,
@@ -87,6 +123,9 @@ export const getAccountBalance = query(async () => {
 	try {
 		const client = getSMSClubClient();
 		const balance = await client.getBalance();
+
+		// Check for low balance and create notification if needed
+		await checkAndNotifyLowBalance(balance.money, balance.currency);
 
 		return {
 			success: true,

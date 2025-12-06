@@ -778,3 +778,68 @@ export const GetNotificationLogsSchema = v.object({
     page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
     pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 50)
 });
+
+// User notification schemas
+export const GetUserNotificationsSchema = v.object({
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+    unreadOnly: v.optional(v.boolean(), false),
+    type: v.optional(v.picklist(['success', 'error', 'info', 'warning', 'task', 'all']), 'all'),
+    sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest')
+});
+
+export const MarkNotificationAsReadSchema = v.object({
+    id: v.string()
+});
+
+export const MarkAllNotificationsAsReadSchema = v.object({
+    type: v.optional(v.picklist(['success', 'error', 'info', 'warning', 'task', 'all']), 'all')
+});
+
+export const DeleteNotificationSchema = v.object({
+    id: v.string()
+});
+
+export const DeleteAllNotificationsSchema = v.object({
+    type: v.optional(v.picklist(['success', 'error', 'info', 'warning', 'task', 'all']), 'all')
+});
+
+// Background task schemas
+export const GetBackgroundTasksSchema = v.object({
+    page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+    pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+    status: v.optional(v.picklist(['pending', 'running', 'completed', 'failed', 'cancelled', 'all']), 'all'),
+    sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest')
+});
+
+export const GetBackgroundTaskSchema = v.object({
+    id: v.string()
+});
+
+export const CreateBackgroundTaskSchema = v.object({
+    name: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+    description: v.optional(v.string()),
+    metadata: v.optional(v.string(), '{}') // JSON string
+});
+
+export const UpdateBackgroundTaskProgressSchema = v.object({
+    id: v.string(),
+    progress: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+    processedItems: v.optional(v.number()),
+    status: v.optional(v.picklist(['pending', 'running', 'completed', 'failed', 'cancelled']))
+});
+
+export const CompleteBackgroundTaskSchema = v.object({
+    id: v.string(),
+    result: v.optional(v.string(), '{}'), // JSON string
+    error: v.optional(v.string()),
+    errorCode: v.optional(v.string())
+});
+
+export const CancelBackgroundTaskSchema = v.object({
+    id: v.string()
+});
+
+export const DeleteBackgroundTaskSchema = v.object({
+    id: v.string()
+});

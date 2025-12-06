@@ -3,16 +3,25 @@
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import SiteHead from '$lib/components/common/utility/site-head.svelte';
 	import WebVitalsTracker from '$lib/components/common/utility/web-vitals-tracker.svelte';
+	import NotificationSystemHandler from '$lib/components/common/utility/notification-system-handler.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import '../app.css';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <!-- Dynamic favicon, title, and SEO meta from store settings -->
 <SiteHead />
 
 <ParaglideJS {i18n}>
+	<!-- Notification System Handler (initializes and manages all notifications) -->
+	<NotificationSystemHandler
+		initialUnreadCount={data.initialUnreadCount}
+		initialNotificationData={data.initialNotificationData}
+		initialBackgroundTasks={data.initialBackgroundTasks}
+		initialRunningTasksCount={data.initialRunningTasksCount}
+	/>
+
 	{@render children()}
 
 	<!-- Global toast notifications -->

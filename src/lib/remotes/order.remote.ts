@@ -17,6 +17,7 @@ import { createPaginatedResponse, calculatePagination } from '$lib/server/pagina
 // Notification imports
 import { sendNotification, buildOrderNotificationContext } from '$lib/server/services/notification';
 import { getTemplatesByEventType } from '$lib/remotes/notification.remote';
+import { createNotification } from '$lib/server/services/notification-manager';
 
 // Helper to generate order number
 function generateOrderNumber(): string {
@@ -302,6 +303,24 @@ export const checkout = form(CheckoutSchema, async (data) => {
 		createdAt: now,
 		updatedAt: now
 	}).returning();
+
+	// Create in-app notification for authenticated users
+	if (user && order) {
+		await createNotification(user.id, {
+			title: 'Order Placed Successfully',
+			message: `Your order #${order.orderNumber} has been created. Total: ${(order.total / 100).toFixed(2)} ${order.currency || 'UAH'}`,
+			type: 'success',
+			actionUrl: `/customer/orders/${order.id}`,
+			actionLabel: 'View Order',
+			metadata: {
+				orderId: order.id,
+				orderNumber: order.orderNumber,
+				amount: order.total,
+				currency: order.currency || 'UAH',
+				itemCount: items.length
+			}
+		});
+	}
 
 	// Create order_item records for analytics
 	const orderItems = [];
