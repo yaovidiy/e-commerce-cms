@@ -3,7 +3,7 @@
  * Handles fiscal receipt generation and shift management
  */
 
-import { query, command } from '$app/server';
+import { query, command, form } from '$app/server';
 import * as v from 'valibot';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
@@ -63,14 +63,22 @@ export const createReceipt = command(v.string(), async (orderId) => {
 		}>;
 
 		// Prepare receipt items
-		const goods = orderItems.map((item) => ({
-			code: item.productId,
-			name: item.name,
-			price: item.price, // Already in kopiykas (cents)
-			quantity: item.quantity,
-			cost: item.price * item.quantity,
-			tax: [20] // 20% VAT - adjust as needed
-		}));
+		const goods = orderItems.map((item) => {
+			// Quantity in thousands (1 unit = 1000)
+			const quantityInThousands = item.quantity * 1000;
+			return {
+				code: item.productId,
+				good: {
+					code: item.productId,
+					name: item.name,
+					price: item.price // Already in kopiykas (cents)
+				},
+				name: item.name,
+				price: item.price, // Already in kopiykas (cents)
+				quantity: quantityInThousands
+				// tax and total_sum omitted to match organization settings
+			};
+		});
 
 		// Create receipt
 		const receiptData = await checkbox.createSaleReceipt({
@@ -104,7 +112,7 @@ export const createReceipt = command(v.string(), async (orderId) => {
 				status: 'created',
 				checkboxData: JSON.stringify(receiptData),
 				shiftId: shift?.id || null,
-				cashRegisterId: shift?.cash_register_id || null,
+				cashRegisterId: shift?.cash_register?.id || null,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			})
@@ -404,3 +412,96 @@ export const getCashRegisters = query(async () => {
 		error(500, `Failed to get cash registers: ${errorMessage}`);
 	}
 });
+
+/**
+ * Create a test receipt for testing Checkbox integration
+ */
+export const createTestReceipt = form(
+	v.object({
+		productName: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+		productPrice: v.pipe(v.number(), v.minValue(0)),
+		quantity: v.pipe(v.number(), v.minValue(1), v.maxValue(1000)),
+		customerEmail: v.optional(v.string(), ''),
+		customerPhone: v.optional(v.string(), '')
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		try {
+			const checkbox = getCheckboxClient();
+
+			// Ensure shift is open
+			let shift = await checkbox.getCurrentShift();
+			if (!shift) {
+				shift = await checkbox.openShift();
+			}
+
+			// Generate unique receipt ID
+			const receiptId = crypto.randomUUID();
+
+			// Calculate total (price is in kopiykas)
+			// Quantity in thousands (1 unit = 1000)
+			const quantityInThousands = data.quantity * 1000;
+			const priceInKopiykas = Math.round(data.productPrice);
+			const totalAmount = priceInKopiykas * data.quantity;
+
+			// Sanitize phone number to match Checkbox API format: ^380\d{9}$
+			let phoneNumber: string | undefined = undefined;
+			if (data.customerPhone) {
+				// Remove all non-digits
+				const digits = data.customerPhone.replace(/\D/g, '');
+				// Check if it's a valid Ukrainian number (380 + 9 digits)
+				if (digits.match(/^380\d{9}$/)) {
+					phoneNumber = digits;
+				} else if (digits.match(/^0\d{9}$/)) {
+					// Convert 0XXXXXXXXX to 380XXXXXXXXX
+					phoneNumber = '380' + digits.substring(1);
+				}
+			}
+
+			// Create test receipt with all required fields according to Checkbox API spec
+			const receipt = await checkbox.createSaleReceipt({
+				id: receiptId,
+				goods: [
+					{
+						code: 'TEST_PRODUCT',
+						good: {
+							code: 'TEST_PRODUCT',
+							name: data.productName,
+							price: priceInKopiykas
+						},
+						name: data.productName,
+						price: priceInKopiykas,
+						quantity: quantityInThousands
+					}
+				],
+				payments: [
+					{
+						type: 'CASHLESS',
+						value: totalAmount
+					}
+				],
+				delivery: {
+					email: data.customerEmail || undefined,
+					phone: phoneNumber
+				}
+			});
+
+			// Refresh the receipts list on the server
+			await getAllReceipts({ orderNumber: '', status: 'all', page: 1, pageSize: 20 }).refresh();
+			await getCurrentShift().refresh();
+
+			return {
+				success: true,
+				receiptId: receipt.id,
+				fiscalCode: receipt.fiscal_code,
+				receiptUrl: receipt.receipt_url,
+				totalAmount: (totalAmount / 100).toFixed(2)
+			};
+		} catch (err) {
+			console.error('Error creating test receipt:', err);
+			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			error(500, `Failed to create test receipt: ${errorMessage}`);
+		}
+	}
+);

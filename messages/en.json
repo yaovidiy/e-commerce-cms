@@ -1320,5 +1320,20 @@
   "receipts_pagination_total": "total",
   "receipts_pagination_previous": "Previous",
   "receipts_pagination_next": "Next",
-  "receipts_error_loading": "Error loading receipts: "
+  "receipts_error_loading": "Error loading receipts: ",
+  "receipts_test_receipt_title": "Create Test Receipt",
+  "receipts_test_receipt_description": "Create a test fiscal receipt to verify Checkbox integration is working",
+  "receipts_test_product_name": "Product Name",
+  "receipts_test_product_name_placeholder": "Test Product",
+  "receipts_test_product_price": "Price (UAH)",
+  "receipts_test_product_price_help": "Price per unit",
+  "receipts_test_quantity": "Quantity",
+  "receipts_test_customer_email": "Customer Email (optional)",
+  "receipts_test_customer_phone": "Customer Phone (optional)",
+  "receipts_test_create_button": "Create Test Receipt",
+  "receipts_test_creating": "Creating test receipt...",
+  "receipts_test_success": "Test Receipt Created Successfully",
+  "receipts_test_success_message": "Receipt ID: {receiptId}",
+  "receipts_test_receipt_url": "View Receipt",
+  "receipts_test_failed": "Failed to create test receipt"
 }

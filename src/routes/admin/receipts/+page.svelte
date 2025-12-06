@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { getAllReceipts, getCurrentShift, openShift, closeShift } from '$lib/remotes/checkbox.remote';
+	import { getAllReceipts, getCurrentShift, openShift, closeShift, createTestReceipt } from '$lib/remotes/checkbox.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Receipt, ChevronLeft, ChevronRight, Power, PowerOff, ExternalLink } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
+	import { toast } from 'svelte-sonner';
 
 	let searchQuery = $state('');
 	let statusFilter = $state('all');
@@ -19,6 +21,8 @@
 	let errorMessage = $state('');
 	let receiptErrorMessage = $state('');
 	let receiptErrorDialogOpen = $state(false);
+	let testReceiptSuccessOpen = $state(false);
+	let testReceiptData = $state<any>(null);
 	const pageSize = 20;
 
 	// Format date helper
@@ -171,6 +175,102 @@
 			</Card.Content>
 		</Card.Root>
 	{/await}
+
+	<!-- Test Receipt Creation -->
+	<Card.Root class="mb-6">
+		<Card.Header>
+			<Card.Title>{m.receipts_test_receipt_title()}</Card.Title>
+			<p class="text-sm text-muted-foreground mt-2">{m.receipts_test_receipt_description()}</p>
+		</Card.Header>
+		<Card.Content>
+			<form
+				{...createTestReceipt.enhance(async ({ submit }) => {
+					try {
+						await submit();
+						if (createTestReceipt.result?.success) {
+							testReceiptData = createTestReceipt.result;
+							testReceiptSuccessOpen = true;
+							// Refresh receipts list
+							getAllReceipts({ orderNumber: '', status: 'all', page: 1, pageSize }).refresh();
+							getCurrentShift().refresh();
+							// Reset form
+							createTestReceipt.fields.set({
+								productName: '',
+								productPrice: 0,
+								quantity: 1,
+								customerEmail: '',
+								customerPhone: ''
+							});
+							toast.success(m.receipts_test_success());
+						}
+					} catch (err) {
+						const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+						toast.error(m.receipts_test_failed(), { description: errorMsg });
+					}
+				})}
+				class="space-y-6"
+			>
+				<div class="grid md:grid-cols-2 gap-4">
+					<div>
+						<Label for="productName">{m.receipts_test_product_name()}</Label>
+						<Input
+							{...createTestReceipt.fields.productName.as('text')}
+							placeholder={m.receipts_test_product_name_placeholder()}
+						/>
+						{#each createTestReceipt.fields.productName.issues() as issue}
+							<p class="text-destructive text-sm mt-1">{issue.message}</p>
+						{/each}
+					</div>
+					<div>
+						<Label for="productPrice">{m.receipts_test_product_price()}</Label>
+						<Input
+							{...createTestReceipt.fields.productPrice.as('number')}
+							step="0.01"
+						/>
+						<p class="text-xs text-muted-foreground mt-1">{m.receipts_test_product_price_help()}</p>
+						{#each createTestReceipt.fields.productPrice.issues() as issue}
+							<p class="text-destructive text-sm mt-1">{issue.message}</p>
+						{/each}
+					</div>
+					<div>
+						<Label for="quantity">{m.receipts_test_quantity()}</Label>
+						<Input
+							{...createTestReceipt.fields.quantity.as('number')}
+							min="1"
+							max="1000"
+						/>
+						{#each createTestReceipt.fields.quantity.issues() as issue}
+							<p class="text-destructive text-sm mt-1">{issue.message}</p>
+						{/each}
+					</div>
+					<div>
+						<Label for="customerEmail">{m.receipts_test_customer_email()}</Label>
+						<Input
+							{...createTestReceipt.fields.customerEmail.as('email')}
+							placeholder="test@example.com"
+						/>
+						{#each createTestReceipt.fields.customerEmail.issues() as issue}
+							<p class="text-destructive text-sm mt-1">{issue.message}</p>
+						{/each}
+					</div>
+					<div>
+						<Label for="customerPhone">{m.receipts_test_customer_phone()}</Label>
+						<Input
+							{...createTestReceipt.fields.customerPhone.as('text')}
+							placeholder="+380501234567"
+						/>
+						{#each createTestReceipt.fields.customerPhone.issues() as issue}
+							<p class="text-destructive text-sm mt-1">{issue.message}</p>
+						{/each}
+					</div>
+				</div>
+
+				<Button type="submit" disabled={!!createTestReceipt.pending}>
+					{createTestReceipt.pending ? m.receipts_test_creating() : m.receipts_test_create_button()}
+				</Button>
+			</form>
+		</Card.Content>
+	</Card.Root>
 
 	<!-- Filters -->
 	<Card.Root class="mb-6">
@@ -379,6 +479,43 @@
 			</div>
 			<Dialog.Footer>
 				<Button type="button" onclick={() => (receiptErrorDialogOpen = false)}>
+					{m.common_ok()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
+
+	<!-- Test Receipt Success Dialog -->
+	<Dialog.Root bind:open={testReceiptSuccessOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{m.receipts_test_success()}</Dialog.Title>
+			</Dialog.Header>
+			{#if testReceiptData}
+				<div class="space-y-4">
+					<div class="bg-green-50 border border-green-200 rounded-md p-4">
+						<p class="text-sm font-mono">{m.receipts_test_success_message({ receiptId: testReceiptData.receiptId })}</p>
+						<p class="text-xs text-muted-foreground mt-2">
+							Фіскальний код: <span class="font-mono">{testReceiptData.fiscalCode}</span>
+						</p>
+						<p class="text-xs text-muted-foreground">
+							Сума: <span class="font-mono">{testReceiptData.totalAmount}</span> грн
+						</p>
+					</div>
+				</div>
+			{/if}
+			<Dialog.Footer>
+				{#if testReceiptData?.receiptUrl}
+					<Button
+						type="button"
+						variant="outline"
+						onclick={() => testReceiptData?.receiptUrl && window.open(testReceiptData.receiptUrl, '_blank')}
+					>
+						<ExternalLink class="h-4 w-4 mr-2" />
+						{m.receipts_test_receipt_url()}
+					</Button>
+				{/if}
+				<Button type="button" onclick={() => (testReceiptSuccessOpen = false)}>
 					{m.common_ok()}
 				</Button>
 			</Dialog.Footer>

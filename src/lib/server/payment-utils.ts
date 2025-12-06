@@ -125,14 +125,18 @@ export async function handlePaymentWebhook(data: string, signature: string) {
 				quantity: number;
 			}>;
 
-			// Prepare receipt items
+			// Prepare receipt items (matching Checkbox API spec)
 			const goods = orderItems.map((item) => ({
 				code: item.productId,
+				good: {
+					code: item.productId,
+					name: item.name,
+					price: item.price // Already in kopiykas (cents)
+				},
 				name: item.name,
 				price: item.price, // Already in kopiykas (cents)
-				quantity: item.quantity,
-				cost: item.price * item.quantity,
-				tax: [20] // 20% VAT
+				quantity: item.quantity * 1000 // Quantity in thousands (1 unit = 1000)
+				// tax and total_sum omitted to match organization settings
 			}));
 
 			// Create receipt
@@ -167,7 +171,7 @@ export async function handlePaymentWebhook(data: string, signature: string) {
 					status: order.customerEmail || order.customerPhone ? 'sent' : 'created',
 					checkboxData: JSON.stringify(receiptData),
 					shiftId: shift?.id || null,
-					cashRegisterId: shift?.cash_register_id || null,
+					cashRegisterId: shift?.cash_register?.id || null,
 					createdAt: new Date(),
 					updatedAt: new Date()
 				});

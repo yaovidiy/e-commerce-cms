@@ -1320,5 +1320,20 @@
   "receipts_pagination_total": "всього",
   "receipts_pagination_previous": "Назад",
   "receipts_pagination_next": "Далі",
-  "receipts_error_loading": "Помилка завантаження чеків: "
+  "receipts_error_loading": "Помилка завантаження чеків: ",
+  "receipts_test_receipt_title": "Створити тестовий чек",
+  "receipts_test_receipt_description": "Створіть тестовий фіскальний чек для перевірки інтеграції Checkbox",
+  "receipts_test_product_name": "Назва товару",
+  "receipts_test_product_name_placeholder": "Тестовий товар",
+  "receipts_test_product_price": "Ціна (грн)",
+  "receipts_test_product_price_help": "Ціна за одиницю",
+  "receipts_test_quantity": "Кількість",
+  "receipts_test_customer_email": "Email клієнта (необов'язково)",
+  "receipts_test_customer_phone": "Телефон клієнта (необов'язково)",
+  "receipts_test_create_button": "Створити тестовий чек",
+  "receipts_test_creating": "Створення тестового чека...",
+  "receipts_test_success": "Тестовий чек успішно створено",
+  "receipts_test_success_message": "ID чека: {receiptId}",
+  "receipts_test_receipt_url": "Переглянути чек",
+  "receipts_test_failed": "Не вдалося створити тестовий чек"
 }
