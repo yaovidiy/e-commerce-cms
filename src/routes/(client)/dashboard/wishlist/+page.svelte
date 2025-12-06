@@ -7,6 +7,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
 	import { Heart, ShoppingCart, Trash2, X } from '@lucide/svelte';
+	import AssetImage from '$lib/components/common/data-display/asset-image.svelte';
 
 	let clearDialogOpen = $state(false);
 	let movingProductId = $state<string | null>(null);
@@ -103,10 +104,12 @@
 						<Card.Content class="p-0">
 							<div class="relative aspect-square bg-muted overflow-hidden">
 								{#if images[0]}
-									<img
-										src={images[0]}
+									<AssetImage
+										assetId={images[0]}
 										alt={item.name}
-										class="w-full h-full object-cover transition-transform group-hover:scale-105"
+										width={400}
+										height={400}
+										class="object-cover w-full h-full group-hover:scale-105 transition-transform"
 									/>
 								{:else}
 									<div class="w-full h-full flex items-center justify-center">
