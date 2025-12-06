@@ -217,6 +217,7 @@
   "common_none": "Немає",
   "common_all": "Всі",
   "common_loading": "Завантаження...",
+  "common_download": "Завантажити",
   "common_page": "Сторінка",
   "common_of": "з",
   "common_previous": "Попередня",
@@ -1335,5 +1336,12 @@
   "receipts_test_success": "Тестовий чек успішно створено",
   "receipts_test_success_message": "ID чека: {receiptId}",
   "receipts_test_receipt_url": "Переглянути чек",
-  "receipts_test_failed": "Не вдалося створити тестовий чек"
+  "receipts_test_failed": "Не вдалося створити тестовий чек",
+  "receipts_view_html": "Переглянути HTML",
+  "receipts_view_png": "Переглянути зображення",
+  "receipts_view_text": "Переглянути текст",
+  "receipts_receipt_html_title": "HTML чека",
+  "receipts_receipt_image_title": "Зображення чека",
+  "receipts_receipt_text_title": "Текст чека",
+  "receipts_loading_receipt": "Завантаження чека..."
 }

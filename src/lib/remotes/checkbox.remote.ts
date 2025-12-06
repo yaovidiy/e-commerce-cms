@@ -414,6 +414,55 @@ export const getCashRegisters = query(async () => {
 });
 
 /**
+ * Get receipt HTML visualization
+ */
+export const getReceiptHtml = query(v.string(), async (receiptId) => {
+	auth.requireAdminUser();
+
+	try {
+		const checkbox = getCheckboxClient();
+		const html = await checkbox.getReceiptHtml(receiptId);
+		return html;
+	} catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		error(500, `Failed to get receipt HTML: ${errorMessage}`);
+	}
+});
+
+/**
+ * Get receipt PNG visualization
+ */
+export const getReceiptPng = query(v.string(), async (receiptId) => {
+	auth.requireAdminUser();
+
+	try {
+		const checkbox = getCheckboxClient();
+		const png = await checkbox.getReceiptPng(receiptId);
+		return png;
+	} catch (err) {
+		console.log(err);
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		error(500, `Failed to get receipt PNG: ${errorMessage}`);
+	}
+});
+
+/**
+ * Get receipt text visualization
+ */
+export const getReceiptText = query(v.string(), async (receiptId) => {
+	auth.requireAdminUser();
+
+	try {
+		const checkbox = getCheckboxClient();
+		const text = await checkbox.getReceiptText(receiptId);
+		return text;
+	} catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		error(500, `Failed to get receipt text: ${errorMessage}`);
+	}
+});
+
+/**
  * Create a test receipt for testing Checkbox integration
  */
 export const createTestReceipt = form(
@@ -486,6 +535,28 @@ export const createTestReceipt = form(
 					phone: phoneNumber
 				}
 			});
+
+			// Get current shift reference for database storage
+			const currentShift = await checkbox.getCurrentShift();
+
+			// Save test receipt to database
+			const [savedReceipt] = await db
+				.insert(tables.checkboxReceipt)
+				.values({
+					id: crypto.randomUUID(),
+					orderId: null, // Test receipt has no order
+					paymentId: null, // Test receipt has no payment
+					receiptId: receipt.id,
+					fiscalCode: receipt.fiscal_code,
+					receiptUrl: receipt.receipt_url || null,
+					status: data.customerEmail || data.customerPhone ? 'sent' : 'created',
+					checkboxData: JSON.stringify(receipt),
+					shiftId: currentShift?.id || null,
+					cashRegisterId: currentShift?.cash_register?.id || null,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				})
+				.returning();
 
 			// Refresh the receipts list on the server
 			await getAllReceipts({ orderNumber: '', status: 'all', page: 1, pageSize: 20 }).refresh();

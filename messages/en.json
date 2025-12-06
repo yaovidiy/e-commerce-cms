@@ -217,6 +217,8 @@
   "common_none": "None",
   "common_all": "All",
   "common_loading": "Loading...",
+  "common_download": "Download",
+  "common_no_data": "No data available",
   "common_page": "Page",
   "common_of": "of",
   "common_previous": "Previous",
@@ -1335,5 +1337,12 @@
   "receipts_test_success": "Test Receipt Created Successfully",
   "receipts_test_success_message": "Receipt ID: {receiptId}",
   "receipts_test_receipt_url": "View Receipt",
-  "receipts_test_failed": "Failed to create test receipt"
+  "receipts_test_failed": "Failed to create test receipt",
+  "receipts_view_html": "View HTML",
+  "receipts_view_png": "View Image",
+  "receipts_view_text": "View Text",
+  "receipts_receipt_html_title": "Receipt HTML",
+  "receipts_receipt_image_title": "Receipt Image",
+  "receipts_receipt_text_title": "Receipt Text",
+  "receipts_loading_receipt": "Loading receipt..."
 }

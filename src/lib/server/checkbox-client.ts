@@ -279,7 +279,55 @@ export class CheckboxClient {
 			throw new Error(`Checkbox API error: ${error.message || response.statusText}`);
 		}
 
+		console.log('Checkbox API request successful:', { endpoint, status: response.status, response });
+
 		return (await response.json()) as T;
+	}
+
+	/**
+	 * Make authenticated request to Checkbox API for raw responses (non-JSON)
+	 * Handles binary data (PNG) and text responses
+	 */
+	private async requestRaw(endpoint: string, options: RequestInit = {}): Promise<string> {
+		await this.authenticate();
+
+		const response = await fetch(`${this.baseUrl}${endpoint}`, {
+			...options,
+			headers: {
+				...options.headers,
+				Authorization: `Bearer ${this.accessToken}`,
+				'X-License-Key': this.licenseKey
+			}
+		});
+
+		if (!response.ok) {
+			console.log('Checkbox API raw request failed:', {
+				endpoint,
+				status: response.status,
+				body: await response.text()
+			});
+
+			// If token is invalid, clear it and retry once
+			if (response.status === 401 && this.accessToken) {
+				this.accessToken = null;
+				this.tokenExpiry = 0;
+				return this.requestRaw(endpoint, options);
+			}
+
+			throw new Error(`Checkbox API error: ${response.statusText}`);
+		}
+
+		const contentType = response.headers.get('content-type');
+		console.log('Checkbox API raw request successful:', { endpoint, status: response.status, contentType });
+
+		// For PNG images, return base64-encoded string
+		if (contentType?.includes('image/png')) {
+			const buffer = await response.arrayBuffer();
+			return Buffer.from(buffer).toString('base64');
+		}
+
+		// For text and HTML, return as plain text
+		return await response.text();
 	}
 
 	/**
@@ -399,18 +447,30 @@ export class CheckboxClient {
 
 	/**
 	 * Get receipt text (for printing)
+	 * Returns plain text representation of the receipt
 	 */
 	async getReceiptText(receiptId: string): Promise<string> {
-		return await this.request<string>(`/receipts/${receiptId}/text`, {
+		return await this.requestRaw(`/receipts/${receiptId}/text`, {
 			method: 'GET'
 		});
 	}
 
 	/**
 	 * Get receipt HTML
+	 * Returns HTML representation of the receipt
 	 */
 	async getReceiptHtml(receiptId: string): Promise<string> {
-		return await this.request<string>(`/receipts/${receiptId}/html`, {
+		return await this.requestRaw(`/receipts/${receiptId}/html`, {
+			method: 'GET'
+		});
+	}
+
+	/**
+	 * Get receipt PNG image
+	 * Returns base64-encoded PNG image
+	 */
+	async getReceiptPng(receiptId: string): Promise<string> {
+		return await this.requestRaw(`/receipts/${receiptId}/png`, {
 			method: 'GET'
 		});
 	}

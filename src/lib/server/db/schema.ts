@@ -183,9 +183,7 @@ export const payment = sqliteTable('payment', {
 
 export const checkboxReceipt = sqliteTable('checkbox_receipt', {
 	id: text('id').primaryKey(),
-	orderId: text('order_id')
-		.notNull()
-		.references(() => order.id),
+	orderId: text('order_id').references(() => order.id), // Made nullable for test receipts
 	paymentId: text('payment_id').references(() => payment.id),
 	receiptId: text('receipt_id'), // from Checkbox API
 	fiscalCode: text('fiscal_code'), // фіскальний номер чека

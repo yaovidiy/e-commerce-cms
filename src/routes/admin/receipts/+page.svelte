@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getAllReceipts, getCurrentShift, openShift, closeShift, createTestReceipt } from '$lib/remotes/checkbox.remote';
+	import { getAllReceipts, getCurrentShift, openShift, closeShift, createTestReceipt, getReceiptHtml, getReceiptPng, getReceiptText } from '$lib/remotes/checkbox.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Badge } from '$lib/components/ui/badge';
@@ -8,7 +8,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { Receipt, ChevronLeft, ChevronRight, Power, PowerOff, ExternalLink } from '@lucide/svelte';
+	import { Receipt, ChevronLeft, ChevronRight, Power, PowerOff, ExternalLink, FileText, Image as ImageIcon, Code, Download } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
 
@@ -23,6 +23,13 @@
 	let receiptErrorDialogOpen = $state(false);
 	let testReceiptSuccessOpen = $state(false);
 	let testReceiptData = $state<any>(null);
+	let htmlDialogOpen = $state(false);
+	let pngDialogOpen = $state(false);
+	let textDialogOpen = $state(false);
+	let htmlContent = $state('');
+	let pngContent = $state('');
+	let textContent = $state('');
+	let loadingReceiptView = $state(false);
 	const pageSize = 20;
 
 	// Format date helper
@@ -99,6 +106,55 @@
 	function previousPage() {
 		if (currentPage > 1) {
 			currentPage--;
+		}
+	}
+
+	// Receipt visualization handlers
+	async function viewReceiptHtml(receiptId: string | null) {
+		if (!receiptId) return;
+		loadingReceiptView = true;
+		try {
+			const html = await getReceiptHtml(receiptId);
+			htmlContent = html;
+			htmlDialogOpen = true;
+		} catch (err) {
+			toast.error(m.receipts_error_loading(), {
+				description: err instanceof Error ? err.message : 'Unknown error'
+			});
+		} finally {
+			loadingReceiptView = false;
+		}
+	}
+
+	async function viewReceiptPng(receiptId: string | null) {
+		if (!receiptId) return;
+		loadingReceiptView = true;
+		try {
+			const png = await getReceiptPng(receiptId);
+			pngContent = png;
+			pngDialogOpen = true;
+		} catch (err) {
+			toast.error(m.receipts_error_loading(), {
+				description: err instanceof Error ? err.message : 'Unknown error'
+			});
+		} finally {
+			loadingReceiptView = false;
+		}
+	}
+
+	async function viewReceiptText(receiptId: string | null) {
+		if (!receiptId) return;
+		loadingReceiptView = true;
+		try {
+			const text = await getReceiptText(receiptId);
+			textContent = text;
+			textDialogOpen = true;
+		} catch (err) {
+			toast.error(m.receipts_error_loading(), {
+				description: err instanceof Error ? err.message : 'Unknown error'
+			});
+		} finally {
+			loadingReceiptView = false;
 		}
 	}
 </script>
@@ -365,7 +421,37 @@
 										<span class="text-sm">{formatDate(receipt.createdAt)}</span>
 									</Table.Cell>
 									<Table.Cell>
-										<div class="flex gap-2">
+										<div class="flex gap-2 flex-wrap">
+											{#if receipt.receiptId}
+												{@const id = receipt.receiptId}
+												<Button
+													size="sm"
+													variant="outline"
+													onclick={() => viewReceiptHtml(id)}
+													disabled={loadingReceiptView}
+													title={m.receipts_view_html()}
+												>
+													<Code class="h-4 w-4" />
+												</Button>
+												<Button
+													size="sm"
+													variant="outline"
+													onclick={() => viewReceiptPng(id)}
+													disabled={loadingReceiptView}
+													title={m.receipts_view_png()}
+												>
+													<ImageIcon class="h-4 w-4" />
+												</Button>
+												<Button
+													size="sm"
+													variant="outline"
+													onclick={() => viewReceiptText(id)}
+													disabled={loadingReceiptView}
+													title={m.receipts_view_text()}
+												>
+													<FileText class="h-4 w-4" />
+												</Button>
+											{/if}
 											{#if receipt.receiptUrl}
 												<Button
 													size="sm"
@@ -520,5 +606,149 @@
 				</Button>
 			</Dialog.Footer>
 		</Dialog.Content>
+		</Dialog.Root>
+
+	<!-- Receipt HTML Dialog -->
+	<Dialog.Root bind:open={htmlDialogOpen}>
+		<Dialog.Content class="max-w-2xl">
+			<Dialog.Header>
+				<Dialog.Title>{m.receipts_receipt_html_title()}</Dialog.Title>
+			</Dialog.Header>
+			{#if loadingReceiptView}
+				<div class="flex items-center justify-center py-8">
+					<div class="flex flex-col items-center gap-2">
+						<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+						<p class="text-sm text-muted-foreground">{m.receipts_loading_receipt()}</p>
+					</div>
+				</div>
+			{:else if htmlContent}
+				<div class="border rounded-lg bg-background overflow-auto max-h-[400px]">
+					<iframe
+						title="Receipt HTML"
+						srcdoc={htmlContent}
+						class="w-full h-[400px] border-0"
+						sandbox="allow-same-origin"
+					></iframe>
+				</div>
+				<Button
+					type="button"
+					variant="outline"
+					class="w-full"
+					onclick={() => {
+						const link = document.createElement('a');
+						const blob = new Blob([htmlContent], { type: 'text/html' });
+						link.href = URL.createObjectURL(blob);
+						link.download = `receipt-${new Date().toISOString().slice(0, 10)}.html`;
+						link.click();
+					}}
+				>
+						<Download class="h-4 w-4 mr-2" />
+						{m.common_download()}
+				</Button>
+			{:else}
+				<p class="text-center text-sm text-muted-foreground py-4">
+					{m.common_no_data()}
+				</p>
+			{/if}
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (htmlDialogOpen = false)}>
+					{m.common_close()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
 	</Dialog.Root>
-</div>
+
+	<!-- Receipt PNG Dialog -->
+	<Dialog.Root bind:open={pngDialogOpen}>
+		<Dialog.Content class="max-w-2xl">
+			<Dialog.Header>
+				<Dialog.Title>{m.receipts_receipt_image_title()}</Dialog.Title>
+			</Dialog.Header>
+			{#if loadingReceiptView}
+				<div class="flex items-center justify-center py-8">
+					<div class="flex flex-col items-center gap-2">
+						<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+						<p class="text-sm text-muted-foreground">{m.receipts_loading_receipt()}</p>
+					</div>
+				</div>
+			{:else if pngContent}
+				<div class="border rounded-lg bg-background overflow-auto max-h-[400px] flex items-center justify-center">
+					<img
+						src={`data:image/png;base64,${pngContent}`}
+						alt="Receipt"
+						class="max-w-full h-auto"
+					/>
+				</div>
+				<Button
+					type="button"
+					variant="outline"
+					class="w-full"
+					onclick={() => {
+						const link = document.createElement('a');
+						link.href = `data:image/png;base64,${pngContent}`;
+						link.download = `receipt-${new Date().toISOString().slice(0, 10)}.png`;
+						link.click();
+					}}
+				>
+					<Download class="h-4 w-4 mr-2" />
+					{m.common_download()}
+				</Button>
+			{:else}
+				<p class="text-center text-sm text-muted-foreground py-4">
+					{m.common_no_data()}
+				</p>
+			{/if}
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (pngDialogOpen = false)}>
+					{m.common_close()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
+
+	<!-- Receipt Text Dialog -->
+	<Dialog.Root bind:open={textDialogOpen}>
+		<Dialog.Content class="max-w-2xl">
+			<Dialog.Header>
+				<Dialog.Title>{m.receipts_receipt_text_title()}</Dialog.Title>
+			</Dialog.Header>
+			{#if loadingReceiptView}
+				<div class="flex items-center justify-center py-8">
+					<div class="flex flex-col items-center gap-2">
+						<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+						<p class="text-sm text-muted-foreground">{m.receipts_loading_receipt()}</p>
+					</div>
+				</div>
+			{:else if textContent}
+				<div class="border rounded-lg bg-muted p-4 overflow-auto max-h-[400px]">
+					<pre class="text-xs whitespace-pre-wrap wrap-break-word font-mono">{textContent}</pre>
+				</div>
+				<Button
+					type="button"
+					variant="outline"
+					class="w-full"
+					onclick={() => {
+						const link = document.createElement('a');
+						const blob = new Blob([textContent], { type: 'text/plain' });
+						link.href = URL.createObjectURL(blob);
+						link.download = `receipt-${new Date().toISOString().slice(0, 10)}.txt`;
+						link.click();
+					}}
+				>
+					<Download class="h-4 w-4 mr-2" />
+					{m.common_download()}
+				</Button>
+			{:else}
+				<p class="text-center text-sm text-muted-foreground py-4">
+					{m.common_no_data()}
+				</p>
+			{/if}
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (textDialogOpen = false)}>
+					{m.common_close()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
+	</div>
+
