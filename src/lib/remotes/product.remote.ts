@@ -9,9 +9,10 @@ import {
 	DeleteProductSchema,
 	FilterProductsSchema
 } from '$lib/server/schemas';
-import { eq, like, and, desc, count } from 'drizzle-orm';
+import { eq, like, and, desc, count, asc } from 'drizzle-orm';
 import { productCache, withCache, invalidateProductCaches } from '$lib/server/cache';
 import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
+import { SortOptions } from '$lib/schemas';
 
 // Get all products with filters
 export const getAllProducts = query(FilterProductsSchema, async (data) => {
@@ -66,6 +67,79 @@ export const getAllProducts = query(FilterProductsSchema, async (data) => {
 		pageSize: data.pageSize
 	});
 });
+
+// Public: Get all active products with filtering, searching, and sorting
+export const getAllPublicProducts = query(
+	v.object({
+		page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
+		pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 12),
+		categoryId: v.optional(v.string()),
+		query: v.optional(v.string()),
+		sortBy: v.optional(v.enum(SortOptions), SortOptions.CREATED_AT_DESC)
+	}),
+	async (data) => {
+		let baseQuery = db.select().from(tables.product);
+
+		const conditions = [eq(tables.product.status, 'active')];
+
+		// Filter by category
+		if (data.categoryId) {
+			conditions.push(eq(tables.product.categoryId, data.categoryId));
+		}
+
+		// Search by product title
+		if (data.query) {
+			conditions.push(like(tables.product.name, `%${data.query}%`));
+		}
+
+		if (conditions.length > 0) {
+			baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+		}
+
+		// Apply sorting based on SortOptions enum
+		switch (data.sortBy) {
+			case SortOptions.TITLE_ASC:
+				baseQuery = baseQuery.orderBy(asc(tables.product.name)) as typeof baseQuery;
+				break;
+			case SortOptions.PRICE_ASC:
+				baseQuery = baseQuery.orderBy(asc(tables.product.price)) as typeof baseQuery;
+				break;
+			case SortOptions.PRICE_DESC:
+				baseQuery = baseQuery.orderBy(desc(tables.product.price)) as typeof baseQuery;
+				break;
+			case SortOptions.CREATED_AT_DESC:
+			default:
+				baseQuery = baseQuery.orderBy(desc(tables.product.createdAt)) as typeof baseQuery;
+				break;
+		}
+
+		// Get total count for pagination
+		let countQuery = db.select({ count: count() }).from(tables.product);
+
+		if (conditions.length > 0) {
+			countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+		}
+
+		const [countResult] = await countQuery;
+		const totalCount = Number(countResult?.count) || 0;
+
+		// Calculate pagination
+		const { offset, limit } = calculatePagination(data.page, data.pageSize);
+		const results = await baseQuery.limit(limit).offset(offset);
+
+		// Parse images for each product
+		const productsWithParsedImages = results.map((product) => ({
+			...product,
+			images: product.images ? JSON.parse(product.images) : []
+		}));
+
+		// Return paginated response
+		return createPaginatedResponse(productsWithParsedImages, totalCount, {
+			page: data.page,
+			pageSize: data.pageSize
+		});
+	}
+);
 
 // Get single product by ID
 export const getProductById = query(v.string(), async (id) => {

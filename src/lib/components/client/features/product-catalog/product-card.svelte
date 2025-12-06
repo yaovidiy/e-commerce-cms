@@ -132,6 +132,7 @@
 			{#if !image}
 				<div class="bg-primary h-full w-full"></div>
 			{:else}
+			{console.log('Rendering image with assetId:', image)}
 				<Image assetId={image} alt={title} thumbnail={false} class="w-full" width={280} height={280} />
 			{/if}
 		</div>
