@@ -896,6 +896,8 @@
   "order_status_delivered": "Доставлено",
   "order_status_cancelled": "Скасовано",
   "order_status_refunded": "Повернено",
+  "order_status_updated_success": "Статус замовлення успішно оновлено",
+  "order_status_updated_error": "Помилка при оновленні статусу замовлення",
   "order_view_details": "Переглянути деталі",
   "order_send_email": "Надіслати лист",
   "order_update_status": "Оновити статус",

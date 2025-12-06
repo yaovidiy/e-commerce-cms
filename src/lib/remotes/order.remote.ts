@@ -435,15 +435,6 @@ export const updateOrderStatus = command(UpdateOrderStatusSchema, async (data) =
 		console.error('[Order] Failed to send status notification:', notificationError);
 	}
 
-	// Refresh orders query
-	await getAllOrders({
-		status: 'all',
-		customerEmail: '',
-		orderNumber: '',
-		page: 1,
-		pageSize: 20
-	}).refresh();
-
 	return order;
 });
 

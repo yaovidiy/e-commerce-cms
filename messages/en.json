@@ -897,6 +897,8 @@
   "order_status_delivered": "Delivered",
   "order_status_cancelled": "Cancelled",
   "order_status_refunded": "Refunded",
+  "order_status_updated_success": "Order status updated successfully",
+  "order_status_updated_error": "Failed to update order status",
   "order_view_details": "View Details",
   "order_send_email": "Send Email",
   "order_update_status": "Update Status",

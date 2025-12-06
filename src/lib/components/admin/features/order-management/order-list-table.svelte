@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
+	import { toast } from 'svelte-sonner';
 	import OrderDetailsDialog from './order-details-dialog.svelte';
 	import SendEmailDialog from './send-email-dialog.svelte';
 	import OrderActionsCell from './order-actions-cell.svelte';
@@ -53,10 +54,24 @@
 	}
 
 	async function handleStatusChange(orderId: string, newStatus: string) {
-		await updateOrderStatus({
-			id: orderId,
-			status: newStatus as Order['status']
-		});
+		try {
+			await updateOrderStatus({
+				id: orderId,
+				status: newStatus as Order['status']
+			});
+			// Refresh the orders list with current filter parameters
+			await getAllOrders({
+				status: statusFilter,
+				customerEmail: searchQuery.includes('@') ? searchQuery : '',
+				orderNumber: !searchQuery.includes('@') ? searchQuery : '',
+				page: currentPage,
+				pageSize
+			}).refresh();
+			toast.success(m.order_status_updated_success?.() ?? 'Order status updated successfully');
+		} catch (error) {
+			console.error('Failed to update order status:', error);
+			toast.error(m.order_status_updated_error?.() ?? 'Failed to update order status');
+		}
 	}
 
 	function handleSearchChange() {
