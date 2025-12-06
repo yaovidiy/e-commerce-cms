@@ -1,21 +1,30 @@
 /**
  * Checkbox РРО API Client
- * 
+ *
  * Checkbox is a cloud-based fiscal receipt system (програмний РРО) required by Ukrainian law.
  * Docs: https://dev.checkbox.ua/doc/api/
  */
 
+import {
+	CHECKBOX_LICENSE_KEY,
+	CHECKBOX_CASH_REGISTER_ID,
+	CHECKBOX_LOGIN,
+	CHECKBOX_PASSWORD,
+	CHECKBOX_PIN_CODE,
+	CHECKBOX_PRODUCTION
+} from '$env/static/private';
+
 interface CheckboxConfig {
-	login: string;
-	password: string;
+	login?: string;
+	password?: string;
 	licenseKey: string;
+	pinCode?: string; // Recommended authentication method
 	cashRegisterId?: string;
 	isProduction?: boolean;
 }
 
 interface CheckboxAuthResponse {
 	access_token: string;
-	expires_at: number;
 	token_type: string;
 }
 
@@ -69,7 +78,14 @@ interface CheckboxShiftResponse {
 	closed_at?: string;
 	initial_transaction_id?: string;
 	closing_transaction_id?: string;
-	cash_register_id: string;
+	cash_register: {
+		id: string;
+		fiscal_number: string;
+		number: number;
+		active: boolean;
+		created_at: string;
+		updated_at: string;	
+	};
 	created_at: string;
 	updated_at: string;
 	balance?: {
@@ -101,9 +117,10 @@ interface CheckboxCashRegister {
 }
 
 export class CheckboxClient {
-	private login: string;
-	private password: string;
+	private login?: string;
+	private password?: string;
 	private licenseKey: string;
+	private pinCode?: string;
 	private cashRegisterId?: string;
 	private baseUrl: string;
 	private accessToken: string | null = null;
@@ -113,19 +130,53 @@ export class CheckboxClient {
 		this.login = config.login;
 		this.password = config.password;
 		this.licenseKey = config.licenseKey;
+		this.pinCode = config.pinCode;
 		this.cashRegisterId = config.cashRegisterId;
 		this.baseUrl = config.isProduction
 			? 'https://api.checkbox.ua/api/v1'
-			: 'https://dev-api.checkbox.ua/api/v1';
+			: 'https://api.checkbox.ua/api/v1';
 	}
 
 	/**
-	 * Authenticate with Checkbox API
+	 * Authenticate with Checkbox API using PIN code (recommended method)
+	 * Docs: https://wiki.checkbox.ua/api/auth
 	 */
-	private async authenticate(): Promise<void> {
-		// Check if token is still valid
-		if (this.accessToken && Date.now() < this.tokenExpiry - 60000) {
-			return; // Token valid for at least 1 more minute
+	private async authenticateWithPinCode(): Promise<void> {
+		if (!this.pinCode) {
+			throw new Error('PIN code not provided for authentication');
+		}
+
+		const response = await fetch(`${this.baseUrl}/cashier/signinPinCode`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-License-Key': this.licenseKey
+			},
+			body: JSON.stringify({
+				pin_code: this.pinCode
+			})
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(
+				`Checkbox PIN authentication failed: ${error.message || response.statusText}`
+			);
+		}
+
+		const data = (await response.json()) as CheckboxAuthResponse;
+		this.accessToken = data.access_token;
+		// Set token expiry to 1 hour from now (JWT tokens don't have explicit expiry from API)
+		this.tokenExpiry = Date.now() + 3600000;
+	}
+
+	/**
+	 * Authenticate with Checkbox API using login/password (fallback method)
+	 * Docs: https://wiki.checkbox.ua/api/auth
+	 */
+	private async authenticateWithCredentials(): Promise<void> {
+		if (!this.login || !this.password) {
+			throw new Error('Login and password not provided for authentication');
 		}
 
 		const response = await fetch(`${this.baseUrl}/cashier/signin`, {
@@ -146,16 +197,39 @@ export class CheckboxClient {
 
 		const data = (await response.json()) as CheckboxAuthResponse;
 		this.accessToken = data.access_token;
-		this.tokenExpiry = data.expires_at;
+		// Set token expiry to 1 hour from now (JWT tokens don't have explicit expiry from API)
+		this.tokenExpiry = Date.now() + 3600000;
+	}
+
+	/**
+	 * Authenticate with Checkbox API
+	 * Tries PIN code first (recommended), falls back to login/password
+	 */
+	private async authenticate(): Promise<void> {
+		// Check if token is still valid
+		if (this.accessToken && Date.now() < this.tokenExpiry - 60000) {
+			return; // Token valid for at least 1 more minute
+		}
+
+		// Try PIN code authentication first (recommended method)
+		if (this.pinCode) {
+			await this.authenticateWithPinCode();
+			return;
+		}
+
+		// Fall back to login/password authentication
+		if (this.login && this.password) {
+			await this.authenticateWithCredentials();
+			return;
+		}
+
+		throw new Error('No authentication credentials provided (PIN code or login/password required)');
 	}
 
 	/**
 	 * Make authenticated request to Checkbox API
 	 */
-	private async request<T>(
-		endpoint: string,
-		options: RequestInit = {}
-	): Promise<T> {
+	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		await this.authenticate();
 
 		const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -170,10 +244,42 @@ export class CheckboxClient {
 
 		if (!response.ok) {
 			const error = await response.json().catch(() => ({ message: response.statusText }));
+
+			// If token is invalid, clear it and retry once
+			if (
+				(error.message?.includes('Невірний токен') || response.status === 401) &&
+				this.accessToken
+			) {
+				this.accessToken = null;
+				this.tokenExpiry = 0;
+				return this.request<T>(endpoint, options);
+			}
+
 			throw new Error(`Checkbox API error: ${error.message || response.statusText}`);
 		}
 
 		return (await response.json()) as T;
+	}
+
+	/**
+	 * Sign out (deactivate current token)
+	 * Docs: https://wiki.checkbox.ua/api/auth
+	 */
+	async signout(): Promise<void> {
+		if (!this.accessToken) {
+			return; // Already signed out
+		}
+
+		try {
+			await this.request('/cashier/signout', {
+				method: 'POST',
+				body: JSON.stringify({})
+			});
+		} finally {
+			// Clear token regardless of response
+			this.accessToken = null;
+			this.tokenExpiry = 0;
+		}
 	}
 
 	/**
@@ -194,7 +300,7 @@ export class CheckboxClient {
 				method: 'GET'
 			});
 
-			const openShift = shifts.results.find(s => s.status === 'OPENED');
+			const openShift = shifts.results.find((s) => s.status === 'OPENED');
 			return openShift || null;
 		} catch {
 			return null;
@@ -216,7 +322,7 @@ export class CheckboxClient {
 	 */
 	async closeShift(): Promise<CheckboxShiftResponse> {
 		const currentShift = await this.getCurrentShift();
-		
+
 		if (!currentShift) {
 			throw new Error('No open shift found');
 		}
@@ -233,7 +339,7 @@ export class CheckboxClient {
 	async createSaleReceipt(data: CreateReceiptRequest): Promise<CheckboxReceiptResponse> {
 		// Ensure shift is open
 		let shift = await this.getCurrentShift();
-		
+
 		if (!shift) {
 			shift = await this.openShift();
 		}
@@ -250,7 +356,7 @@ export class CheckboxClient {
 	async createReturnReceipt(data: CreateReceiptRequest): Promise<CheckboxReceiptResponse> {
 		// Ensure shift is open
 		let shift = await this.getCurrentShift();
-		
+
 		if (!shift) {
 			shift = await this.openShift();
 		}
@@ -293,7 +399,7 @@ export class CheckboxClient {
 	 */
 	async getCashRegisterInfo(cashRegisterId?: string): Promise<CheckboxCashRegister> {
 		const id = cashRegisterId || this.cashRegisterId;
-		
+
 		if (!id) {
 			throw new Error('Cash register ID not provided');
 		}
@@ -317,24 +423,37 @@ export class CheckboxClient {
 
 /**
  * Get Checkbox client instance
+ *
+ * Supports two authentication methods (in order of preference):
+ * 1. PIN code + License key (recommended): CHECKBOX_PIN_CODE + CHECKBOX_LICENSE_KEY
+ * 2. Login + Password (fallback): CHECKBOX_LOGIN + CHECKBOX_PASSWORD
  */
 export function getCheckboxClient(): CheckboxClient {
-	const login = process.env.CHECKBOX_LOGIN;
-	const password = process.env.CHECKBOX_PASSWORD;
-	const licenseKey = process.env.CHECKBOX_LICENSE_KEY;
-	const cashRegisterId = process.env.CHECKBOX_CASH_REGISTER_ID;
-	const isProduction = process.env.CHECKBOX_PRODUCTION === 'true';
+	const licenseKey = CHECKBOX_LICENSE_KEY;
+	const pinCode = CHECKBOX_PIN_CODE;
+	const login = CHECKBOX_LOGIN;
+	const password = CHECKBOX_PASSWORD;
+	const cashRegisterId = CHECKBOX_CASH_REGISTER_ID;
+	const isProduction = CHECKBOX_PRODUCTION === 'true';
 
-	if (!login || !password || !licenseKey) {
+	if (!licenseKey) {
 		throw new Error(
-			'Checkbox credentials not configured. Set CHECKBOX_LOGIN, CHECKBOX_PASSWORD, and CHECKBOX_LICENSE_KEY environment variables.'
+			'Checkbox credentials not configured. Set CHECKBOX_LICENSE_KEY environment variable.'
+		);
+	}
+
+	// Check that at least one authentication method is provided
+	if (!pinCode && (!login || !password)) {
+		throw new Error(
+			'Checkbox authentication not configured. Provide either CHECKBOX_PIN_CODE (recommended) or both CHECKBOX_LOGIN and CHECKBOX_PASSWORD environment variables.'
 		);
 	}
 
 	return new CheckboxClient({
+		licenseKey,
+		pinCode,
 		login,
 		password,
-		licenseKey,
 		cashRegisterId,
 		isProduction
 	});

@@ -233,13 +233,15 @@ export const openShift = command(v.object({}), async () => {
 		// Open new shift
 		const shiftData = await checkbox.openShift();
 
+		console.log('Opened shift:', shiftData);
+
 		// Save to database
 		const [shift] = await db
 			.insert(tables.checkboxShift)
 			.values({
 				id: crypto.randomUUID(),
 				shiftId: shiftData.id,
-				cashRegisterId: shiftData.cash_register_id,
+				cashRegisterId: shiftData.cash_register.id,
 				status: 'opened',
 				openedBy: user.id,
 				openedAt: new Date()
@@ -252,6 +254,7 @@ export const openShift = command(v.object({}), async () => {
 			message: 'Shift opened successfully'
 		};
 	} catch (err) {
+		console.error(err);
 		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
 		error(500, `Failed to open shift: ${errorMessage}`);
 	}

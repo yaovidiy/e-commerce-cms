@@ -5,12 +5,20 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Receipt, ChevronLeft, ChevronRight, Power, PowerOff, ExternalLink } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	let searchQuery = $state('');
 	let statusFilter = $state('all');
 	let currentPage = $state(1);
+	let closeShiftDialogOpen = $state(false);
+	let isClosingShift = $state(false);
+	let errorDialogOpen = $state(false);
+	let errorMessage = $state('');
+	let receiptErrorMessage = $state('');
+	let receiptErrorDialogOpen = $state(false);
 	const pageSize = 20;
 
 	// Format date helper
@@ -52,19 +60,32 @@
 			await openShift({});
 			getCurrentShift().refresh();
 		} catch (err) {
-			alert('Failed to open shift: ' + (err instanceof Error ? err.message : 'Unknown error'));
+			errorMessage = m.receipts_failed_open_shift() + (err instanceof Error ? err.message : 'Unknown error');
+			errorDialogOpen = true;
 		}
 	}
 
-	async function handleCloseShift() {
-		if (!confirm('Are you sure you want to close the current shift?')) return;
-		
+	async function handleCloseShiftConfirm() {
+		isClosingShift = true;
 		try {
 			await closeShift({});
 			getCurrentShift().refresh();
+			closeShiftDialogOpen = false;
 		} catch (err) {
-			alert('Failed to close shift: ' + (err instanceof Error ? err.message : 'Unknown error'));
+			errorMessage = m.receipts_failed_close_shift() + (err instanceof Error ? err.message : 'Unknown error');
+			errorDialogOpen = true;
+		} finally {
+			isClosingShift = false;
 		}
+	}
+
+	function openCloseShiftDialog() {
+		closeShiftDialogOpen = true;
+	}
+
+	function showReceiptError(message: string) {
+		receiptErrorMessage = message || 'Unknown error';
+		receiptErrorDialogOpen = true;
 	}
 
 	function nextPage() {
@@ -82,8 +103,8 @@
 	<!-- Header -->
 	<div class="flex justify-between items-center mb-6">
 		<div>
-			<h1 class="text-3xl font-bold">Checkbox РРО</h1>
-			<p class="text-muted-foreground">Fiscal Receipt Management</p>
+			<h1 class="text-3xl font-bold">{m.receipts_title()}</h1>
+			<p class="text-muted-foreground">{m.receipts_subtitle()}</p>
 		</div>
 	</div>
 
@@ -91,21 +112,21 @@
 	{#await getCurrentShift()}
 		<Card.Root class="mb-6">
 			<Card.Header>
-				<Card.Title>Current Shift</Card.Title>
+				<Card.Title>{m.receipts_shift_title()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
-				<p class="text-muted-foreground">Loading shift information...</p>
+				<p class="text-muted-foreground">{m.receipts_loading()}</p>
 			</Card.Content>
 		</Card.Root>
 	{:then shiftData}
 		<Card.Root class="mb-6">
 			<Card.Header>
 				<div class="flex justify-between items-center">
-					<Card.Title>Current Shift</Card.Title>
+					<Card.Title>{m.receipts_shift_title()}</Card.Title>
 					{#if shiftData?.shift}
-						<Badge variant="success">Shift Open</Badge>
+						<Badge variant="success">{m.receipts_shift_open()}</Badge>
 					{:else}
-						<Badge variant="secondary">No Active Shift</Badge>
+						<Badge variant="secondary">{m.receipts_shift_closed()}</Badge>
 					{/if}
 				</div>
 			</Card.Header>
@@ -113,29 +134,29 @@
 				{#if shiftData?.shift}
 					<div class="grid md:grid-cols-3 gap-4 mb-4">
 						<div>
-							<p class="text-sm text-muted-foreground">Shift ID</p>
+							<p class="text-sm text-muted-foreground">{m.receipts_shift_id()}</p>
 							<p class="font-mono">{shiftData.shift.id}</p>
 						</div>
 						<div>
-							<p class="text-sm text-muted-foreground">Opened At</p>
+							<p class="text-sm text-muted-foreground">{m.receipts_shift_opened_at()}</p>
 							<p>{formatDate(new Date(shiftData.shift.opened_at))}</p>
 						</div>
 						<div>
-							<p class="text-sm text-muted-foreground">Cash Register</p>
-							<p class="font-mono text-sm">{shiftData.shift.cash_register_id}</p>
+							<p class="text-sm text-muted-foreground">{m.receipts_cash_register()}</p>
+							<p class="font-mono text-sm">{shiftData.shift.cash_register.id}</p>
 						</div>
 					</div>
-					<Button onclick={handleCloseShift} variant="destructive">
+					<Button onclick={openCloseShiftDialog} variant="destructive">
 						<PowerOff class="h-4 w-4 mr-2" />
-						Close Shift
+						{m.receipts_close_shift()}
 					</Button>
 				{:else}
 					<p class="text-muted-foreground mb-4">
-						No active shift. You must open a shift before creating receipts.
+						{m.receipts_no_shift_message()}
 					</p>
 					<Button onclick={handleOpenShift}>
 						<Power class="h-4 w-4 mr-2" />
-						Open Shift
+						{m.receipts_open_shift()}
 					</Button>
 				{/if}
 			</Card.Content>
@@ -143,10 +164,10 @@
 	{:catch error}
 		<Card.Root class="mb-6">
 			<Card.Header>
-				<Card.Title>Current Shift</Card.Title>
+				<Card.Title>{m.receipts_shift_title()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
-				<p class="text-destructive">Error: {error.message}</p>
+				<p class="text-destructive">{m.receipts_error_loading()}{error.message}</p>
 			</Card.Content>
 		</Card.Root>
 	{/await}
@@ -158,7 +179,7 @@
 				<div class="flex-1">
 					<Input
 						type="text"
-						placeholder="Search by order number..."
+						placeholder={m.receipts_search_placeholder()}
 						bind:value={searchQuery}
 					/>
 				</div>
@@ -166,11 +187,11 @@
 					bind:value={statusFilter}
 					class="px-4 py-2 border rounded-md bg-white"
 				>
-					<option value="all">All Statuses</option>
-					<option value="created">Created</option>
-					<option value="sent">Sent</option>
-					<option value="error">Error</option>
-					<option value="cancelled">Cancelled</option>
+					<option value="all">{m.receipts_filter_all()}</option>
+					<option value="created">{m.receipts_filter_created()}</option>
+					<option value="sent">{m.receipts_filter_sent()}</option>
+					<option value="error">{m.receipts_filter_error()}</option>
+					<option value="cancelled">{m.receipts_filter_cancelled()}</option>
 				</select>
 			</div>
 		</Card.Content>
@@ -181,31 +202,31 @@
 		<Card.Root>
 			<Card.Content class="pt-6">
 				<div class="text-center py-12">
-					<p class="text-muted-foreground">Loading receipts...</p>
+					<p class="text-muted-foreground">{m.receipts_loading()}</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
 	{:then data}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Fiscal Receipts ({data.total})</Card.Title>
+				<Card.Title>{m.receipts_table_title()} ({data.total})</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				{#if data.receipts.length === 0}
 					<div class="text-center py-12">
 						<Receipt class="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-						<p class="text-muted-foreground">No receipts found</p>
+						<p class="text-muted-foreground">{m.receipts_no_receipts()}</p>
 					</div>
 				{:else}
 					<Table.Root>
 						<Table.Header>
 							<Table.Row>
-								<Table.Head>Order</Table.Head>
-								<Table.Head>Fiscal Code</Table.Head>
-								<Table.Head>Status</Table.Head>
-								<Table.Head>Amount</Table.Head>
-								<Table.Head>Created</Table.Head>
-								<Table.Head>Actions</Table.Head>
+								<Table.Head>{m.receipts_table_order()}</Table.Head>
+								<Table.Head>{m.receipts_table_fiscal_code()}</Table.Head>
+								<Table.Head>{m.receipts_table_status()}</Table.Head>
+								<Table.Head>{m.receipts_table_amount()}</Table.Head>
+								<Table.Head>{m.receipts_table_created()}</Table.Head>
+								<Table.Head>{m.receipts_table_actions()}</Table.Head>
 							</Table.Row>
 						</Table.Header>
 						<Table.Body>
@@ -218,14 +239,14 @@
 												<p class="text-xs text-muted-foreground">{receipt.order.customerEmail}</p>
 											</div>
 										{:else}
-											<span class="text-muted-foreground">N/A</span>
+											<span class="text-muted-foreground">{m.receipts_not_available()}</span>
 										{/if}
 									</Table.Cell>
 									<Table.Cell>
 										{#if receipt.fiscalCode}
 											<span class="font-mono text-sm">{receipt.fiscalCode}</span>
 										{:else}
-											<span class="text-muted-foreground">Pending</span>
+											<span class="text-muted-foreground">{m.receipts_fiscal_code_pending()}</span>
 										{/if}
 									</Table.Cell>
 									<Table.Cell>
@@ -237,7 +258,7 @@
 										{#if receipt.order}
 											{formatPrice(receipt.order.total)}
 										{:else}
-											<span class="text-muted-foreground">N/A</span>
+											<span class="text-muted-foreground">{m.receipts_not_available()}</span>
 										{/if}
 									</Table.Cell>
 									<Table.Cell>
@@ -258,9 +279,9 @@
 												<Button
 													size="sm"
 													variant="outline"
-													onclick={() => alert(receipt.errorMessage || 'Unknown error')}
+													onclick={() => showReceiptError(receipt.errorMessage || 'Unknown error')}
 												>
-													View Error
+													{m.receipts_view_error()}
 												</Button>
 											{/if}
 										</div>
@@ -273,7 +294,7 @@
 					<!-- Pagination -->
 					<div class="flex justify-between items-center mt-4">
 						<p class="text-sm text-muted-foreground">
-							Page {data.page} of {data.totalPages} ({data.total} total)
+							{m.receipts_pagination_page()} {data.page} {m.receipts_pagination_of()} {data.totalPages} ({data.total} {m.receipts_pagination_total()})
 						</p>
 						<div class="flex gap-2">
 							<Button
@@ -283,7 +304,7 @@
 								disabled={currentPage === 1}
 							>
 								<ChevronLeft class="h-4 w-4" />
-								Previous
+								{m.receipts_pagination_previous()}
 							</Button>
 							<Button
 								variant="outline"
@@ -291,7 +312,7 @@
 								onclick={nextPage}
 								disabled={currentPage >= data.totalPages}
 							>
-								Next
+								{m.receipts_pagination_next()}
 								<ChevronRight class="h-4 w-4" />
 							</Button>
 						</div>
@@ -303,9 +324,64 @@
 		<Card.Root>
 			<Card.Content class="pt-6">
 				<div class="text-center py-12">
-					<p class="text-destructive">Error loading receipts: {error.message}</p>
+					<p class="text-destructive">{m.receipts_error_loading()}{error.message}</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
 	{/await}
+
+	<!-- Close Shift Confirmation Dialog -->
+	<AlertDialog.Root bind:open={closeShiftDialogOpen}>
+		<AlertDialog.Content>
+			<AlertDialog.Header>
+				<AlertDialog.Title>{m.receipts_close_shift()}</AlertDialog.Title>
+				<AlertDialog.Description>
+					{m.receipts_close_shift_confirm()}
+				</AlertDialog.Description>
+			</AlertDialog.Header>
+
+			<AlertDialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (closeShiftDialogOpen = false)}>
+					{m.common_cancel()}
+				</Button>
+				<Button type="button" variant="destructive" disabled={isClosingShift} onclick={handleCloseShiftConfirm}>
+					{isClosingShift ? m.common_loading() : m.receipts_close_shift()}
+				</Button>
+			</AlertDialog.Footer>
+		</AlertDialog.Content>
+	</AlertDialog.Root>
+
+	<!-- Shift Operation Error Dialog -->
+	<Dialog.Root bind:open={errorDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{m.common_error()}</Dialog.Title>
+			</Dialog.Header>
+			<div class="space-y-4">
+				<p class="text-destructive text-sm">{errorMessage}</p>
+			</div>
+			<Dialog.Footer>
+				<Button type="button" onclick={() => (errorDialogOpen = false)}>
+					{m.common_ok()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
+
+	<!-- Receipt Error Details Dialog -->
+	<Dialog.Root bind:open={receiptErrorDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{m.receipts_view_error()}</Dialog.Title>
+			</Dialog.Header>
+			<div class="space-y-4">
+				<p class="text-destructive text-sm font-mono break-all">{receiptErrorMessage}</p>
+			</div>
+			<Dialog.Footer>
+				<Button type="button" onclick={() => (receiptErrorDialogOpen = false)}>
+					{m.common_ok()}
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 </div>
