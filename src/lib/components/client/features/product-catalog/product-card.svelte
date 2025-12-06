@@ -55,6 +55,7 @@
 				addedToCart = false;
 			}, 500);
 		} catch (err) {
+			console.error('Error adding to cart:', err);
 			toast.error('Не вдалося додати товар до кошика');
 		}
 	}

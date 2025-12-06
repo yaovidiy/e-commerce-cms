@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { getAllProducts, deleteProduct } from '$lib/remotes/product.remote';
+	import { getAllProducts, deleteProduct, updateAllProductsStatus } from '$lib/remotes/product.remote';
 	import { DataTableWrapper } from '$lib/components/common/data-display';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { DeleteProductDialog } from '$lib/components/admin/features/product-management';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import ProductActionsCellComponent from './product-actions-cell.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Plus } from '@lucide/svelte/icons';
@@ -22,9 +23,28 @@
 	let deletingProduct = $state<Product | null>(null);
 	let deleteDialogOpen = $state(false);
 
+	// Bulk status update dialog state
+	let bulkStatusAction = $state<'active' | 'draft' | null>(null);
+	let bulkStatusDialogOpen = $state(false);
+
 	function openDeleteDialog(product: Product) {
 		deletingProduct = product;
 		deleteDialogOpen = true;
+	}
+
+	function openBulkStatusDialog(status: 'active' | 'draft') {
+		bulkStatusAction = status;
+		bulkStatusDialogOpen = true;
+	}
+
+	async function handleBulkStatusUpdate() {
+		if (!bulkStatusAction) return;
+
+		await updateAllProductsStatus({ status: bulkStatusAction });
+		bulkStatusDialogOpen = false;
+		bulkStatusAction = null;
+		// Refresh the product list
+		getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize }).refresh();
 	}
 
 	function handlePageChange(pageIndex: number) {
@@ -177,6 +197,17 @@
 		</Button>
 	</div>
 
+	<!-- Bulk Actions -->
+	<div class="flex gap-2">
+		<Button variant="outline" onclick={() => openBulkStatusDialog('active')}>
+			{m.product_set_all_active()}
+		</Button>
+
+		<Button variant="outline" onclick={() => openBulkStatusDialog('draft')}>
+			{m.product_set_all_draft()}
+		</Button>
+	</div>
+
 	<!-- Filters -->
 	<div class="flex gap-4">
 		<Input
@@ -224,3 +255,30 @@
 
 <!-- Delete Product Dialog -->
 <DeleteProductDialog bind:product={deletingProduct} bind:open={deleteDialogOpen} />
+
+<!-- Bulk Status Update Dialog -->
+<AlertDialog.Root bind:open={bulkStatusDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Confirm Action</AlertDialog.Title>
+			<AlertDialog.Description>
+				{bulkStatusAction === 'active'
+					? m.product_set_all_products_active()
+					: m.product_set_all_products_draft()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<Button type="button" variant="outline" onclick={() => (bulkStatusDialogOpen = false)}>
+				{m.common_cancel()}
+			</Button>
+			<Button
+				type="button"
+				variant="default"
+				disabled={!!updateAllProductsStatus.pending}
+				onclick={handleBulkStatusUpdate}
+			>
+				{updateAllProductsStatus.pending ? m.common_loading() : m.common_save()}
+			</Button>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

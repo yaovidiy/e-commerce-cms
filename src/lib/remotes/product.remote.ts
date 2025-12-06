@@ -1,4 +1,4 @@
-import { query, form } from '$app/server';
+import { query, form, command } from '$app/server';
 import { db, rawDb } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
 import * as auth from '$lib/server/auth';
@@ -293,5 +293,38 @@ export const searchAutocomplete = query(
 			.all(searchQuery, data.limit);
 
 		return results;
+	}
+);
+
+// Update all products to a specific status
+export const updateAllProductsStatus = command(
+	v.object({
+		status: v.picklist(['draft', 'active', 'archived'])
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		const now = new Date();
+
+		await db
+			.update(tables.product)
+			.set({
+				status: data.status,
+				updatedAt: now
+			})
+			.execute();
+
+		// Invalidate product caches
+		invalidateProductCaches();
+
+		// Refresh product list on server
+		await getAllProducts({
+			name: '',
+			status: 'all',
+			page: 1,
+			pageSize: 20
+		}).refresh();
+
+		return { success: true };
 	}
 );
