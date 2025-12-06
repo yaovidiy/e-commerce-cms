@@ -8,7 +8,7 @@
 	import MobileMenu from '$lib/components/client/widgets/mobile-menu.svelte';
 	import Megamenu from '$lib/components/client/widgets/mega-menu.svelte';
 
-	import Cart from '$lib/components/client/widgets/cart-popover.svelte';
+	import Cart from '$lib/components/client/features/cart/cart-drawer.svelte';
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
 	import Search from '$lib/components/client/widgets/search.svelte';
 	import PhoneDropdown from '$lib/components/client/widgets/phone-dropdown.svelte';
