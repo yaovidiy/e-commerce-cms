@@ -93,7 +93,7 @@ export function getUser() {
 	const user = locals?.user || null;
 
 	if (!user) {
-		redirect(302, '/auth/login');
+		return null;
 	}
 
 	return user;

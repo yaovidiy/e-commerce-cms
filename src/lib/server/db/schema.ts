@@ -704,6 +704,28 @@ export const backgroundTask = sqliteTable('background_task', {
 export type BackgroundTask = typeof backgroundTask.$inferSelect;
 export type InsertBackgroundTask = typeof backgroundTask.$inferInsert;
 
+// Mega Menu - Main navigation items with category relationships
+export const megaMenu = sqliteTable('mega_menu', {
+	id: text('id').primaryKey(),
+	title: text('title').notNull(),
+	
+	// Single category for the main menu item (optional)
+	categoryId: text('category_id')
+		.references(() => category.id),
+	
+	// JSON array of category IDs for the mega menu categories list
+	categories: text('categories').notNull().default('[]'), // JSON array of category IDs
+	
+	displayOrder: integer('display_order').notNull().default(0),
+	isVisible: integer('is_visible', { mode: 'boolean' }).notNull().default(true),
+	
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export type MegaMenu = typeof megaMenu.$inferSelect;
+export type InsertMegaMenu = typeof megaMenu.$inferInsert;
+
 // 
 // CREATE TRIGGER product_fts_delete AFTER DELETE ON product BEGIN
 //   INSERT INTO product_fts(product_fts, rowid, id, name, description, sku) VALUES('delete', old.id, old.id, old.name, old.description, old.sku);

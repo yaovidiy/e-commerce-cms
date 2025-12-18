@@ -6,11 +6,7 @@
 	// TODO: Import controls component when available
 	// import Controls from '$lib/components/client/features/product-catalog/controls.svelte';
 	import ProductList from '$lib/components/client/features/product-catalog/product-list.svelte';
-	// TODO: Import ApiRequest when available
-	// import ApiRequest from '$lib/utils/api';
 	import { getAllPublicProducts } from '$lib/remotes/product.remote';
-	// TODO: Import pagination component when available
-	// import Pagination from '$lib/components/client/features/product-catalog/pagination.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { globalState } from '$lib/state/global.svelte';
 	import { useSearchParams } from 'runed/kit';

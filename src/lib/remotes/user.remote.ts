@@ -152,7 +152,7 @@ export const getUserByUsername = query(v.string(), async (username) => {
 // Auth form functions with session management
 export const login = form(LoginSchema, async (data, invalid) => {
 	const event = getRequestEvent();
-	const { username, password } = data;
+	const { username, password, redirect: redirectUrl } = data;
 
 	const [existingUser] = await db
 		.select()
@@ -183,10 +183,6 @@ export const login = form(LoginSchema, async (data, invalid) => {
 	const session = await auth.createSession(sessionToken, existingUser.id);
 	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
-	// Check for redirect parameter in URL
-	const url = new URL(event.request.url);
-	const redirectUrl = url.searchParams.get('redirect');
-	
 	// Redirect to the specified URL or default to dashboard
 	redirect(303, redirectUrl || '/dashboard');
 });

@@ -4,10 +4,11 @@
 	import { Label } from '$lib/components/ui/label';
 	import { login } from '$lib/remotes/user.remote';
 	import * as m from '$lib/paraglide/messages';
-	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
 
-	
+	// Get redirect URL from query params
+	let redirectUrl = $derived(page.url.searchParams.get('redirect') || '');
 </script>
 
 <form
@@ -21,6 +22,9 @@
 		}
 	})}
 >
+	<!-- Hidden redirect field -->
+	<input {...login.fields.redirect.as('text')} type="hidden" value={redirectUrl} />
+	
 	<div class="space-y-4">
 		<div class="space-y-2">
 			<Label for="username">{m.auth_username()}</Label>

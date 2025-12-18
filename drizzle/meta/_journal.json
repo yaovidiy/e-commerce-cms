@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1762946910121,
-      "tag": "0000_yellow_human_robot",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1763178214772,
-      "tag": "0001_dry_the_enforcers",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1763431115467,
-      "tag": "0002_simple_ego",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1764215163710,
-      "tag": "0003_good_vampiro",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1764902722827,
-      "tag": "0004_kind_blazing_skull",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1765011577775,
-      "tag": "0005_dapper_prism",
+      "when": 1765464307686,
+      "tag": "0000_tricky_dark_beast",
       "breakpoints": true
     }
   ]
