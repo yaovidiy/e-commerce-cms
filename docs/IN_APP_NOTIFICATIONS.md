@@ -269,7 +269,7 @@ async function processDataAsync(userId: string, taskId: string, items: any[]) {
   import NotificationCenter from '$lib/components/common/feedback/notification-center.svelte';
   import BackgroundTaskMonitor from '$lib/components/common/feedback/background-task-monitor.svelte';
   import { unreadNotificationCount, runningTasksCount } from '$lib/state/notification-store';
-  import { Bell, Clock } from 'lucide-svelte';
+  import { Bell, Clock } from '@lucide/svelte';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
 

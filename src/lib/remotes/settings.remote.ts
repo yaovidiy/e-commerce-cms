@@ -1025,3 +1025,102 @@ export const updateAdvancedSettings = form(UpdateAdvancedSettingsSchema, async (
 
 	return await updateMultipleSettingsHelper(settingsToUpdate);
 });
+
+/**
+ * Get Telegram channel ID from database
+ */
+export const getTelegramChannelId = query(async () => {
+	try {
+		const setting = await db
+			.select()
+			.from(tables.settings)
+			.where(eq(tables.settings.key, 'telegram_channel_id'));
+
+		if (setting.length > 0 && setting[0].value) {
+			return {
+				success: true,
+				channelId: setting[0].value,
+				source: 'database' as const,
+				message: ''
+			};
+		}
+
+		// Fallback to environment variable
+		const envChannelId = process.env.TELEGRAM_CHANNEL_ID;
+		if (envChannelId) {
+			return {
+				success: true,
+				channelId: envChannelId,
+				source: 'environment' as const,
+				message: ''
+			};
+		}
+
+		return {
+			success: false,
+			channelId: undefined,
+			message: 'No Telegram channel ID configured',
+			source: 'none' as const
+		};
+	} catch (error) {
+		return {
+			success: false,
+			channelId: undefined,
+			message: error instanceof Error ? error.message : 'Failed to get Telegram channel ID',
+			source: 'none' as const
+		};
+	}
+});
+
+/**
+ * Set Telegram channel ID in database
+ */
+export const setTelegramChannelId = command(
+	v.object({
+		channelId: v.pipe(v.string(), v.minLength(1), v.maxLength(255))
+	}),
+	async (data) => {
+		try {
+			requireAdminUser();
+
+			const now = new Date();
+
+			// Check if setting already exists
+			const existing = await db
+				.select()
+				.from(tables.settings)
+				.where(eq(tables.settings.key, 'telegram_channel_id'));
+
+			if (existing.length > 0) {
+				// Update existing
+				await db
+					.update(tables.settings)
+					.set({
+						value: data.channelId,
+						updatedAt: now
+					})
+					.where(eq(tables.settings.key, 'telegram_channel_id'));
+			} else {
+				// Insert new
+				await db.insert(tables.settings).values({
+					key: 'telegram_channel_id',
+					value: data.channelId,
+					description: 'Telegram channel ID for receiving order notifications',
+					createdAt: now,
+					updatedAt: now
+				});
+			}
+
+			return {
+				success: true,
+				message: 'Telegram channel ID saved successfully',
+				channelId: data.channelId
+			};
+		} catch (error) {
+			return {
+				success: false,
+				message: error instanceof Error ? error.message : 'Failed to save Telegram channel ID'
+			};
+		}
+	}
+);

@@ -242,6 +242,15 @@ export const emailSettings = sqliteTable('email_settings', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
 
+// General settings table - stores key-value configuration pairs
+export const settings = sqliteTable('settings', {
+	key: text('key').primaryKey(), // e.g., 'telegram_channel_id', 'site_name'
+	value: text('value').notNull(), // JSON string for flexibility
+	description: text('description'), // Human-readable description
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -281,6 +290,9 @@ export type InsertCheckboxShift = typeof checkboxShift.$inferInsert;
 
 export type EmailSettings = typeof emailSettings.$inferSelect;
 export type InsertEmailSettings = typeof emailSettings.$inferInsert;
+
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = typeof settings.$inferInsert;
 
 // Notification template types
 export type NotificationChannelType = 'email' | 'sms';

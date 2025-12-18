@@ -8,6 +8,13 @@
       "when": 1765464307686,
       "tag": "0000_tricky_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1766057944694,
+      "tag": "0001_whole_ricochet",
+      "breakpoints": true
     }
   ]
 }

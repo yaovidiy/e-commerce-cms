@@ -1,4 +1,5 @@
 import { error as logError } from 'console';
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID } from '$env/static/private';
 
 export interface TelegramClientConfig {
   botToken: string;
@@ -104,6 +105,7 @@ export class TelegramClient {
           status: response.status,
           error: data.description,
           errorCode: data.error_code,
+          ...(params.chat_id && { chat_id: params.chat_id, chat_id_type: typeof params.chat_id }),
         });
       }
 
@@ -124,6 +126,75 @@ export class TelegramClient {
   async getMe(): Promise<TelegramUser | null> {
     const response = await this.request<TelegramUser>('getMe', {});
     return response.ok && response.result ? response.result : null;
+  }
+
+  /**
+   * Gets information about a chat to verify bot access and permissions
+   * Reference: https://core.telegram.org/bots/api#getchat
+   */
+  async getChatInfo(): Promise<{ ok: boolean; message: string; data?: unknown }> {
+    try {
+      const response = await this.request<unknown>('getChat', {
+        chat_id: this.channelId,
+      });
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          message: `Cannot access chat: ${response.description || 'Unknown error'}. Make sure: 
+1. The bot is added to the channel/group as an admin
+2. The channel ID is correct
+3. The channel/group is not private or restricted`,
+        };
+      }
+
+      return {
+        ok: true,
+        message: 'Bot has access to the chat',
+        data: response.result,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        message: `Error checking chat access: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      };
+    }
+  }
+
+  /**
+   * Validates that the bot can send messages to the configured chat
+   * This should be called before attempting to send any messages
+   */
+  async validateChannelAccess(): Promise<{ valid: boolean; message: string }> {
+    try {
+      // First check if bot token is valid
+      const botInfo = await this.getMe();
+      if (!botInfo) {
+        return {
+          valid: false,
+          message: 'Invalid bot token. Check TELEGRAM_BOT_TOKEN in environment variables.',
+        };
+      }
+
+      // Then check if bot can access the chat
+      const chatInfo = await this.getChatInfo();
+      if (!chatInfo.ok) {
+        return {
+          valid: false,
+          message: chatInfo.message,
+        };
+      }
+
+      return {
+        valid: true,
+        message: `✅ Bot is ready! Connected to chat with ID: ${this.channelId}`,
+      };
+    } catch (err) {
+      return {
+        valid: false,
+        message: `Validation error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      };
+    }
   }
 
   /**
@@ -506,15 +577,90 @@ export class TelegramClient {
 }
 
 /**
+ * Get Telegram channel ID from database or environment
+ * Returns {channelId, source} where source is 'database' or 'environment'
+ */
+async function getTelegramChannelIdWithFallback(): Promise<{
+  channelId: string | number;
+  source: 'database' | 'environment';
+}> {
+  try {
+    // Try to get from database first
+    const { getTelegramChannelId } = await import('$lib/remotes/settings.remote');
+    const result = await getTelegramChannelId();
+
+    if (result.success && result.channelId) {
+      // Convert channel ID to number if it's numeric
+      let channelId: string | number = result.channelId;
+      if (/^-?\d+$/.test(result.channelId)) {
+        channelId = parseInt(result.channelId, 10);
+      }
+
+      return {
+        channelId,
+        source: result.source
+      };
+    }
+  } catch (error) {
+    logError('Failed to get channel ID from database, falling back to environment:', error);
+  }
+
+  // Fallback to environment variable
+  const channelIdEnv = TELEGRAM_CHANNEL_ID;
+  if (!channelIdEnv) {
+    throw new Error(
+      'No Telegram channel ID found in database or TELEGRAM_CHANNEL_ID environment variable'
+    );
+  }
+
+  // Convert channel ID to number if it's numeric
+  let channelId: string | number = channelIdEnv;
+  if (/^-?\d+$/.test(channelIdEnv)) {
+    channelId = parseInt(channelIdEnv, 10);
+  }
+
+  return {
+    channelId,
+    source: 'environment'
+  };
+}
+
+/**
  * Factory function to create a Telegram client
  */
 export function createTelegramClient(): TelegramClient {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  const botToken = TELEGRAM_BOT_TOKEN;
+  const channelIdEnv = TELEGRAM_CHANNEL_ID;
 
-  if (!botToken || !channelId) {
+  if (!botToken || !channelIdEnv) {
     throw new Error('TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID environment variables are required');
   }
+
+  // Convert channel ID to number if it's numeric, otherwise keep as string for @username format
+  let channelId: string | number = channelIdEnv;
+  if (/^-?\d+$/.test(channelIdEnv)) {
+    channelId = parseInt(channelIdEnv, 10);
+  }
+
+  return new TelegramClient({
+    botToken,
+    channelId,
+  });
+}
+
+/**
+ * Async factory function to create a Telegram client with DB-first, env-fallback
+ */
+export async function createTelegramClientWithDbFallback(): Promise<TelegramClient> {
+  const botToken = TELEGRAM_BOT_TOKEN;
+
+  if (!botToken) {
+    throw new Error('TELEGRAM_BOT_TOKEN environment variable is required');
+  }
+
+  const { channelId, source } = await getTelegramChannelIdWithFallback();
+
+  console.log(`[Telegram] Using channel ID from ${source}:`, channelId);
 
   return new TelegramClient({
     botToken,

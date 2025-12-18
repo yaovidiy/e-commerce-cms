@@ -7,7 +7,8 @@ import * as tables from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
- * Sends a Telegram test message to verify bot is working
+ * Tests Telegram bot connection by getting bot info
+ * This is a lightweight check that verifies the bot token is valid
  */
 export const testTelegramConnection = command(v.object({}), async () => {
   try {
@@ -15,25 +16,16 @@ export const testTelegramConnection = command(v.object({}), async () => {
     const user = await client.getMe();
 
     if (!user) {
-      throw new Error('Failed to get bot info');
-    }
-
-    const testMessage = await client.sendMessage(
-      `<b>🤖 Bot Connection Test Successful</b>\n\n` +
-      `<b>Bot Name:</b> ${user.first_name}\n` +
-      `<b>Bot ID:</b> <code>${user.id}</code>\n` +
-      `<b>Test Time:</b> ${new Date().toLocaleString()}`
-    );
-
-    if (!testMessage) {
-      throw new Error('Failed to send test message');
+      throw new Error('Failed to get bot info. Check your TELEGRAM_BOT_TOKEN.');
     }
 
     return {
       success: true,
-      message: 'Telegram bot connection verified successfully',
+      message: `✅ Bot connection successful! Bot: ${user.first_name} (ID: ${user.id})`,
       botId: user.id,
       botName: user.first_name,
+      isBot: user.is_bot,
+      username: user.username,
     };
   } catch (error) {
     return {

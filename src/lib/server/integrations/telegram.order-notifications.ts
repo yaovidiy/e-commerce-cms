@@ -1,9 +1,10 @@
 import { TelegramClient } from './telegram.client';
-import type { Order, OrderItem } from '$lib/server/db/schema';
+import * as tables from '$lib/server/db/schema';
+import * as m from '$lib/paraglide/messages';
 
 export interface OrderNotificationPayload {
-  order: typeof Order.$inferSelect;
-  items: (typeof OrderItem.$inferSelect)[];
+  order: typeof tables.order.$inferSelect;
+  items: (typeof tables.orderItem.$inferSelect)[];
   customerEmail?: string;
   customerPhone?: string;
   customerName?: string;
@@ -25,6 +26,8 @@ export class TelegramOrderNotificationService {
    */
   private formatOrderMessage(payload: OrderNotificationPayload): string {
     const { order, items, customerEmail, customerPhone, customerName } = payload;
+    const origin = process.env.ORIGIN || 'http://localhost:5173';
+    const orderPageUrl = `${origin}/admin/orders/${order.id}`;
 
     const itemsList = items
       .map((item) => {
@@ -37,40 +40,41 @@ export class TelegramOrderNotificationService {
     const shippingCost = (order.shippingCost || 0) / 100;
     const discount = (order.discount || 0) / 100;
 
-    let message = `<b>📦 New Order</b>\n`;
-    message += `<b>Order ID:</b> <code>${order.id}</code>\n`;
-    message += `<b>Status:</b> ${this.getStatusEmoji(order.status)} ${order.status}\n\n`;
+    let message = `<b>${m.telegram_order_new()}</b>\n`;
+    message += `<b>${m.telegram_order_id()}:</b> <a href="${orderPageUrl}"><code>${order.id}</code></a>\n`;
+    message += `<b>${m.telegram_order_status()}:</b> ${this.getStatusEmoji(order.status)} ${order.status}\n\n`;
 
     if (customerName) {
-      message += `<b>👤 Customer:</b> ${customerName}\n`;
+      message += `<b>${m.telegram_customer()}:</b> ${customerName}\n`;
     }
     if (customerEmail) {
-      message += `<b>📧 Email:</b> <code>${customerEmail}</code>\n`;
+      message += `<b>${m.telegram_customer_email()}:</b> <code>${customerEmail}</code>\n`;
     }
     if (customerPhone) {
-      message += `<b>📞 Phone:</b> <code>${customerPhone}</code>\n`;
+      message += `<b>${m.telegram_customer_phone()}:</b> <code>${customerPhone}</code>\n`;
     }
 
     if (customerEmail || customerPhone || customerName) {
       message += '\n';
     }
 
-    message += `<b>📋 Items:</b>\n${itemsList}\n\n`;
+    message += `<b>${m.telegram_items()}:</b>\n${itemsList}\n\n`;
 
-    message += `<b>💰 Totals:</b>\n`;
+    message += `<b>${m.telegram_totals()}:</b>\n`;
     if (shippingCost > 0) {
-      message += `Shipping: ₴${shippingCost.toFixed(2)}\n`;
+      message += `${m.telegram_shipping()}: ₴${shippingCost.toFixed(2)}\n`;
     }
     if (discount > 0) {
-      message += `Discount: -₴${discount.toFixed(2)}\n`;
+      message += `${m.telegram_discount()}: -₴${discount.toFixed(2)}\n`;
     }
-    message += `<b>Total: ₴${orderTotal.toFixed(2)}</b>\n`;
+    message += `<b>${m.telegram_total()}: ₴${orderTotal.toFixed(2)}</b>\n`;
 
     if (order.notes) {
-      message += `\n<b>📝 Notes:</b>\n<i>${this.escapeHtml(order.notes)}</i>`;
+      message += `\n<b>${m.telegram_notes()}:</b>\n<i>${this.escapeHtml(order.notes)}</i>`;
     }
 
-    message += `\n<b>Date:</b> ${new Date(order.createdAt).toLocaleString()}`;
+    message += `\n<b>${m.telegram_date()}:</b> ${new Date(order.createdAt).toLocaleString()}\n`;
+    message += `\n<a href="${orderPageUrl}">${m.telegram_view_order()}</a>`;
 
     return message;
   }
@@ -123,7 +127,7 @@ export class TelegramOrderNotificationService {
    * Sends an order status update
    */
   async notifyOrderStatusUpdate(
-    order: typeof Order.$inferSelect,
+    order: typeof tables.order.$inferSelect,
     oldStatus: string,
     newStatus: string
   ): Promise<boolean> {
@@ -145,7 +149,7 @@ export class TelegramOrderNotificationService {
    * Sends an order cancellation notification
    */
   async notifyOrderCancellation(
-    order: typeof Order.$inferSelect,
+    order: typeof tables.order.$inferSelect,
     reason?: string
   ): Promise<boolean> {
     try {
@@ -170,7 +174,7 @@ export class TelegramOrderNotificationService {
    * Sends an order payment received notification
    */
   async notifyPaymentReceived(
-    order: typeof Order.$inferSelect,
+    order: typeof tables.order.$inferSelect,
     paymentMethod?: string
   ): Promise<boolean> {
     try {
@@ -250,7 +254,7 @@ export class TelegramOrderNotificationService {
    * Sends a delivery confirmation notification
    */
   async notifyDeliveryConfirmation(
-    order: typeof Order.$inferSelect,
+    order: typeof tables.order.$inferSelect,
     trackingNumber?: string,
     estimatedDeliveryDate?: Date
   ): Promise<boolean> {

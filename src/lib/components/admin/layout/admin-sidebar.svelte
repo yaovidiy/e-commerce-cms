@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import * as Collapsible from '$lib/components/ui/collapsible';
-	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown, MessageSquare, Bell, MapPin, CreditCard, ListChecks } from '@lucide/svelte/icons';
+	import { FileText, Users, Image, Package, FolderTree, Tag, Receipt, Mail, Truck, Percent, Settings, Frame, Layout, BarChart, Menu, Database, ShoppingCart, ChevronDown, MessageSquare, Bell, MapPin, CreditCard, ListChecks, Send } from '@lucide/svelte/icons';
 	import * as m from '$lib/paraglide/messages';
 	import { me } from '$lib/remotes/user.remote';
 	import { goto } from '$app/navigation';
@@ -153,6 +153,11 @@
 					title: () => m.sms_management?.() || 'SMS Management',
 					url: '/admin/sms',
 					icon: MessageSquare
+				},
+				{
+					title: () => 'Telegram Integration',
+					url: '/admin/telegram',
+					icon: Send
 				},
 				{
 					title: () => m.settings(),
