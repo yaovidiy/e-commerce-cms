@@ -11,11 +11,13 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { RichTextEditor, AssetBrowser } from '$lib/components/common/forms';
 	import * as Card from '$lib/components/ui/card';
+	import * as Select from '$lib/components/ui/select';
 	import * as m from '$lib/paraglide/messages';
 	import { ArrowLeft, Link, Plus, X } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { generateSlug } from '$lib/utils';
 	import type { Asset } from '$lib/server/db/schema';
+	import ProductTierManager from '$lib/components/admin/features/product-management/product-tier-manager.svelte';
 
 	const productId = page.params.id;
 
@@ -57,6 +59,8 @@
 				updateProduct.fields.brandId.set(product.brandId || '');
 				updateProduct.fields.seoTitle.set(product.seoTitle || '');
 				updateProduct.fields.seoDescription.set(product.seoDescription || '');
+				updateProduct.fields.priceUnit.set(product.priceUnit || 'unit');
+				updateProduct.fields.weight.set(product.weight || 0);
 
 				// Set description for rich text editor
 				descriptionValue = product.description || '';
@@ -294,6 +298,78 @@
 								<p class="text-destructive text-sm">{issue.message}</p>
 							{/each}
 						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Price Unit Configuration -->
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>{m.product_price_unit()}</Card.Title>
+						<Card.Description>{m.product_price_unit_help()}</Card.Description>
+					</Card.Header>
+					<Card.Content class="space-y-4">
+						<div class="grid gap-4 md:grid-cols-2">
+							<!-- Price Unit -->
+							<div class="space-y-2">
+								<Label>{m.product_price_unit()}</Label>
+								<Select.Root
+									value={updateProduct.fields.priceUnit.value()}
+									onValueChange={(value) => {
+										if (value) {
+											updateProduct.fields.priceUnit.set(value as any);
+										}
+									}}
+								>
+									<Select.Trigger>
+										{updateProduct.fields.priceUnit.value() === 'unit'
+											? m.product_price_unit_per_unit()
+											: updateProduct.fields.priceUnit.value() === 'per_100g'
+												? m.product_price_unit_per_100g()
+												: updateProduct.fields.priceUnit.value() === 'per_kg'
+													? m.product_price_unit_per_kg()
+													: updateProduct.fields.priceUnit.value() === 'per_liter'
+														? m.product_price_unit_per_liter()
+														: m.product_price_unit_per_ml()}
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value="unit">{m.product_price_unit_per_unit()}</Select.Item>
+										<Select.Item value="per_100g">{m.product_price_unit_per_100g()}</Select.Item>
+										<Select.Item value="per_kg">{m.product_price_unit_per_kg()}</Select.Item>
+										<Select.Item value="per_liter">{m.product_price_unit_per_liter()}</Select.Item>
+										<Select.Item value="per_ml">{m.product_price_unit_per_ml()}</Select.Item>
+									</Select.Content>
+								</Select.Root>
+								{#each updateProduct.fields.priceUnit.issues() as issue}
+									<p class="text-destructive text-sm">{issue.message}</p>
+								{/each}
+							</div>
+
+							<!-- Weight (for weight-based units) -->
+							<div class="space-y-2">
+								<Label>{m.product_weight()}</Label>
+								<Input
+									{...updateProduct.fields.weight.as('number')}
+									placeholder="100"
+									min="1"
+									step="1"
+								/>
+								<p class="text-muted-foreground text-xs">{m.product_weight_help()}</p>
+								{#each updateProduct.fields.weight.issues() as issue}
+									<p class="text-destructive text-sm">{issue.message}</p>
+								{/each}
+							</div>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Tiered Pricing -->
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>{m.product_tiered_pricing()}</Card.Title>
+						<Card.Description>{m.product_enable_tiered_pricing_help()}</Card.Description>
+					</Card.Header>
+					<Card.Content>
+						<ProductTierManager {productId} />
 					</Card.Content>
 				</Card.Root>
 

@@ -96,6 +96,12 @@ export const product = sqliteTable('product', {
 	variants: text('variants'), // JSON for size/color variations
 	seoTitle: text('seo_title'),
 	seoDescription: text('seo_description'),
+	// Pricing unit fields
+	priceUnit: text('price_unit', { enum: ['unit', 'per_100g', 'per_kg', 'per_liter', 'per_ml'] })
+		.notNull()
+		.default('unit'), // unit, per_100g, per_kg, per_liter, per_ml
+	weight: integer('weight'), // weight/size in grams (for weight-based units), or null for per-unit pricing
+	hasMultiplePrices: integer('has_multiple_prices', { mode: 'boolean' }).notNull().default(0), // true if product has tiered pricing
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
@@ -109,6 +115,16 @@ export const cart = sqliteTable('cart', {
 	total: integer('total').notNull().default(0), // stored in cents
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const productTier = sqliteTable('product_tier', {
+	id: text('id').primaryKey(),
+	productId: text('product_id')
+		.notNull()
+		.references(() => product.id, { onDelete: 'cascade' }),
+	minQuantity: integer('min_quantity').notNull(), // minimum quantity to apply discount
+	discount: integer('discount').notNull(), // discount percentage (0-100)
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
 export const order = sqliteTable('order', {
@@ -269,6 +285,9 @@ export type InsertBrand = typeof brand.$inferInsert;
 
 export type Product = typeof product.$inferSelect;
 export type InsertProduct = typeof product.$inferInsert;
+
+export type ProductTier = typeof productTier.$inferSelect;
+export type InsertProductTier = typeof productTier.$inferInsert;
 
 export type Cart = typeof cart.$inferSelect;
 export type InsertCart = typeof cart.$inferInsert;

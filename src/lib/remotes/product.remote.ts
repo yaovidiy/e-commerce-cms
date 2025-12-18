@@ -7,7 +7,11 @@ import {
 	CreateProductSchema,
 	UpdateProductSchema,
 	DeleteProductSchema,
-	FilterProductsSchema
+	FilterProductsSchema,
+	CreateProductTierSchema,
+	UpdateProductTierSchema,
+	DeleteProductTierSchema,
+	GetProductTiersSchema
 } from '$lib/server/schemas';
 import { eq, like, and, desc, count, asc } from 'drizzle-orm';
 import { productCache, withCache, invalidateProductCaches } from '$lib/server/cache';
@@ -402,3 +406,165 @@ export const updateAllProductsStatus = command(
 		return { success: true };
 	}
 );
+
+// ==================== PRODUCT TIER PRICING ====================
+
+// Get all tiers for a product
+export const getProductTiers = query(
+	v.object({
+		productId: v.string()
+	}),
+	async (data) => {
+		const tiers = await db
+			.select()
+			.from(tables.productTier)
+			.where(eq(tables.productTier.productId, data.productId))
+			.orderBy(asc(tables.productTier.minQuantity));
+
+		return tiers;
+	}
+);
+
+// Create a new tier for a product
+export const createProductTier = command(
+	CreateProductTierSchema,
+	async (data) => {
+		auth.requireAdminUser();
+
+		// Verify product exists
+		const [product] = await db
+			.select()
+			.from(tables.product)
+			.where(eq(tables.product.id, data.productId));
+
+		if (!product) {
+			throw new Error('Product not found');
+		}
+
+		// Check if tier with this minQuantity already exists
+		const [existing] = await db
+			.select()
+			.from(tables.productTier)
+			.where(
+				and(
+					eq(tables.productTier.productId, data.productId),
+					eq(tables.productTier.minQuantity, data.minQuantity)
+				)
+			);
+
+		if (existing) {
+			throw new Error('Tier with this minimum quantity already exists');
+		}
+
+		const [tier] = await db
+			.insert(tables.productTier)
+			.values({
+				id: crypto.randomUUID(),
+				productId: data.productId,
+				minQuantity: data.minQuantity,
+				discount: data.discount,
+				createdAt: new Date()
+			})
+			.returning();
+
+		// Mark product as having multiple prices
+		await db
+			.update(tables.product)
+			.set({
+				hasMultiplePrices: true,
+				updatedAt: new Date()
+			})
+			.where(eq(tables.product.id, data.productId));
+
+		// Refresh product cache and tier list
+		invalidateProductCaches();
+		await getProductTiers({ productId: data.productId }).refresh();
+
+		return tier;
+	}
+);
+
+// Update a product tier
+export const updateProductTier = form(
+	UpdateProductTierSchema,
+	async (data) => {
+		auth.requireAdminUser();
+
+		// Get existing tier
+		const [tier] = await db
+			.select()
+			.from(tables.productTier)
+			.where(eq(tables.productTier.id, data.id));
+
+		if (!tier) {
+			throw new Error('Tier not found');
+		}
+
+		// Update tier
+		const updates: Record<string, any> = {};
+		if (data.minQuantity !== undefined) {
+			updates.minQuantity = data.minQuantity;
+		}
+		if (data.discount !== undefined) {
+			updates.discount = data.discount;
+		}
+
+		const [updated] = await db
+			.update(tables.productTier)
+			.set(updates)
+			.where(eq(tables.productTier.id, data.id))
+			.returning();
+
+		// Refresh tier list
+		invalidateProductCaches();
+		await getProductTiers({ productId: tier.productId }).refresh();
+
+		return updated;
+	}
+);
+
+// Delete a product tier
+export const deleteProductTier = form(
+	v.object({
+		id: v.string()
+	}),
+	async (data) => {
+		auth.requireAdminUser();
+
+		// Get tier to find product
+		const [tier] = await db
+			.select()
+			.from(tables.productTier)
+			.where(eq(tables.productTier.id, data.id));
+
+		if (!tier) {
+			throw new Error('Tier not found');
+		}
+
+		// Delete tier
+		await db.delete(tables.productTier).where(eq(tables.productTier.id, data.id));
+
+		// Check if product still has tiers
+		const [remainingTier] = await db
+			.select()
+			.from(tables.productTier)
+			.where(eq(tables.productTier.productId, tier.productId))
+			.limit(1);
+
+		// Update product's hasMultiplePrices flag
+		await db
+			.update(tables.product)
+			.set({
+				hasMultiplePrices: !!remainingTier,
+				updatedAt: new Date()
+			})
+			.where(eq(tables.product.id, tier.productId));
+
+		// Refresh tier list
+		invalidateProductCaches();
+		await getProductTiers({ productId: tier.productId }).refresh();
+
+		return { success: true };
+	}
+);
+

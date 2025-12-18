@@ -1,0 +1,1 @@
+ALTER TABLE `product_tier` RENAME COLUMN `price` TO `discount`;

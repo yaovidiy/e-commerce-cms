@@ -9,11 +9,13 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { RichTextEditor, AssetBrowser } from '$lib/components/common/forms';
 	import * as Card from '$lib/components/ui/card';
+	import * as Select from '$lib/components/ui/select';
 	import * as m from '$lib/paraglide/messages';
 	import { ArrowLeft, Link, Plus, X } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { generateSlug } from '$lib/utils';
 	import type { Asset } from '$lib/server/db/schema';
+	import ProductTierManager from '$lib/components/admin/features/product-management/product-tier-manager.svelte';
 
 	// Local state for rich text editor
 	let descriptionValue = $state('');
@@ -225,6 +227,67 @@
 				</Card.Content>
 			</Card.Root>
 
+			<!-- Price Unit Configuration -->
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>{m.product_price_unit()}</Card.Title>
+					<Card.Description>{m.product_price_unit_help()}</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="grid gap-4 md:grid-cols-2">
+						<!-- Price Unit -->
+						<div class="space-y-2">
+							<Label>{m.product_price_unit()}</Label>
+							<Select.Root
+								value={createProduct.fields.priceUnit.value()}
+								onValueChange={(value) => {
+									if (value) {
+										createProduct.fields.priceUnit.set(value as any);
+									}
+								}}
+							>
+								<Select.Trigger>
+									{createProduct.fields.priceUnit.value() === 'unit'
+										? m.product_price_unit_per_unit()
+										: createProduct.fields.priceUnit.value() === 'per_100g'
+											? m.product_price_unit_per_100g()
+											: createProduct.fields.priceUnit.value() === 'per_kg'
+												? m.product_price_unit_per_kg()
+												: createProduct.fields.priceUnit.value() === 'per_liter'
+													? m.product_price_unit_per_liter()
+													: m.product_price_unit_per_ml()}
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Item value="unit">{m.product_price_unit_per_unit()}</Select.Item>
+									<Select.Item value="per_100g">{m.product_price_unit_per_100g()}</Select.Item>
+									<Select.Item value="per_kg">{m.product_price_unit_per_kg()}</Select.Item>
+									<Select.Item value="per_liter">{m.product_price_unit_per_liter()}</Select.Item>
+									<Select.Item value="per_ml">{m.product_price_unit_per_ml()}</Select.Item>
+								</Select.Content>
+							</Select.Root>
+							{#each createProduct.fields.priceUnit.issues() as issue}
+								<p class="text-destructive text-sm">{issue.message}</p>
+							{/each}
+						</div>
+
+						<!-- Weight (for weight-based units) -->
+						<div class="space-y-2">
+							<Label>{m.product_weight()}</Label>
+							<Input
+								{...createProduct.fields.weight.as('number')}
+								placeholder="100"
+								min="1"
+								step="1"
+							/>
+							<p class="text-muted-foreground text-xs">{m.product_weight_help()}</p>
+							{#each createProduct.fields.weight.issues() as issue}
+								<p class="text-destructive text-sm">{issue.message}</p>
+							{/each}
+						</div>
+					</div>
+				</Card.Content>
+			</Card.Root>
+
 			<!-- Inventory -->
 			<Card.Root>
 				<Card.Header>
@@ -425,6 +488,21 @@
 							<p class="text-destructive text-sm">{issue.message}</p>
 						{/each}
 					</div>
+				</Card.Content>
+			</Card.Root>
+
+			<!-- Tiered Pricing Info -->
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>{m.product_tiered_pricing()}</Card.Title>
+				</Card.Header>
+				<Card.Content class="space-y-3">
+					<p class="text-sm text-muted-foreground">
+						{m.product_enable_tiered_pricing_help()}
+					</p>
+					<p class="text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 p-3 rounded">
+						💡 Create the product first, then you can add price tiers from the product edit page.
+					</p>
 				</Card.Content>
 			</Card.Root>
 

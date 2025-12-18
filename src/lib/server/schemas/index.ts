@@ -211,7 +211,11 @@ export const CreateProductSchema = v.object({
 	images: v.optional(v.string()), // JSON string
 	variants: v.optional(v.string()), // JSON string
 	seoTitle: v.optional(v.string()),
-	seoDescription: v.optional(v.string())
+	seoDescription: v.optional(v.string()),
+	// Pricing unit fields
+	priceUnit: v.optional(v.picklist(['unit', 'per_100g', 'per_kg', 'per_liter', 'per_ml']), 'unit'),
+	weight: v.optional(v.pipe(v.number(), v.minValue(1))), // weight in grams
+	hasMultiplePrices: v.optional(v.boolean(), false)
 });
 
 export const UpdateProductSchema = v.object({
@@ -233,7 +237,11 @@ export const UpdateProductSchema = v.object({
 	images: v.optional(v.string()),
 	variants: v.optional(v.string()),
 	seoTitle: v.optional(v.string()),
-	seoDescription: v.optional(v.string())
+	seoDescription: v.optional(v.string()),
+	// Pricing unit fields
+	priceUnit: v.optional(v.picklist(['unit', 'per_100g', 'per_kg', 'per_liter', 'per_ml'])),
+	weight: v.optional(v.pipe(v.number(), v.minValue(1))),
+	hasMultiplePrices: v.optional(v.boolean())
 });
 
 export const DeleteProductSchema = v.object({
@@ -247,6 +255,27 @@ export const FilterProductsSchema = v.object({
 	brandId: v.optional(v.string()),
 	page: v.optional(v.pipe(v.number(), v.minValue(1)), 1),
 	pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20)
+});
+
+// Product tier discount schemas
+export const CreateProductTierSchema = v.object({
+	productId: v.string(),
+	minQuantity: v.pipe(v.number(), v.minValue(1)),
+	discount: v.pipe(v.number(), v.minValue(0), v.maxValue(100)) // discount percentage 0-100
+});
+
+export const UpdateProductTierSchema = v.object({
+	id: v.string(),
+	minQuantity: v.optional(v.pipe(v.number(), v.minValue(1))),
+	discount: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(100)))
+});
+
+export const DeleteProductTierSchema = v.object({
+	id: v.string()
+});
+
+export const GetProductTiersSchema = v.object({
+	productId: v.string()
 });
 
 // Cart schemas
