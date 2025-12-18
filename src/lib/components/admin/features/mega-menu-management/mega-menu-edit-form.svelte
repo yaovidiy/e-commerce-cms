@@ -36,7 +36,8 @@
 
 	function handleCategoriesSelect(categoryIds: string[]) {
 		selectedCategoryIds = categoryIds;
-		form.fields.categories.set(categoryIds);
+		// Convert array to comma-separated string for form submission
+		form.fields.categories.set(categoryIds.join(','));
 	}
 
 	// Pre-fill form on mount
@@ -45,7 +46,7 @@
 			id: item.id,
 			title: item.title,
 			categoryId: item.categoryId || '',
-			categories: item.categories || [],
+			categories: item.categories ? item.categories.join(',') : '',
 			isVisible: item.isVisible,
 			displayOrder: item.displayOrder
 		});
@@ -64,7 +65,8 @@
 	watch(
 		() => selectedCategoryIds,
 		() => {
-			form.fields.categories.set(selectedCategoryIds);
+			// Convert array to comma-separated string for form submission
+			form.fields.categories.set(selectedCategoryIds.join(','));
 		}
 	);
 
@@ -97,6 +99,18 @@
 			<p class="text-destructive text-sm">{issue.message}</p>
 		{/each}
 	</div>
+
+	<!-- Hidden inputs for categoryId and categories - always in form -->
+	<Input
+		{...form.fields.categoryId.as('text')}
+		placeholder={m.mega_menu_main_category()}
+		type="hidden"
+	/>
+	<Input
+		{...form.fields.categories.as('text')}
+		placeholder={m.common_categories()}
+		type="hidden"
+	/>
 
 	<!-- Main Category (Single select) -->
 	<div class="space-y-2">

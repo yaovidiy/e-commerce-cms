@@ -84,6 +84,14 @@ export const createMegaMenu = form(CreateMegaMenuSchema, async (data) => {
 
 	const now = new Date();
 
+	// Parse categories string into array
+	const categoriesArray = data.categories
+		? data.categories
+				.split(',')
+				.map((id) => id.trim())
+				.filter((id) => id.length > 0)
+		: [];
+
 	console.log('Creating mega menu with data:', data);
 
 	const [newItem] = await db
@@ -92,7 +100,7 @@ export const createMegaMenu = form(CreateMegaMenuSchema, async (data) => {
 			id: crypto.randomUUID(),
 			title: data.title,
 			categoryId: data.categoryId || null,
-			categories: JSON.stringify(data.categories || []),
+			categories: JSON.stringify(categoriesArray),
 			isVisible: data.isVisible,
 			displayOrder: data.displayOrder,
 			createdAt: now,
@@ -122,8 +130,16 @@ export const updateMegaMenu = form(UpdateMegaMenuSchema, async (data) => {
 
 	if (updateData.title !== undefined) updateObject.title = updateData.title;
 	if (updateData.categoryId !== undefined) updateObject.categoryId = updateData.categoryId || null;
-	if (updateData.categories !== undefined)
-		updateObject.categories = JSON.stringify(updateData.categories || []);
+	if (updateData.categories !== undefined) {
+		// Parse categories string into array
+		const categoriesArray = updateData.categories
+			? updateData.categories
+					.split(',')
+					.map((categoryId) => categoryId.trim())
+					.filter((categoryId) => categoryId.length > 0)
+			: [];
+		updateObject.categories = JSON.stringify(categoriesArray);
+	}
 	if (updateData.isVisible !== undefined) updateObject.isVisible = updateData.isVisible;
 	if (updateData.displayOrder !== undefined) updateObject.displayOrder = updateData.displayOrder;
 

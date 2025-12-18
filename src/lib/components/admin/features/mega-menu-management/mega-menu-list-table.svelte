@@ -1,20 +1,18 @@
 <script lang="ts">
 	import { getAllMegaMenus } from '$lib/remotes/mega-menu.remote';
-	import { getAllCategories } from '$lib/remotes/category.remote';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { Badge } from '$lib/components/ui/badge';
 	import * as m from '$lib/paraglide/messages';
 	import { DataTableWrapper } from '$lib/components/common/data-display';
 	import MegaMenuForm from './mega-menu-form.svelte';
 	import DeleteMegaMenuDialog from './delete-mega-menu-dialog.svelte';
 	import MegaMenuActionsCell from './mega-menu-actions-cell.svelte';
+	import MegaMenuCategoryItemsList from './mega-menu-category-items-list.svelte';
 	import { renderComponent, renderSnippet } from '$lib/components/ui/data-table';
-	import { onMount, createRawSnippet } from 'svelte';
+	import { createRawSnippet } from 'svelte';
 	import type { ColumnDef } from '@tanstack/table-core';
 	import type { MegaMenu } from '$lib/server/db/schema';
-	import MegaMenuCategoryItemsList from './mega-menu-category-items-list.svelte';
 
 	let searchQuery = $state('');
 	let currentPage = $state(1);
@@ -24,8 +22,6 @@
 	let editDialogOpen = $state(false);
 	let deleteDialogOpen = $state(false);
 	let deletingItem = $state<MegaMenu | null>(null);
-
-	let categoriesMap = $state<Map<string, string>>(new Map());
 
 	function handlePageChange(pageIndex: number) {
 		currentPage = pageIndex + 1;
@@ -41,16 +37,6 @@
 		deleteDialogOpen = true;
 	}
 
-	onMount(async () => {
-		// Load all categories to build a map of id to name
-		const result = await getAllCategories({ search: '', page: 1, pageSize: 1000 });
-		const newMap = new Map<string, string>();
-		result.data.forEach((cat) => {
-			newMap.set(cat.id, cat.name);
-		});
-		categoriesMap = newMap;
-	});
-
 	const columns: ColumnDef<MegaMenu>[] = [
 		{
 			accessorKey: 'title',
@@ -65,7 +51,7 @@
 				if (!categoryId) return '-';
 
 				return renderComponent(MegaMenuCategoryItemsList, {
-					categoryIds: categoryId ? [categoryId] : []
+					categoryIds: [categoryId]
 				});
 			}
 		},

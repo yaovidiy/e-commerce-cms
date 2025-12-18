@@ -23,7 +23,8 @@
 
 	function handleCategoriesSelect(categoryIds: string[]) {
 		selectedCategoryIds = categoryIds;
-		form.fields.categories.set(categoryIds);
+		// Convert array to comma-separated string for form submission
+		form.fields.categories.set(categoryIds.join(','));
 	}
 
 	// Auto-sync form fields with component state
@@ -37,7 +38,8 @@
 	watch(
 		() => selectedCategoryIds,
 		() => {
-			form.fields.categories.set(selectedCategoryIds);
+			// Convert array to comma-separated string for form submission
+			form.fields.categories.set(selectedCategoryIds.join(','));
 		}
 	);
 
@@ -76,6 +78,18 @@
 			<p class="text-destructive text-sm">{issue.message}</p>
 		{/each}
 	</div>
+
+	<!-- Hidden inputs for categoryId and categories - always in form -->
+	<Input
+		{...form.fields.categoryId.as('text')}
+		placeholder={m.mega_menu_main_category()}
+		type="hidden"
+	/>
+	<Input
+		{...form.fields.categories.as('text')}
+		placeholder={m.common_categories()}
+		type="hidden"
+	/>
 
 	<!-- Main Category (Single select) -->
 	<div class="space-y-2">

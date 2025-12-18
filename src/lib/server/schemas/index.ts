@@ -944,8 +944,8 @@ export const DeleteBackgroundTaskSchema = v.object({
 // Mega Menu schemas
 export const CreateMegaMenuSchema = v.object({
 	title: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
-	categoryId: v.optional(v.pipe(v.string(), v.minLength(1))),
-	categories: v.optional(v.array(v.string())),
+	categoryId: v.optional(v.string()), // Main category - can be empty
+	categories: v.optional(v.string()), // Comma-separated category IDs
 	isVisible: v.optional(v.boolean(), true),
 	displayOrder: v.optional(v.number(), 0)
 });
@@ -953,8 +953,8 @@ export const CreateMegaMenuSchema = v.object({
 export const UpdateMegaMenuSchema = v.object({
 	id: v.string(),
 	title: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(200))),
-	categoryId: v.optional(v.pipe(v.string(), v.minLength(1))),
-	categories: v.optional(v.array(v.string())),
+	categoryId: v.optional(v.string()), // Main category - can be empty
+	categories: v.optional(v.string()), // Comma-separated category IDs
 	isVisible: v.optional(v.boolean()),
 	displayOrder: v.optional(v.number())
 });
