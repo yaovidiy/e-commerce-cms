@@ -1,8 +1,8 @@
-/*
- SQLite does not support "Set default to column" out of the box, we do not generate automatic migration for that, so it has to be done manually
- Please refer to: https://www.techonthenet.com/sqlite/tables/alter_table.php
-                  https://www.sqlite.org/lang_altertable.html
-                  https://stackoverflow.com/questions/2083543/modify-a-columns-type-in-sqlite3
+-- Manual migration: SQLite doesn't support "Set default to column" out of the box
+-- The address table defaults are already defined in the initial schema (0000)
+-- This migration serves as a placeholder
+-- See: https://www.sqlite.org/lang_altertable.html
 
- Due to that we don't generate migration automatically and it has to be done manually
-*/
+-- No-op statement to satisfy migration system
+PRAGMA schema_version;
+
