@@ -541,3 +541,47 @@ export const deleteContactPhone = form(DeleteContactPhoneSchema, async (data) =>
 	await getAllContactPhonesAdmin().refresh();
 	return { success: true };
 });
+
+// ============= SOCIAL LINKS & CONTACT INFO (CLIENT-FACING) =============
+
+/**
+ * Get all social links with custom icon asset IDs from settings
+ * Used by footer and other client-facing components
+ */
+export const getAllSocialLinks = query(async () => {
+	const socialPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'youtube', 'telegram', 'viber'];
+	
+	// Get all site settings
+	const settings = await db.select().from(tables.siteSetting);
+	
+	const settingsByKey = Object.fromEntries(
+		settings.map((s) => [s.key, s.value])
+	);
+
+	// Build social links with icon asset IDs
+	return socialPlatforms
+		.map((platform) => {
+			const urlKey = `${platform}_url`;
+			const iconKey = `${platform}_icon_asset_id`;
+			
+			return {
+				platform,
+				url: settingsByKey[urlKey] || null,
+				iconAssetId: settingsByKey[iconKey] || null
+			};
+		})
+		.filter((link) => link.url); // Only return platforms with URLs
+});
+
+/**
+ * Get contact information (phones only)
+ * Used by footer and other client-facing components
+ */
+export const getContactInfo = query(async () => {
+	// Get all contact phones (non-social)
+	const contactPhones = await db.select().from(tables.contactPhone).where(eq(tables.contactPhone.isActive, true));
+
+	return {
+		phones: contactPhones
+	};
+});

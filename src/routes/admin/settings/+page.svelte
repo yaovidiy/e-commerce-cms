@@ -3,6 +3,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Textarea } from '$lib/components/ui/textarea';
+	import Image from '$lib/components/common/data-display/asset-image.svelte';
 	import { Switch } from '$lib/components/ui/switch';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Card from '$lib/components/ui/card';
@@ -27,16 +28,23 @@
 	let logoBrowserOpen = $state(false);
 	let faviconBrowserOpen = $state(false);
 	let ogImageBrowserOpen = $state(false);
+	let facebookIconBrowserOpen = $state(false);
+	let instagramIconBrowserOpen = $state(false);
+	let twitterIconBrowserOpen = $state(false);
+	let youtubeIconBrowserOpen = $state(false);
+	let linkedinIconBrowserOpen = $state(false);
+	let telegramIconBrowserOpen = $state(false);
+	let viberIconBrowserOpen = $state(false);
 
 	// Handle asset selection for logo
 	function handleLogoSelect(asset: Asset) {
-		generalSettings.storeLogo = asset.url;
+		generalSettings.storeLogo = asset.id;
 		logoBrowserOpen = false;
 	}
 
 	// Handle asset selection for favicon
 	function handleFaviconSelect(asset: Asset) {
-		generalSettings.storeFavicon = asset.url;
+		generalSettings.storeFavicon = asset.id;
 		faviconBrowserOpen = false;
 	}
 
@@ -44,6 +52,42 @@
 	function handleOgImageSelect(asset: Asset) {
 		seoSettings.seoDefaultOgImage = asset.url;
 		ogImageBrowserOpen = false;
+	}
+
+	// Handle asset selection for social media icons
+	function handleFacebookIconSelect(asset: Asset) {
+		storeInfoSettings.facebookIconAssetId = asset.id;
+		facebookIconBrowserOpen = false;
+	}
+
+	function handleInstagramIconSelect(asset: Asset) {
+		storeInfoSettings.instagramIconAssetId = asset.id;
+		instagramIconBrowserOpen = false;
+	}
+
+	function handleTwitterIconSelect(asset: Asset) {
+		storeInfoSettings.twitterIconAssetId = asset.id;
+		twitterIconBrowserOpen = false;
+	}
+
+	function handleYoutubeIconSelect(asset: Asset) {
+		storeInfoSettings.youtubeIconAssetId = asset.id;
+		youtubeIconBrowserOpen = false;
+	}
+
+	function handleLinkedinIconSelect(asset: Asset) {
+		storeInfoSettings.linkedinIconAssetId = asset.id;
+		linkedinIconBrowserOpen = false;
+	}
+
+	function handleTelegramIconSelect(asset: Asset) {
+		storeInfoSettings.telegramIconAssetId = asset.id;
+		telegramIconBrowserOpen = false;
+	}
+
+	function handleViberIconSelect(asset: Asset) {
+		storeInfoSettings.viberIconAssetId = asset.id;
+		viberIconBrowserOpen = false;
 	}
 
 	// Clear logo
@@ -54,6 +98,35 @@
 	// Clear favicon
 	function clearFavicon() {
 		generalSettings.storeFavicon = '';
+	}
+
+	// Clear social media icons
+	function clearFacebookIcon() {
+		storeInfoSettings.facebookIconAssetId = '';
+	}
+
+	function clearInstagramIcon() {
+		storeInfoSettings.instagramIconAssetId = '';
+	}
+
+	function clearTwitterIcon() {
+		storeInfoSettings.twitterIconAssetId = '';
+	}
+
+	function clearYoutubeIcon() {
+		storeInfoSettings.youtubeIconAssetId = '';
+	}
+
+	function clearLinkedinIcon() {
+		storeInfoSettings.linkedinIconAssetId = '';
+	}
+
+	function clearTelegramIcon() {
+		storeInfoSettings.telegramIconAssetId = '';
+	}
+
+	function clearViberIcon() {
+		storeInfoSettings.viberIconAssetId = '';
 	}
 
 	// Clear OG image
@@ -95,10 +168,19 @@
 		storePostalCode: '',
 		storeCountry: '',
 		facebookUrl: '',
+		facebookIconAssetId: '',
 		instagramUrl: '',
+		instagramIconAssetId: '',
 		twitterUrl: '',
+		twitterIconAssetId: '',
 		youtubeUrl: '',
-		linkedinUrl: ''
+		youtubeIconAssetId: '',
+		linkedinUrl: '',
+		linkedinIconAssetId: '',
+		telegramUrl: '',
+		telegramIconAssetId: '',
+		viberUrl: '',
+		viberIconAssetId: ''
 	});
 
 	// Checkout settings state
@@ -155,8 +237,8 @@
 			if (settingsQuery.current) {
 				// General settings
 				generalSettings.storeName = getSettingValue('store_name', 'My E-commerce Store');
-				generalSettings.storeLogo = getSettingValue('store_logo', '');
-				generalSettings.storeFavicon = getSettingValue('store_favicon', '');
+				generalSettings.storeLogo = getSettingValue('store_logo_asset_id', '');
+				generalSettings.storeFavicon = getSettingValue('store_favicon_asset_id', '');
 				generalSettings.storeEmail = getSettingValue('store_email', 'contact@example.com');
 				generalSettings.storePhone = getSettingValue('store_phone', '');
 				generalSettings.timezone = getSettingValue('timezone', 'UTC');
@@ -172,10 +254,19 @@
 				storeInfoSettings.storePostalCode = getSettingValue('store_postal_code', '');
 				storeInfoSettings.storeCountry = getSettingValue('store_country', '');
 				storeInfoSettings.facebookUrl = getSettingValue('facebook_url', '');
+				storeInfoSettings.facebookIconAssetId = getSettingValue('facebook_icon_asset_id', '');
 				storeInfoSettings.instagramUrl = getSettingValue('instagram_url', '');
+				storeInfoSettings.instagramIconAssetId = getSettingValue('instagram_icon_asset_id', '');
 				storeInfoSettings.twitterUrl = getSettingValue('twitter_url', '');
+				storeInfoSettings.twitterIconAssetId = getSettingValue('twitter_icon_asset_id', '');
 				storeInfoSettings.youtubeUrl = getSettingValue('youtube_url', '');
+				storeInfoSettings.youtubeIconAssetId = getSettingValue('youtube_icon_asset_id', '');
 				storeInfoSettings.linkedinUrl = getSettingValue('linkedin_url', '');
+				storeInfoSettings.linkedinIconAssetId = getSettingValue('linkedin_icon_asset_id', '');
+				storeInfoSettings.telegramUrl = getSettingValue('telegram_url', '');
+				storeInfoSettings.telegramIconAssetId = getSettingValue('telegram_icon_asset_id', '');
+				storeInfoSettings.viberUrl = getSettingValue('viber_url', '');
+				storeInfoSettings.viberIconAssetId = getSettingValue('viber_icon_asset_id', '');
 
 				// Checkout settings
 				checkoutSettings.enableGuestCheckout = getSettingValue('enable_guest_checkout', true);
@@ -349,6 +440,10 @@
 				<!-- General Settings Tab -->
 				<Tabs.Content value="general">
 					<form {...updateGeneralSettings}>
+						<!-- Hidden fields for logo and favicon asset IDs - bound to state -->
+						<input type="hidden" name="storeLogo" bind:value={generalSettings.storeLogo} />
+						<input type="hidden" name="storeFavicon" bind:value={generalSettings.storeFavicon} />
+
 						<Card.Root>
 							<Card.Header>
 								<Card.Title>{m.settings_category_general()}</Card.Title>
@@ -380,11 +475,7 @@
 										{#if generalSettings.storeLogo}
 											<div class="relative">
 												<div class="bg-muted relative h-24 w-40 overflow-hidden rounded-lg border">
-													<img
-														src={generalSettings.storeLogo}
-														alt="Store Logo"
-														class="h-full w-full object-contain"
-													/>
+													<Image assetId={generalSettings.storeLogo} thumbnail={false} />
 												</div>
 												<button
 													type="button"
@@ -425,11 +516,7 @@
 										{#if generalSettings.storeFavicon}
 											<div class="relative">
 												<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
-													<img
-														src={generalSettings.storeFavicon}
-														alt="Favicon"
-														class="h-full w-full object-contain"
-													/>
+													<Image assetId={generalSettings.storeFavicon} thumbnail={false} />
 												</div>
 												<button
 													type="button"
@@ -563,6 +650,22 @@
 				<!-- Store Info Settings Tab -->
 				<Tabs.Content value="store">
 					<form {...updateStoreInfoSettings}>
+						<!-- Hidden fields for social URLs and icon asset IDs - bound to state -->
+						<input type="hidden" name="facebookUrl" bind:value={storeInfoSettings.facebookUrl} />
+						<input type="hidden" name="facebookIconAssetId" bind:value={storeInfoSettings.facebookIconAssetId} />
+						<input type="hidden" name="instagramUrl" bind:value={storeInfoSettings.instagramUrl} />
+						<input type="hidden" name="instagramIconAssetId" bind:value={storeInfoSettings.instagramIconAssetId} />
+						<input type="hidden" name="twitterUrl" bind:value={storeInfoSettings.twitterUrl} />
+						<input type="hidden" name="twitterIconAssetId" bind:value={storeInfoSettings.twitterIconAssetId} />
+						<input type="hidden" name="youtubeUrl" bind:value={storeInfoSettings.youtubeUrl} />
+						<input type="hidden" name="youtubeIconAssetId" bind:value={storeInfoSettings.youtubeIconAssetId} />
+						<input type="hidden" name="linkedinUrl" bind:value={storeInfoSettings.linkedinUrl} />
+						<input type="hidden" name="linkedinIconAssetId" bind:value={storeInfoSettings.linkedinIconAssetId} />
+						<input type="hidden" name="telegramUrl" bind:value={storeInfoSettings.telegramUrl} />
+						<input type="hidden" name="telegramIconAssetId" bind:value={storeInfoSettings.telegramIconAssetId} />
+						<input type="hidden" name="viberUrl" bind:value={storeInfoSettings.viberUrl} />
+						<input type="hidden" name="viberIconAssetId" bind:value={storeInfoSettings.viberIconAssetId} />
+
 						<Card.Root>
 							<Card.Header>
 								<Card.Title>{m.settings_category_store()}</Card.Title>
@@ -644,76 +747,410 @@
 								</div>
 
 								<div class="pt-6">
-									<h3 class="mb-4 text-lg font-semibold">Social Media</h3>
+									<h3 class="mb-4 text-lg font-semibold">Contact Information</h3>
 									<div class="space-y-4">
-										<!-- Facebook -->
+										<!-- Contact Email -->
 										<div class="space-y-2">
-											<Label for="facebook">{m.settings_store_facebook()}</Label>
+											<Label for="contact-email">{m.user_email?.() || 'Contact Email'}</Label>
 											<Input
-												id="facebook"
-												{...updateStoreInfoSettings.fields.facebookUrl.as('text')}
-												bind:value={storeInfoSettings.facebookUrl}
-												placeholder="https://facebook.com/yourstore"
+												id="contact-email"
+												{...updateStoreInfoSettings.fields.contactEmail.as('email')}
+												bind:value={storeInfoSettings.contactEmail}
+												placeholder="contact@yourstore.com"
 											/>
 											<p class="text-muted-foreground text-sm">
-												{m.settings_store_facebook_help()}
+												Email address for customer inquiries
 											</p>
+										</div>
+									</div>
+								</div>
+
+								<div class="pt-6">
+									<h3 class="mb-4 text-lg font-semibold">Social Media</h3>
+									<div class="space-y-6">
+										<!-- Facebook -->
+										<div class="border-b pb-6">
+											<Label for="facebook" class="text-base font-medium">{m.settings_store_facebook()}</Label>
+											<div class="mt-3 space-y-4">
+												<!-- Facebook URL -->
+												<div class="space-y-2">
+													<Label for="facebook-url" class="text-sm">Facebook URL</Label>
+													<Input
+														id="facebook-url"
+														type="text"
+														bind:value={storeInfoSettings.facebookUrl}
+														placeholder="https://facebook.com/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														{m.settings_store_facebook_help()}
+													</p>
+												</div>
+
+												<!-- Facebook Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.facebookIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.facebookIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearFacebookIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (facebookIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.facebookIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for Facebook (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 
 										<!-- Instagram -->
-										<div class="space-y-2">
-											<Label for="instagram">{m.settings_store_instagram()}</Label>
-											<Input
-												id="instagram"
-												{...updateStoreInfoSettings.fields.instagramUrl.as('text')}
-												bind:value={storeInfoSettings.instagramUrl}
-												placeholder="https://instagram.com/yourstore"
-											/>
-											<p class="text-muted-foreground text-sm">
-												{m.settings_store_instagram_help()}
-											</p>
+										<div class="border-b pb-6">
+											<Label for="instagram" class="text-base font-medium">{m.settings_store_instagram()}</Label>
+											<div class="mt-3 space-y-4">
+												<!-- Instagram URL -->
+												<div class="space-y-2">
+													<Label for="instagram-url" class="text-sm">Instagram URL</Label>
+													<Input
+														id="instagram-url"
+														type="text"
+														bind:value={storeInfoSettings.instagramUrl}
+														placeholder="https://instagram.com/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														{m.settings_store_instagram_help()}
+													</p>
+												</div>
+
+												<!-- Instagram Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.instagramIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.instagramIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearInstagramIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (instagramIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.instagramIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for Instagram (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 
 										<!-- Twitter -->
-										<div class="space-y-2">
-											<Label for="twitter">{m.settings_store_twitter()}</Label>
-											<Input
-												id="twitter"
-												{...updateStoreInfoSettings.fields.twitterUrl.as('text')}
-												bind:value={storeInfoSettings.twitterUrl}
-												placeholder="https://twitter.com/yourstore"
-											/>
-											<p class="text-muted-foreground text-sm">
-												{m.settings_store_twitter_help()}
-											</p>
+										<div class="border-b pb-6">
+											<Label for="twitter" class="text-base font-medium">{m.settings_store_twitter()}</Label>
+											<div class="mt-3 space-y-4">
+												<!-- Twitter URL -->
+												<div class="space-y-2">
+													<Label for="twitter-url" class="text-sm">Twitter URL</Label>
+													<Input
+														id="twitter-url"
+														type="text"
+														bind:value={storeInfoSettings.twitterUrl}
+														placeholder="https://twitter.com/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														{m.settings_store_twitter_help()}
+													</p>
+												</div>
+
+												<!-- Twitter Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.twitterIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.twitterIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearTwitterIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (twitterIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.twitterIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for Twitter (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 
 										<!-- YouTube -->
-										<div class="space-y-2">
-											<Label for="youtube">{m.settings_store_youtube()}</Label>
-											<Input
-												id="youtube"
-												{...updateStoreInfoSettings.fields.youtubeUrl.as('text')}
-												bind:value={storeInfoSettings.youtubeUrl}
-												placeholder="https://youtube.com/c/yourstore"
-											/>
-											<p class="text-muted-foreground text-sm">
-												{m.settings_store_youtube_help()}
-											</p>
+										<div class="border-b pb-6">
+											<Label for="youtube" class="text-base font-medium">{m.settings_store_youtube()}</Label>
+											<div class="mt-3 space-y-4">
+												<!-- YouTube URL -->
+												<div class="space-y-2">
+													<Label for="youtube-url" class="text-sm">YouTube URL</Label>
+													<Input
+														id="youtube-url"
+														type="text"
+														bind:value={storeInfoSettings.youtubeUrl}
+														placeholder="https://youtube.com/c/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														{m.settings_store_youtube_help()}
+													</p>
+												</div>
+
+												<!-- YouTube Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.youtubeIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.youtubeIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearYoutubeIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (youtubeIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.youtubeIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for YouTube (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 
 										<!-- LinkedIn -->
-										<div class="space-y-2">
-											<Label for="linkedin">{m.settings_store_linkedin()}</Label>
-											<Input
-												id="linkedin"
-												{...updateStoreInfoSettings.fields.linkedinUrl.as('text')}
-												bind:value={storeInfoSettings.linkedinUrl}
-												placeholder="https://linkedin.com/company/yourstore"
-											/>
-											<p class="text-muted-foreground text-sm">
-												{m.settings_store_linkedin_help()}
-											</p>
+										<div>
+											<Label for="linkedin" class="text-base font-medium">{m.settings_store_linkedin()}</Label>
+											<div class="mt-3 space-y-4">
+												<!-- LinkedIn URL -->
+												<div class="space-y-2">
+													<Label for="linkedin-url" class="text-sm">LinkedIn URL</Label>
+													<Input
+														id="linkedin-url"
+														type="text"
+														bind:value={storeInfoSettings.linkedinUrl}
+														placeholder="https://linkedin.com/company/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														{m.settings_store_linkedin_help()}
+													</p>
+												</div>
+
+												<!-- LinkedIn Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.linkedinIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.linkedinIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearLinkedinIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (linkedinIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.linkedinIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for LinkedIn (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<!-- Telegram -->
+										<div class="border-b pb-6">
+											<Label for="telegram" class="text-base font-medium">Telegram</Label>
+											<div class="mt-3 space-y-4">
+												<!-- Telegram URL -->
+												<div class="space-y-2">
+													<Label for="telegram-url" class="text-sm">Telegram URL</Label>
+													<Input
+														id="telegram-url"
+														type="text"
+														bind:value={storeInfoSettings.telegramUrl}
+														placeholder="https://t.me/yourstore"
+													/>
+													<p class="text-muted-foreground text-sm">
+														Enter your Telegram channel or bot URL
+													</p>
+												</div>
+
+												<!-- Telegram Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.telegramIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.telegramIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearTelegramIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (telegramIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.telegramIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for Telegram (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<!-- Viber -->
+										<div class="border-b pb-6">
+											<Label for="viber" class="text-base font-medium">Viber</Label>
+											<div class="mt-3 space-y-4">
+												<!-- Viber URL -->
+												<div class="space-y-2">
+													<Label for="viber-url" class="text-sm">Viber URL</Label>
+													<Input
+														id="viber-url"
+														type="text"
+														bind:value={storeInfoSettings.viberUrl}
+														placeholder="viber://chat?number=%2B..."
+													/>
+													<p class="text-muted-foreground text-sm">
+														Enter your Viber contact URL
+													</p>
+												</div>
+
+												<!-- Viber Icon -->
+												<div class="space-y-2">
+													<Label>Custom Icon</Label>
+													<div class="flex items-start gap-4">
+														{#if storeInfoSettings.viberIconAssetId}
+															<div class="relative">
+																<div class="bg-muted relative h-16 w-16 overflow-hidden rounded-lg border">
+																	<Image assetId={storeInfoSettings.viberIconAssetId} thumbnail={false} />
+																</div>
+																<button
+																	type="button"
+																	onclick={clearViberIcon}
+																	class="bg-destructive text-destructive-foreground hover:bg-destructive/90 absolute -top-2 -right-2 rounded-full p-1"
+																>
+																	<X class="h-4 w-4" />
+																</button>
+															</div>
+														{/if}
+														<div class="flex-1">
+															<Button
+																variant="outline"
+																type="button"
+																onclick={() => (viberIconBrowserOpen = true)}
+																class="w-full"
+															>
+																<ImageIcon class="mr-2 h-4 w-4" />
+																{storeInfoSettings.viberIconAssetId ? 'Change Icon' : 'Select Icon'}
+															</Button>
+															<p class="text-muted-foreground text-xs mt-2">
+																Upload a custom icon for Viber (recommended: 32x32px)
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -1341,3 +1778,12 @@
 <AssetBrowser bind:open={logoBrowserOpen} onSelect={handleLogoSelect} />
 <AssetBrowser bind:open={faviconBrowserOpen} onSelect={handleFaviconSelect} />
 <AssetBrowser bind:open={ogImageBrowserOpen} onSelect={handleOgImageSelect} />
+
+<!-- Social Media Icon Asset Browsers -->
+<AssetBrowser bind:open={facebookIconBrowserOpen} onSelect={handleFacebookIconSelect} />
+<AssetBrowser bind:open={instagramIconBrowserOpen} onSelect={handleInstagramIconSelect} />
+<AssetBrowser bind:open={twitterIconBrowserOpen} onSelect={handleTwitterIconSelect} />
+<AssetBrowser bind:open={youtubeIconBrowserOpen} onSelect={handleYoutubeIconSelect} />
+<AssetBrowser bind:open={linkedinIconBrowserOpen} onSelect={handleLinkedinIconSelect} />
+<AssetBrowser bind:open={telegramIconBrowserOpen} onSelect={handleTelegramIconSelect} />
+<AssetBrowser bind:open={viberIconBrowserOpen} onSelect={handleViberIconSelect} />

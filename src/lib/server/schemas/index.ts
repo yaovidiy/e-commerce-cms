@@ -606,10 +606,19 @@ export const UpdateStoreInfoSettingsSchema = v.object({
 	storePostalCode: v.optional(v.string()),
 	storeCountry: v.optional(v.string()),
 	facebookUrl: v.optional(v.string()),
+	facebookIconAssetId: v.optional(v.string()),
 	instagramUrl: v.optional(v.string()),
+	instagramIconAssetId: v.optional(v.string()),
 	twitterUrl: v.optional(v.string()),
+	twitterIconAssetId: v.optional(v.string()),
 	youtubeUrl: v.optional(v.string()),
-	linkedinUrl: v.optional(v.string())
+	youtubeIconAssetId: v.optional(v.string()),
+	linkedinUrl: v.optional(v.string()),
+	linkedinIconAssetId: v.optional(v.string()),
+	telegramUrl: v.optional(v.string()),
+	telegramIconAssetId: v.optional(v.string()),
+	viberUrl: v.optional(v.string()),
+	viberIconAssetId: v.optional(v.string())
 });
 
 // SEO Settings specific schemas

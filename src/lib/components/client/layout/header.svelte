@@ -12,6 +12,7 @@
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
 	import Search from '$lib/components/client/widgets/search.svelte';
 	import PhoneDropdown from '$lib/components/client/widgets/phone-dropdown.svelte';
+	import Image from '$lib/components/common/data-display/asset-image.svelte';
 	import { onMount } from 'svelte';
 	import { getNavigationMenuByLocation } from '$lib/remotes/navigation.remote';
 	import { getPublicSettings } from '$lib/remotes/settings.remote';
@@ -56,8 +57,10 @@
 			{#await storeSettingsPromise}
 				<Skeleton class="h-10 w-32" />
 			{:then settings}
-				{#if settings.storeLogo}
-					<img src={settings.storeLogo} alt={settings.storeName} class="max-h-full max-w-full object-contain" />
+				{#if settings.storeLogoAssetId}
+					<div class="max-h-full max-w-full">
+						<Image assetId={settings.storeLogoAssetId} thumbnail={false} />
+					</div>
 				{:else}
 					<span class="text-lg font-bold">{settings.storeName}</span>
 				{/if}
@@ -80,8 +83,10 @@
 				{#await storeSettingsPromise}
 					<Skeleton class="h-10 w-32" />
 				{:then settings}
-					{#if settings.storeLogo}
-						<img src={settings.storeLogo} alt={settings.storeName} class="max-h-full max-w-full object-contain" />
+					{#if settings.storeLogoAssetId}
+						<div class="max-h-full max-w-full">
+							<Image assetId={settings.storeLogoAssetId} thumbnail={false} />
+						</div>
 					{:else}
 						<span class="text-lg font-bold">{settings.storeName}</span>
 					{/if}

@@ -172,12 +172,28 @@ const DEFAULT_SETTINGS: SettingDefinition[] = [
 		label: 'Country'
 	},
 	{
+		key: 'contact_email',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'Contact Email',
+		description: 'Contact email address for customer inquiries'
+	},
+	{
 		key: 'facebook_url',
 		value: '',
 		type: 'string',
 		category: 'store',
 		label: 'Facebook URL',
 		description: 'Your Facebook page URL'
+	},
+	{
+		key: 'facebook_icon',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'Facebook Icon',
+		description: 'Custom icon URL for Facebook'
 	},
 	{
 		key: 'instagram_url',
@@ -188,12 +204,28 @@ const DEFAULT_SETTINGS: SettingDefinition[] = [
 		description: 'Your Instagram profile URL'
 	},
 	{
+		key: 'instagram_icon',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'Instagram Icon',
+		description: 'Custom icon URL for Instagram'
+	},
+	{
 		key: 'twitter_url',
 		value: '',
 		type: 'string',
 		category: 'store',
 		label: 'Twitter/X URL',
 		description: 'Your Twitter/X profile URL'
+	},
+	{
+		key: 'twitter_icon',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'Twitter Icon',
+		description: 'Custom icon URL for Twitter'
 	},
 	{
 		key: 'youtube_url',
@@ -204,12 +236,28 @@ const DEFAULT_SETTINGS: SettingDefinition[] = [
 		description: 'Your YouTube channel URL'
 	},
 	{
+		key: 'youtube_icon',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'YouTube Icon',
+		description: 'Custom icon URL for YouTube'
+	},
+	{
 		key: 'linkedin_url',
 		value: '',
 		type: 'string',
 		category: 'store',
 		label: 'LinkedIn URL',
 		description: 'Your LinkedIn page URL'
+	},
+	{
+		key: 'linkedin_icon',
+		value: '',
+		type: 'string',
+		category: 'store',
+		label: 'LinkedIn Icon',
+		description: 'Custom icon URL for LinkedIn'
 	},
 
 	// Checkout Settings
@@ -514,17 +562,26 @@ export const getPublicSettings = query(async () => {
 
 	return {
 		storeName: settingsMap['store_name'] as string || 'My Store',
-		storeLogo: settingsMap['store_logo'] as string || '',
-		storeFavicon: settingsMap['store_favicon'] as string || '',
+		storeLogoAssetId: settingsMap['storeLogo'] as string || '',
+		storeFaviconAssetId: settingsMap['store_favicon'] as string || '',
 		storeEmail: settingsMap['store_email'] as string || '',
 		storePhone: settingsMap['store_phone'] as string || '',
 		currency: settingsMap['currency'] as string || 'USD',
 		currencySymbol: settingsMap['currency_symbol'] as string || '$',
 		facebookUrl: settingsMap['facebook_url'] as string || '',
+		facebookIconAssetId: settingsMap['facebook_icon_asset_id'] as string || '',
 		instagramUrl: settingsMap['instagram_url'] as string || '',
+		instagramIconAssetId: settingsMap['instagram_icon_asset_id'] as string || '',
 		twitterUrl: settingsMap['twitter_url'] as string || '',
+		twitterIconAssetId: settingsMap['twitter_icon_asset_id'] as string || '',
 		youtubeUrl: settingsMap['youtube_url'] as string || '',
+		youtubeIconAssetId: settingsMap['youtube_icon_asset_id'] as string || '',
 		linkedinUrl: settingsMap['linkedin_url'] as string || '',
+		linkedinIconAssetId: settingsMap['linkedin_icon_asset_id'] as string || '',
+		telegramUrl: settingsMap['telegram_url'] as string || '',
+		telegramIconAssetId: settingsMap['telegram_icon_asset_id'] as string || '',
+		viberUrl: settingsMap['viber_url'] as string || '',
+		viberIconAssetId: settingsMap['viber_icon_asset_id'] as string || '',
 		seoDefaultTitle: settingsMap['seo_default_title'] as string || 'My Store',
 		seoDefaultDescription: settingsMap['seo_default_description'] as string || '',
 		seoDefaultOgImage: settingsMap['seo_default_og_image'] as string || ''
@@ -749,10 +806,10 @@ export const updateGeneralSettings = form(UpdateGeneralSettingsSchema, async (da
 		settingsToUpdate.push({ key: 'store_name', value: data.storeName });
 	}
 	if (data.storeLogo !== undefined) {
-		settingsToUpdate.push({ key: 'store_logo', value: data.storeLogo });
+		settingsToUpdate.push({ key: 'store_logo_asset_id', value: data.storeLogo });
 	}
 	if (data.storeFavicon !== undefined) {
-		settingsToUpdate.push({ key: 'store_favicon', value: data.storeFavicon });
+		settingsToUpdate.push({ key: 'store_favicon_asset_id', value: data.storeFavicon });
 	}
 	if (data.storeEmail !== undefined) {
 		settingsToUpdate.push({ key: 'store_email', value: data.storeEmail });
@@ -809,17 +866,44 @@ export const updateStoreInfoSettings = form(UpdateStoreInfoSettingsSchema, async
 	if (data.facebookUrl !== undefined) {
 		settingsToUpdate.push({ key: 'facebook_url', value: data.facebookUrl });
 	}
+	if (data.facebookIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'facebook_icon_asset_id', value: data.facebookIconAssetId });
+	}
 	if (data.instagramUrl !== undefined) {
 		settingsToUpdate.push({ key: 'instagram_url', value: data.instagramUrl });
+	}
+	if (data.instagramIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'instagram_icon_asset_id', value: data.instagramIconAssetId });
 	}
 	if (data.twitterUrl !== undefined) {
 		settingsToUpdate.push({ key: 'twitter_url', value: data.twitterUrl });
 	}
+	if (data.twitterIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'twitter_icon_asset_id', value: data.twitterIconAssetId });
+	}
 	if (data.youtubeUrl !== undefined) {
 		settingsToUpdate.push({ key: 'youtube_url', value: data.youtubeUrl });
 	}
+	if (data.youtubeIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'youtube_icon_asset_id', value: data.youtubeIconAssetId });
+	}
 	if (data.linkedinUrl !== undefined) {
 		settingsToUpdate.push({ key: 'linkedin_url', value: data.linkedinUrl });
+	}
+	if (data.linkedinIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'linkedin_icon_asset_id', value: data.linkedinIconAssetId });
+	}
+	if (data.telegramUrl !== undefined) {
+		settingsToUpdate.push({ key: 'telegram_url', value: data.telegramUrl });
+	}
+	if (data.telegramIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'telegram_icon_asset_id', value: data.telegramIconAssetId });
+	}
+	if (data.viberUrl !== undefined) {
+		settingsToUpdate.push({ key: 'viber_url', value: data.viberUrl });
+	}
+	if (data.viberIconAssetId !== undefined) {
+		settingsToUpdate.push({ key: 'viber_icon_asset_id', value: data.viberIconAssetId });
 	}
 
 	if (settingsToUpdate.length === 0) {
