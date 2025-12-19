@@ -568,3 +568,35 @@ export const deleteProductTier = form(
 	}
 );
 
+// Toggle all products trackInventory status
+export const toggleAllProductsTrackInventory = command(v.object({}), async () => {
+	auth.requireAdminUser();
+
+	// Get all products to count them
+	const allProducts = await db.select().from(tables.product);
+
+	if (allProducts.length === 0) {
+		return { success: true, message: 'No products found' };
+	}
+
+	// Use raw SQL to toggle the trackInventory boolean for all products
+	await rawDb.exec(`
+		UPDATE product SET 
+			track_inventory = CASE 
+				WHEN track_inventory = 1 THEN 0 
+				ELSE 1 
+			END,
+			updated_at = CURRENT_TIMESTAMP
+	`);
+
+	// Invalidate caches
+	invalidateProductCaches();
+
+	// Refresh product list
+	await getAllProducts({ page: 1, pageSize: 50 }).refresh();
+
+	return { 
+		success: true, 
+		message: `Updated ${allProducts.length} products` 
+	};
+});

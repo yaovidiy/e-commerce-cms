@@ -97,7 +97,7 @@
 		</div>
 
 		<!-- Second Bar with Categories, Search, and Actions -->
-		<div class="bg-milky fixed top-14 z-10 h-20 w-full border-b transition-all">
+		<div class="top-14 z-10 h-20 w-full border-b transition-all">
 			<div class="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-8">
 				<!-- Categories Button -->
 				<DropdownMenu.Root>

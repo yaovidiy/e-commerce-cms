@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getAllProducts, deleteProduct, updateAllProductsStatus } from '$lib/remotes/product.remote';
+	import { getAllProducts, deleteProduct, updateAllProductsStatus, toggleAllProductsTrackInventory } from '$lib/remotes/product.remote';
 	import { DataTableWrapper } from '$lib/components/common/data-display';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -27,6 +27,9 @@
 	let bulkStatusAction = $state<'active' | 'draft' | null>(null);
 	let bulkStatusDialogOpen = $state(false);
 
+	// Toggle inventory tracking dialog state
+	let toggleInventoryDialogOpen = $state(false);
+
 	function openDeleteDialog(product: Product) {
 		deletingProduct = product;
 		deleteDialogOpen = true;
@@ -43,6 +46,13 @@
 		await updateAllProductsStatus({ status: bulkStatusAction });
 		bulkStatusDialogOpen = false;
 		bulkStatusAction = null;
+		// Refresh the product list
+		getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize }).refresh();
+	}
+
+	async function handleToggleInventoryTracking() {
+		await toggleAllProductsTrackInventory({});
+		toggleInventoryDialogOpen = false;
 		// Refresh the product list
 		getAllProducts({ name: searchQuery, status: statusFilter, page: 1, pageSize }).refresh();
 	}
@@ -206,6 +216,10 @@
 		<Button variant="outline" onclick={() => openBulkStatusDialog('draft')}>
 			{m.product_set_all_draft()}
 		</Button>
+
+		<Button variant="outline" onclick={() => (toggleInventoryDialogOpen = true)}>
+			Toggle Inventory Tracking
+		</Button>
 	</div>
 
 	<!-- Filters -->
@@ -278,6 +292,30 @@
 				onclick={handleBulkStatusUpdate}
 			>
 				{updateAllProductsStatus.pending ? m.common_loading() : m.common_save()}
+			</Button>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+<!-- Toggle Inventory Tracking Dialog -->
+<AlertDialog.Root bind:open={toggleInventoryDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Toggle Inventory Tracking</AlertDialog.Title>
+			<AlertDialog.Description>
+				This will toggle the inventory tracking status for all products. Are you sure?
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<Button type="button" variant="outline" onclick={() => (toggleInventoryDialogOpen = false)}>
+				{m.common_cancel()}
+			</Button>
+			<Button
+				type="button"
+				variant="default"
+				disabled={!!toggleAllProductsTrackInventory.pending}
+				onclick={handleToggleInventoryTracking}
+			>
+				{toggleAllProductsTrackInventory.pending ? m.common_loading() : m.common_save()}
 			</Button>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
