@@ -1,12 +1,15 @@
 # Blog Management Domain
 
 ## Overview
+
 Complete CRUD system for managing blog posts in the admin panel. Allows admin users to create, view, edit, and delete blog posts with automatic slug generation and search functionality.
 
 ## Remote Functions
+
 Location: `src/lib/remotes/blog.remote.ts`
 
 ### Queries
+
 - `getAllBlogs()` - Retrieves all blog posts
 - `getBlog(slug)` - Retrieves a single blog post by slug
 - `getBlogById(id)` - Retrieves a single blog post by ID (used for editing)
@@ -14,6 +17,7 @@ Location: `src/lib/remotes/blog.remote.ts`
 - `searchBlogsByTitle(title)` - Searches blog posts by title
 
 ### Forms
+
 - `createBlog(data)` - Creates a new blog post
   - Uses logged-in user as author (authorId auto-filled)
   - Auto-refreshes blog list after creation
@@ -23,6 +27,7 @@ Location: `src/lib/remotes/blog.remote.ts`
   - Auto-refreshes blog list after deletion
 
 ## Database Schema
+
 Table: `blog` in `src/lib/server/db/schema.ts`
 
 ```typescript
@@ -37,9 +42,11 @@ Table: `blog` in `src/lib/server/db/schema.ts`
 ```
 
 ## Validation Schemas
+
 Location: `src/lib/server/schemas/index.ts`
 
 ### CreateBlogSchema
+
 ```typescript
 {
   title: string (1-200 chars)
@@ -47,9 +54,11 @@ Location: `src/lib/server/schemas/index.ts`
   slug: string (1-200 chars)
 }
 ```
+
 Note: `authorId` is automatically set from logged-in user
 
 ### UpdateBlogSchema
+
 ```typescript
 {
   id: string
@@ -60,18 +69,21 @@ Note: `authorId` is automatically set from logged-in user
 ```
 
 ### DeleteBlogSchema
+
 ```typescript
 {
-  id: string
+	id: string;
 }
 ```
 
 ## Components
 
 ### Admin Feature Components
+
 Location: `src/lib/components/admin/features/blog-management/`
 
 #### BlogListTable
+
 - Displays all blog posts in a table format
 - Includes search functionality (filters by title)
 - Dropdown menu with actions: View, Edit, Delete
@@ -79,6 +91,7 @@ Location: `src/lib/components/admin/features/blog-management/`
 - Shows: title, slug, created date, and actions
 
 #### BlogForm
+
 - Form for creating and editing blog posts
 - Supports both create and edit modes via `blog` prop
 - Auto-generates slug from title (can be manually edited) - only in create mode
@@ -90,6 +103,7 @@ Location: `src/lib/components/admin/features/blog-management/`
 - Dynamic button text based on mode (Create/Save)
 
 #### DeleteBlogDialog
+
 - Confirmation dialog for deleting blogs
 - Shows blog title in confirmation message
 - Auto-closes and refreshes list on successful deletion
@@ -97,21 +111,27 @@ Location: `src/lib/components/admin/features/blog-management/`
 ## Routes
 
 ### Admin Blogs List Page
+
 Path: `/admin/blogs`
 File: `src/routes/admin/blogs/+page.svelte`
+
 - Displays `BlogListTable` component
 - "Create Blog" button navigates to create page
 
 ### Blog Creation Page
+
 Path: `/admin/blogs/create`
 File: `src/routes/admin/blogs/create/+page.svelte`
+
 - Displays `BlogForm` component (create mode)
 - Back button returns to blogs list
 - Form submission creates blog and redirects to list
 
 ### Blog Edit Page
+
 Path: `/admin/blogs/edit/[id]`
 File: `src/routes/admin/blogs/edit/[id]/+page.svelte`
+
 - Dynamic route using blog ID as parameter
 - Fetches blog data using `getBlogById(id)` query
 - Displays `BlogForm` component with blog data (edit mode)
@@ -121,6 +141,7 @@ File: `src/routes/admin/blogs/edit/[id]/+page.svelte`
 - Form submission updates blog and redirects to list
 
 ## Authentication & Authorization
+
 - All blog management operations require admin privileges
 - Uses `requireAdminUser()` helper in all remote functions
 - Redirects to `/auth/login` if user is not an admin
@@ -129,6 +150,7 @@ File: `src/routes/admin/blogs/edit/[id]/+page.svelte`
 ## Features
 
 ### Auto-Slug Generation
+
 - Slugs are automatically generated from blog titles
 - Converts to lowercase, replaces spaces with hyphens
 - Removes special characters, keeps only alphanumeric and hyphens
@@ -136,19 +158,23 @@ File: `src/routes/admin/blogs/edit/[id]/+page.svelte`
 - Flag prevents auto-generation after manual edit
 
 ### Search & Filter
+
 - Client-side filtering by blog title
 - Case-insensitive search
 - Instant results as user types
 
 ### Automatic Query Refresh
+
 - Blog list automatically refreshes after create/update/delete
 - Server-side query refresh in remote function handlers
 - Uses `getAllBlogs().refresh()` pattern
 
 ## Internationalization
+
 All user-facing text uses translation keys from `messages/{locale}.json`:
 
 ### Translation Keys
+
 - `blog_title`, `blog_content`, `blog_slug` - Field labels
 - `blog_author`, `blog_created_at` - Display labels
 - `blog_create_blog`, `blog_create_new_blog` - Action buttons
@@ -162,6 +188,7 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 ## Usage Patterns
 
 ### Creating a Blog
+
 1. Navigate to `/admin/blogs`
 2. Click "Create Blog" button
 3. Fill in title (slug auto-generates)
@@ -171,12 +198,14 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 7. Redirected to blogs list with new post
 
 ### Viewing Blogs
+
 1. Navigate to `/admin/blogs`
 2. Use search to filter by title
 3. View title, slug, created date in table
 4. Click actions menu (three dots) for operations
 
 ### Editing Blogs
+
 1. In blogs list, click actions menu on desired blog
 2. Select "Edit" to navigate to `/admin/blogs/edit/{id}`
 3. Blog data is fetched and pre-populated in form
@@ -186,6 +215,7 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 7. List auto-refreshes after operation
 
 ### Deleting Blogs
+
 1. In blogs list, click actions menu on desired blog
 2. Select "Edit" to modify (route: `/admin/blogs/edit/{id}`)
 3. Or select "Delete" to open confirmation dialog
@@ -195,30 +225,35 @@ All user-facing text uses translation keys from `messages/{locale}.json`:
 ## Best Practices
 
 ### Remote Functions
+
 - Always use `requireAdminUser()` for admin operations
 - Auto-refresh related queries after mutations
 - Return meaningful data from form handlers
 - Use proper Valibot validation schemas
 
 ### Components
+
 - Follow 4-tier component architecture (admin/features/blog-management/)
 - Use barrel exports in `index.ts`
 - Implement auto-refresh with `$effect()` watching `form.result`
 - Use translation keys for all user-facing text
 
 ### Forms
+
 - Spread form object onto `<form>` element: `{...createBlog}`
 - Use `fields.as()` method for inputs: `{...createBlog.fields.title.as('text')}`
 - Display validation errors: `{#each form.fields.title.issues() as issue}`
 - Check pending state: `disabled={!!createBlog.pending}`
 
 ### Search & Filter
+
 - Implement client-side filtering for simple use cases
 - Use server-side filtering for large datasets
 - Debounce search input for better performance
 - Show empty state when no results
 
 ## Future Enhancements
+
 Potential improvements for blog management:
 
 1. ~~**Rich Text Editor**~~ ✅ **Implemented** - TipTap editor with formatting, images, videos, links
@@ -235,9 +270,11 @@ Potential improvements for blog management:
 ## Rich Text Editor
 
 ### Component
+
 Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 
 ### Features
+
 - **Text Formatting**: Bold, italic, strikethrough, inline code
 - **Text Alignment**: Left, center, right, justify alignment for paragraphs and headings
 - **Headings**: H1, H2, H3 support
@@ -250,25 +287,25 @@ Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 - **Clear Formatting**: Remove all formatting
 
 ### Technology
+
 - Built with **TipTap v3** (headless rich text editor)
 - Extensions: StarterKit, Link, Image, Youtube, TextAlign
 - Fully reactive with Svelte 5 runes
 - Stores content as HTML
 
 ### Usage
+
 ```svelte
 <script>
-  import { RichTextEditor } from '$lib/components/common/forms';
-  let content = $state('');
+	import { RichTextEditor } from '$lib/components/common/forms';
+	let content = $state('');
 </script>
 
-<RichTextEditor 
-  bind:value={content} 
-  placeholder="Write something..." 
-/>
+<RichTextEditor bind:value={content} placeholder="Write something..." />
 ```
 
 ### Toolbar Actions
+
 - Text: Bold, Italic, Strikethrough, Code
 - Alignment: Left, Center, Right, Justify
 - Headings: H1, H2, H3
@@ -277,6 +314,7 @@ Location: `src/lib/components/common/forms/rich-text-editor.svelte`
 - History: Undo, Redo, Clear formatting
 
 ### Styling
+
 - Uses Tailwind CSS for consistent styling
 - Prose styles for content rendering
 - Responsive toolbar layout

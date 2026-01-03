@@ -3,10 +3,12 @@
 ## Core Technology Analysis
 
 ### Programming Language
+
 - **TypeScript** (v5.0+) - Strongly typed JavaScript used throughout the entire codebase
 - Module system: ESM (type: "module" in package.json)
 
 ### Primary Framework
+
 - **SvelteKit v2** - Full-stack framework for building Svelte applications
   - Using Svelte 5 with new runes API (`$props`, `$bindable`, `@render`)
   - Adapter: `@sveltejs/adapter-auto` for automatic deployment configuration
@@ -18,24 +20,29 @@
 ### Secondary Frameworks & Libraries
 
 **Authentication & Security:**
+
 - Custom session-based authentication system (not using Lucia directly, but inspired by it)
 - `@node-rs/argon2` - Password hashing
 - `@oslojs/crypto` & `@oslojs/encoding` - Cryptographic utilities for session tokens
 
 **Database & ORM:**
+
 - **Drizzle ORM v0.33** - TypeScript ORM
 - **better-sqlite3** - SQLite database driver
 - Database dialect: SQLite
 - Migration tools: `drizzle-kit` for schema management
 
 **Validation:**
+
 - **Valibot v1.1** - Schema validation library for form data and API inputs
 
 **Internationalization (i18n):**
+
 - **@inlang/paraglide-sveltekit v0.11** - Compile-time i18n with zero runtime overhead
 - Supports multiple languages (en, uk based on messages/ folder)
 
 **UI & Styling:**
+
 - **Tailwind CSS v4** - Utility-first CSS framework (recently migrated from v3)
 - **@tailwindcss/vite** - Vite plugin for Tailwind v4
 - **shadcn-svelte** inspired component system (button component detected)
@@ -45,14 +52,17 @@
 - **@lucide/svelte** - Icon library
 
 **Testing:**
+
 - **Playwright** - End-to-end testing framework
 
 **Code Quality:**
+
 - **ESLint v9** with TypeScript and Svelte plugins
 - **Prettier v3** with Svelte and Tailwind plugins
 - **svelte-check** - Type checking for Svelte files
 
 ### State Management Approach
+
 - **No centralized state management library** (no Redux, Zustand, Pinia, etc.)
 - Uses SvelteKit's built-in patterns:
   - Server-side: `PageServerLoad` functions and form actions
@@ -63,7 +73,9 @@
 ## Domain Specificity Analysis
 
 ### Problem Domain
+
 This is a **SvelteKit E-commerce CMS** application that targets:
+
 - **Content management** for blog/article publishing
 - **E-commerce** capabilities (indicated by project name)
 - **Multi-language support** for international audiences
@@ -72,16 +84,19 @@ This is a **SvelteKit E-commerce CMS** application that targets:
 ### Core Business Concepts
 
 **Content Management:**
+
 - Blog posts with title, content, slug, author relationships
 - Content creation and editing workflows
 - Author attribution
 
 **User Management:**
+
 - User registration and login
 - Session-based authentication (30-day expiry with 15-day renewal)
 - Password security with Argon2 hashing
 
 **Data Models:**
+
 - `User`: id, username, passwordHash, age (optional)
 - `Session`: id, userId (FK), expiresAt
 - `Blog`: id, title, content, slug, authorId (FK), createdAt
@@ -107,6 +122,7 @@ This is a **SvelteKit E-commerce CMS** application that targets:
 ### Primary Data Structures
 
 **Database Schema Types:**
+
 ```typescript
 User: { id: string, username: string, passwordHash: string, age?: number }
 Session: { id: string, userId: string, expiresAt: Date }
@@ -114,10 +130,12 @@ Blog: { id: string, title: string, content: string, slug: string, authorId: stri
 ```
 
 **Validation Schemas (Valibot):**
+
 - `CreateBlogSchema`: Validates title (1-200 chars), content (min 1 char), slug (1-200 chars), authorId
 - `UpdateBlogSchema`: Validates id, title, content, slug
 
 **Remote Functions (Query/Form Patterns):**
+
 - `query()` - Server-side data fetching with optional input validation
 - `form()` - Server-side form actions with schema validation
 
@@ -172,28 +190,33 @@ Blog: { id: string, title: string, content: string, slug: string, authorId: stri
 ### Specialized Technologies & Constraints
 
 **Security Constraints:**
+
 - Passwords must be hashed with Argon2 (specific parameters: memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1)
 - Session tokens use SHA-256 hashing
 - Sessions expire after 30 days, renew at 15 days
 
 **Database Constraints:**
+
 - SQLite only (no connection pooling needed)
-- Timestamps stored as integers with `{ mode: 'timestamp' }` 
+- Timestamps stored as integers with `{ mode: 'timestamp' }`
 - Primary keys are text-based UUIDs or base32-encoded random bytes
 - Foreign key constraints enforced (user references)
 
 **i18n Constraints:**
+
 - Translations must be compile-time (paraglide-sveltekit)
 - Message files in `/messages/{locale}.json`
 - i18n handle must wrap app in `+layout.svelte`
 
 **Styling Constraints:**
+
 - Must use Tailwind v4 utility classes
 - Component variants via `tailwind-variants`
 - Class merging via `cn()` utility (clsx + tailwind-merge)
 - No inline styles or component-scoped CSS encouraged
 
 **Svelte 5 Constraints:**
+
 - Must use runes: `$props`, `$state`, `$derived`, `$effect`, `$bindable`
 - No legacy `export let` syntax
 - Render blocks: `{@render children?.()}`

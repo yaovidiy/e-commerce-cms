@@ -308,7 +308,7 @@ See `docs/CHECKBOX_TESTING.md` for complete testing guide.
 - `docs/MVP_FEATURES.md` (marked Checkbox as implemented)
 
 ### Installed Components
-- `pnpm dlx shadcn-svelte@latest add badge` (UI component)
+- `bun x shadcn-svelte@latest add badge` (UI component)
 
 ## Architecture Decisions
 

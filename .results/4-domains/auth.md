@@ -1,11 +1,13 @@
 # Authentication Domain Implementation
 
 ## Overview
+
 The authentication system uses custom session-based authentication with Argon2 password hashing and SHA-256 hashed session tokens. All authentication logic runs server-side via hooks and remote functions.
 
 ## Architecture
 
 ### Core Files
+
 - `src/lib/server/auth.ts`: Authentication utilities
 - `src/lib/remotes/user.remote.ts`: Auth remote functions (login, register, logout, CRUD)
 - `src/lib/server/schemas/index.ts`: Validation schemas
@@ -14,7 +16,9 @@ The authentication system uses custom session-based authentication with Argon2 p
 - UI Components: Login form, signup form, logout button
 
 ### Remote Functions Pattern
+
 **All authentication operations use SvelteKit's experimental remote functions for type-safe client-server communication:**
+
 - `login()` - Form function for authentication
 - `register()` - Form function for registration with first-user-as-admin logic
 - `logout()` - Form function for session termination
@@ -24,6 +28,7 @@ The authentication system uses custom session-based authentication with Argon2 p
 ## Session Management
 
 ### Session Token Generation
+
 ```typescript
 export function generateSessionToken() {
 	const bytes = crypto.getRandomValues(new Uint8Array(20));
@@ -33,41 +38,41 @@ export function generateSessionToken() {
 ```
 
 **Key Points:**
+
 - 20 bytes of entropy (160 bits)
 - Base32 lowercase encoding
 - Uses Web Crypto API
 - Returns token like: "abcd1234efgh5678ijkl"
 
 ### Session Creation
+
 ```typescript
 export async function createSession(token: string, userId: string) {
-	const sessionId = encodeHexLowerCase(
-    sha256(new TextEncoder().encode(token))
-  );
-  
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
 	const session: table.Session = {
 		id: sessionId,
 		userId,
 		expiresAt: new Date(Date.now() + DAY_IN_MS * 30)
 	};
-	
+
 	await db.insert(table.session).values(session);
 	return session;
 }
 ```
 
 **Key Points:**
+
 - Session ID is SHA-256 hash of token (prevents token exposure in DB)
 - 30-day expiration
 - Returns session object with `expiresAt` as Date
 
 ### Session Validation
+
 ```typescript
 export async function validateSessionToken(token: string) {
-	const sessionId = encodeHexLowerCase(
-    sha256(new TextEncoder().encode(token))
-  );
-  
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
 	const [result] = await db
 		.select({
 			user: { id: table.user.id, username: table.user.username },
@@ -80,7 +85,7 @@ export async function validateSessionToken(token: string) {
 	if (!result) {
 		return { session: null, user: null };
 	}
-	
+
 	const { session, user } = result;
 
 	// Check expiration
@@ -105,6 +110,7 @@ export async function validateSessionToken(token: string) {
 ```
 
 **Key Points:**
+
 - Hash token to get session ID
 - Join with user table
 - Delete expired sessions
@@ -112,6 +118,7 @@ export async function validateSessionToken(token: string) {
 - Return both session and user data
 
 ### Session Invalidation
+
 ```typescript
 export async function invalidateSession(sessionId: string) {
 	await db.delete(table.session).where(eq(table.session.id, sessionId));
@@ -121,12 +128,9 @@ export async function invalidateSession(sessionId: string) {
 ## Cookie Management
 
 ### Setting Session Cookie
+
 ```typescript
-export function setSessionTokenCookie(
-  event: RequestEvent, 
-  token: string, 
-  expiresAt: Date
-) {
+export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date) {
 	event.cookies.set(sessionCookieName, token, {
 		expires: expiresAt,
 		path: '/'
@@ -135,6 +139,7 @@ export function setSessionTokenCookie(
 ```
 
 ### Deleting Session Cookie
+
 ```typescript
 export function deleteSessionTokenCookie(event: RequestEvent) {
 	event.cookies.delete(sessionCookieName, {
@@ -144,6 +149,7 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 ```
 
 ### Cookie Name
+
 ```typescript
 export const sessionCookieName = 'auth-session';
 ```
@@ -151,6 +157,7 @@ export const sessionCookieName = 'auth-session';
 ## Password Hashing
 
 ### Hash Password (Registration)
+
 ```typescript
 import { hash } from '@node-rs/argon2';
 
@@ -163,12 +170,14 @@ const passwordHash = await hash(password, {
 ```
 
 **Parameters (MUST use these exact values):**
+
 - `memoryCost: 19456` (19 MiB)
 - `timeCost: 2` iterations
 - `outputLen: 32` bytes
 - `parallelism: 1` thread
 
 ### Verify Password (Login)
+
 ```typescript
 import { verify } from '@node-rs/argon2';
 
@@ -196,6 +205,7 @@ function generateUserId() {
 ```
 
 **Key Points:**
+
 - 15 bytes = 120 bits of entropy
 - Base32 lowercase encoding
 - Comparable security to UUID v4 (122 bits)
@@ -203,6 +213,7 @@ function generateUserId() {
 ## Request Hooks
 
 ### Hooks Setup (`src/hooks.server.ts`)
+
 ```typescript
 import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth.js';
@@ -213,7 +224,7 @@ const handleParaglide: Handle = i18n.handle();
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
-	
+
 	if (!sessionToken) {
 		event.locals.user = null;
 		event.locals.session = null;
@@ -221,7 +232,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	}
 
 	const { session, user } = await auth.validateSessionToken(sessionToken);
-	
+
 	if (session) {
 		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	} else {
@@ -238,6 +249,7 @@ export const handle: Handle = sequence(handleParaglide, handleAuth);
 ```
 
 **Key Points:**
+
 - Runs before every request
 - Validates session token from cookie
 - Sets `event.locals.user` and `event.locals.session`
@@ -261,15 +273,17 @@ declare global {
 ## Login Flow
 
 ### 1. Display Login Form
+
 ```svelte
 <form method="POST" action="?/login">
-  <input name="username" />
-  <input name="password" type="password" />
-  <button type="submit">Login</button>
+	<input name="username" />
+	<input name="password" type="password" />
+	<button type="submit">Login</button>
 </form>
 ```
 
 ### 2. Process Login (+page.server.ts)
+
 ```typescript
 export const actions: Actions = {
 	login: async (event) => {
@@ -286,10 +300,8 @@ export const actions: Actions = {
 		}
 
 		// Get user from database
-		const results = await db.select()
-      .from(table.user)
-      .where(eq(table.user.username, username));
-      
+		const results = await db.select().from(table.user).where(eq(table.user.username, username));
+
 		const existingUser = results.at(0);
 		if (!existingUser) {
 			return fail(400, { message: 'Incorrect username or password' });
@@ -302,7 +314,7 @@ export const actions: Actions = {
 			outputLen: 32,
 			parallelism: 1
 		});
-		
+
 		if (!validPassword) {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
@@ -320,15 +332,17 @@ export const actions: Actions = {
 ## Registration Flow
 
 ### 1. Display Registration Form
+
 ```svelte
 <form method="POST" action="?/register">
-  <input name="username" />
-  <input name="password" type="password" />
-  <button type="submit">Register</button>
+	<input name="username" />
+	<input name="password" type="password" />
+	<button type="submit">Register</button>
 </form>
 ```
 
 ### 2. Process Registration (+page.server.ts)
+
 ```typescript
 export const actions: Actions = {
 	register: async (event) => {
@@ -355,11 +369,11 @@ export const actions: Actions = {
 
 		// Insert user
 		try {
-			await db.insert(table.user).values({ 
-        id: userId, 
-        username, 
-        passwordHash 
-      });
+			await db.insert(table.user).values({
+				id: userId,
+				username,
+				passwordHash
+			});
 
 			// Create session
 			const sessionToken = auth.generateSessionToken();
@@ -368,7 +382,7 @@ export const actions: Actions = {
 		} catch (e) {
 			return fail(500, { message: 'An error has occurred' });
 		}
-		
+
 		return redirect(302, '/dashboard');
 	}
 };
@@ -382,7 +396,7 @@ export const actions: Actions = {
 		if (!event.locals.session) {
 			return fail(401);
 		}
-		
+
 		await auth.invalidateSession(event.locals.session.id);
 		auth.deleteSessionTokenCookie(event);
 
@@ -394,6 +408,7 @@ export const actions: Actions = {
 ## Validation Functions
 
 ### Username Validation
+
 ```typescript
 function validateUsername(username: unknown): username is string {
 	return (
@@ -406,22 +421,21 @@ function validateUsername(username: unknown): username is string {
 ```
 
 **Rules:**
+
 - 3-31 characters
 - Lowercase letters, numbers, underscores, hyphens only
 - No spaces or special characters
 
 ### Password Validation
+
 ```typescript
 function validatePassword(password: unknown): password is string {
-	return (
-		typeof password === 'string' && 
-		password.length >= 6 && 
-		password.length <= 255
-	);
+	return typeof password === 'string' && password.length >= 6 && password.length <= 255;
 }
 ```
 
 **Rules:**
+
 - 6-255 characters
 - No character restrictions (allows special chars)
 
@@ -432,7 +446,7 @@ export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	}
-	
+
 	// User is authenticated
 	return { user: event.locals.user };
 };
@@ -444,10 +458,10 @@ export const load: PageServerLoad = async (event) => {
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
 // Session duration
-const SESSION_DURATION = DAY_IN_MS * 30;  // 30 days
+const SESSION_DURATION = DAY_IN_MS * 30; // 30 days
 
 // Renewal threshold
-const RENEWAL_THRESHOLD = DAY_IN_MS * 15;  // 15 days before expiry
+const RENEWAL_THRESHOLD = DAY_IN_MS * 15; // 15 days before expiry
 ```
 
 ## Dependencies

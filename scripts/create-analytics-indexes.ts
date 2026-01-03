@@ -4,7 +4,7 @@
  * This script creates indexes on the order_item and order tables
  * to optimize analytics query performance.
  * 
- * Run with: pnpm tsx scripts/create-analytics-indexes.ts
+ * Run with: bun tsx scripts/create-analytics-indexes.ts
  */
 
 import Database from 'better-sqlite3';

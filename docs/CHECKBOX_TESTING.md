@@ -134,7 +134,7 @@ Server runs at http://localhost:5173
 
 **Steps:**
 1. Configure `.env` with Checkbox credentials
-2. Start dev server: `pnpm dev`
+2. Start dev server: `bun dev`
 3. Login as admin
 4. Navigate to `/admin/receipts`
 5. Click "Open Shift"

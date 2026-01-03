@@ -1,6 +1,7 @@
 # Component Architecture Domain
 
 ## Overview
+
 The component architecture is organized into **4 primary folders** following separation of concerns and usage patterns. This structure ensures clear boundaries, minimal duplication, and scalable organization.
 
 ## 4-Tier Structure
@@ -18,12 +19,14 @@ src/lib/components/
 **Purpose**: Low-level, design system components (shadcn-svelte)
 
 **Characteristics**:
+
 - Framework-agnostic UI primitives
 - No business logic or API calls
 - Highly reusable across entire application
 - Follow shadcn-svelte conventions
 
 **Example Components**:
+
 - `button/` - Base button component with variants
 - `input/` - Form input primitives
 - `dialog/` - Modal dialogs
@@ -31,6 +34,7 @@ src/lib/components/
 - `table/` - Data table primitives
 
 **Rules**:
+
 - ✅ Always check https://www.shadcn-svelte.com/llms.txt before creating
 - ✅ Use `tailwind-variants` for styling
 - ✅ Export via barrel `index.ts`
@@ -41,6 +45,7 @@ src/lib/components/
 **Purpose**: Components exclusively for admin dashboard/CMS
 
 **Structure**:
+
 ```
 admin/
 ├── layout/          # Sidebars, headers, navigation
@@ -49,11 +54,13 @@ admin/
 ```
 
 **Example Components**:
+
 - `admin/layout/admin-sidebar.svelte`
 - `admin/features/product-management/product-form.svelte`
 - `admin/widgets/quick-stats-card.svelte`
 
 **Rules**:
+
 - ✅ Use remote functions for data operations
 - ✅ Check `event.locals.user` for authentication
 - ✅ Group by feature domain
@@ -64,6 +71,7 @@ admin/
 **Purpose**: Components for public e-commerce storefront
 
 **Structure**:
+
 ```
 client/
 ├── layout/          # Site headers, footers, navigation
@@ -72,12 +80,14 @@ client/
 ```
 
 **Example Components**:
+
 - `client/layout/site-header.svelte`
 - `client/features/product-catalog/product-card.svelte`
 - `client/features/cart/cart-drawer.svelte`
 - `client/widgets/newsletter-signup.svelte`
 
 **Rules**:
+
 - ✅ Optimize for SEO and performance
 - ✅ Group by customer journey
 - ✅ Use i18n for multi-language support
@@ -88,6 +98,7 @@ client/
 **Purpose**: Components used across both admin and client contexts
 
 **Structure**:
+
 ```
 common/
 ├── layout/          # Generic page layout components
@@ -99,12 +110,14 @@ common/
 ```
 
 **Example Components**:
+
 - `common/data-display/data-table.svelte`
 - `common/forms/rich-text-editor.svelte`
 - `common/feedback/toast-notification.svelte`
 - `common/utility/language-switcher.svelte`
 
 **Rules**:
+
 - ✅ Context-agnostic (works in admin and client)
 - ✅ Reusable across multiple features
 - ✅ Can compose `/ui` components
@@ -155,6 +168,7 @@ import { RichTextEditor } from '$lib/components/common/forms';
 ## Naming Conventions
 
 **Files**: `kebab-case.svelte`
+
 ```
 product-card.svelte
 admin-sidebar.svelte
@@ -162,11 +176,13 @@ cart-drawer.svelte
 ```
 
 **Exports**: `PascalCase`
+
 ```typescript
 export { ProductCard, ProductGrid } from './features/product-catalog';
 ```
 
 **Folders**: `kebab-case`
+
 ```
 product-management/
 user-account/
@@ -177,6 +193,7 @@ user-account/
 ## Best Practices
 
 ### DO ✅
+
 - Use shadcn-svelte for all base UI components
 - Group admin features by domain (product, order, user)
 - Group client features by customer journey (catalog, cart, checkout)
@@ -186,6 +203,7 @@ user-account/
 - Keep components focused and single-purpose
 
 ### DON'T ❌
+
 - Mix admin and client logic in same component
 - Duplicate code between admin/client (extract to `/common`)
 - Create custom UI components without checking shadcn-svelte first
@@ -196,41 +214,47 @@ user-account/
 ## Integration Points
 
 ### With Remote Functions
+
 All data operations use remote functions:
+
 ```svelte
 <script lang="ts">
-  import { getAllProducts } from '$lib/remotes/product.remote';
-  
-  let products = $state([]);
-  
-  async function loadProducts() {
-    products = await getAllProducts();
-  }
+	import { getAllProducts } from '$lib/remotes/product.remote';
+
+	let products = $state([]);
+
+	async function loadProducts() {
+		products = await getAllProducts();
+	}
 </script>
 ```
 
 ### With i18n
+
 All user-facing text uses translation keys:
+
 ```svelte
 <script lang="ts">
-  import * as m from '$lib/paraglide/messages';
+	import * as m from '$lib/paraglide/messages';
 </script>
 
 <Button>{m.addToCart()}</Button>
 ```
 
 ### With UI Components
+
 Higher-level components compose base UI:
+
 ```svelte
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button';
-  import { Card } from '$lib/components/ui/card';
-  
-  // Feature-specific component logic
+	import { Button } from '$lib/components/ui/button';
+	import { Card } from '$lib/components/ui/card';
+
+	// Feature-specific component logic
 </script>
 
 <Card>
-  <Button>Action</Button>
+	<Button>Action</Button>
 </Card>
 ```
 
@@ -244,20 +268,24 @@ Higher-level components compose base UI:
 ## Files
 
 **UI Components**:
+
 - `src/lib/components/ui/button/button.svelte`
 - `src/lib/components/ui/button/index.ts`
 
 **Admin Components**:
+
 - `src/lib/components/admin/layout/`
 - `src/lib/components/admin/features/`
 - `src/lib/components/admin/widgets/`
 
 **Client Components**:
+
 - `src/lib/components/client/layout/`
 - `src/lib/components/client/features/`
 - `src/lib/components/client/widgets/`
 
 **Common Components**:
+
 - `src/lib/components/common/layout/`
 - `src/lib/components/common/data-display/`
 - `src/lib/components/common/forms/`

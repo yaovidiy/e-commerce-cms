@@ -147,7 +147,7 @@ invalidateCategoryCaches(); // Clears categories + products (cascade)
 ### Index Creation
 
 ```bash
-pnpm tsx scripts/create-additional-indexes.ts
+bun tsx scripts/create-additional-indexes.ts
 
 # Result:
 ✅ Index Creation Complete!
@@ -200,7 +200,7 @@ All files compile cleanly:
 - Bundle analyzer for identifying large files
 - Web Vitals tracking infrastructure
 - Performance metrics visible in dev mode
-- Ready for: `pnpm lighthouse [url]`
+- Ready for: `bun lighthouse [url]`
 
 ### ✅ Task 7: Performance Monitoring
 - PerformanceMonitor class (server-side)
