@@ -5,6 +5,14 @@ import { i18n } from '$lib/i18n';
 
 const handleParaglide: Handle = i18n.handle();
 
+// Gracefully handle PostHog shutdown timeout during build
+if (process.env.NODE_ENV === 'production') {
+	process.on('beforeExit', () => {
+		// Allow PostHog to gracefully shutdown without blocking
+		process.exit(0);
+	});
+}
+
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
 	if (!sessionToken) {

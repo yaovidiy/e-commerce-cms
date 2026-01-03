@@ -2,7 +2,7 @@
 # Auto-detects build dependencies for native modules
 
 [phases.build]
-cmds = ["bun install", "bun run build"]
+cmds = ["bun install", "NODE_OPTIONS=--no-warnings bun run build"]
 
 [phases.start]
 cmd = "bun run start"
