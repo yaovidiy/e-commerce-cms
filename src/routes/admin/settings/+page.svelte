@@ -470,7 +470,6 @@
 								<!-- Store Logo -->
 								<div class="space-y-2">
 									<Label>{m.settings_general_store_logo()}</Label>
-									<input type="hidden" name="storeLogo" value={generalSettings.storeLogo} />
 									<div class="flex items-start gap-4">
 										{#if generalSettings.storeLogo}
 											<div class="relative">
@@ -511,7 +510,6 @@
 								<!-- Store Favicon -->
 								<div class="space-y-2">
 									<Label>{m.settings_general_store_favicon()}</Label>
-									<input type="hidden" name="storeFavicon" value={generalSettings.storeFavicon} />
 									<div class="flex items-start gap-4">
 										{#if generalSettings.storeFavicon}
 											<div class="relative">
