@@ -1,0 +1,42 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+bun.lock.bak
+pnpm-lock.yaml
+
+# Build output (will be rebuilt)
+.svelte-kit
+build/
+
+# Development
+.env.local
+.env.*.local
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+e2e/results
+test-results
+playwright-report
+
+# Documentation
+docs/
+.results/
+
+# CI/CD
+.github/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local development
+local.db
+local.db-*
+*.log
