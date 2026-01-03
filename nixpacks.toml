@@ -1,11 +1,15 @@
 # Nixpacks configuration for Railway
 # Auto-detects build dependencies for native modules
 
-[providers]
-nodejs = "20"
+[build]
+providers = ["node"]
+
+[build.node]
+nodeVersion = "20"
 
 [phases.build]
 cmds = ["bun install", "bun run build"]
 
 [phases.start]
 cmd = "bun run start"
+
