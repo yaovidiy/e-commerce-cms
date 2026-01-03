@@ -1,8 +1,5 @@
 # Nixpacks configuration for Railway
-# Ensures all build dependencies are available for native modules
-
-[phases.setup]
-nixPkgs = ["python3", "pkg-config", "gcc", "make"]
+# Auto-detects build dependencies for native modules
 
 [phases.build]
 cmds = ["bun install", "bun run build"]
