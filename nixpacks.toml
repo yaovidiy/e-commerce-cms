@@ -2,7 +2,7 @@
 # Ensures all build dependencies are available for native modules
 
 [phases.setup]
-nixPkgs = ["python3", "pkg-config", "sqlite", "libpng", "libjpeg", "libvips"]
+nixPkgs = ["python3", "pkg-config", "gcc", "make"]
 
 [phases.build]
 cmds = ["bun install", "bun run build"]
