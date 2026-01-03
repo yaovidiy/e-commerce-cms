@@ -5,7 +5,7 @@
     "buildCommand": "bun install && bun run build"
   },
   "deploy": {
-    "startCommand": "bun run start",
+    "startCommand": "mkdir -p /data && bun run start",
     "restartPolicyType": "NEVER",
     "restartPolicyMaxRetries": 5
   }
