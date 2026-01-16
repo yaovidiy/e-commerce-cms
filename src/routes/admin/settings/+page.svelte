@@ -237,8 +237,8 @@
 			if (settingsQuery.current) {
 				// General settings
 				generalSettings.storeName = getSettingValue('store_name', 'My E-commerce Store');
-				generalSettings.storeLogo = getSettingValue('store_logo_asset_id', '');
-				generalSettings.storeFavicon = getSettingValue('store_favicon_asset_id', '');
+				generalSettings.storeLogo = getSettingValue('store_logo', '');
+				generalSettings.storeFavicon = getSettingValue('store_favicon', '');
 				generalSettings.storeEmail = getSettingValue('store_email', 'contact@example.com');
 				generalSettings.storePhone = getSettingValue('store_phone', '');
 				generalSettings.timezone = getSettingValue('timezone', 'UTC');

@@ -57,9 +57,9 @@
 			{#await storeSettingsPromise}
 				<Skeleton class="h-10 w-32" />
 			{:then settings}
-				{#if settings.storeLogoAssetId}
+				{#if settings.storeLogo}
 					<div class="max-h-full max-w-full">
-						<Image assetId={settings.storeLogoAssetId} thumbnail={false} />
+						<Image assetId={settings.storeLogo} thumbnail={false} />
 					</div>
 				{:else}
 					<span class="text-lg font-bold">{settings.storeName}</span>
@@ -83,9 +83,9 @@
 				{#await storeSettingsPromise}
 					<Skeleton class="h-10 w-32" />
 				{:then settings}
-					{#if settings.storeLogoAssetId}
+					{#if settings.storeLogo}
 						<div class="max-h-full max-w-full">
-							<Image assetId={settings.storeLogoAssetId} thumbnail={false} />
+							<Image assetId={settings.storeLogo} thumbnail={false} />
 						</div>
 					{:else}
 						<span class="text-lg font-bold">{settings.storeName}</span>

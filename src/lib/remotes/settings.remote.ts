@@ -562,8 +562,8 @@ export const getPublicSettings = query(async () => {
 
 	return {
 		storeName: settingsMap['store_name'] as string || 'My Store',
-		storeLogoAssetId: settingsMap['storeLogo'] as string || '',
-		storeFaviconAssetId: settingsMap['store_favicon'] as string || '',
+		storeLogo: settingsMap['store_logo'] as string || '',
+		storeFavicon: settingsMap['store_favicon'] as string || '',
 		storeEmail: settingsMap['store_email'] as string || '',
 		storePhone: settingsMap['store_phone'] as string || '',
 		currency: settingsMap['currency'] as string || 'USD',
@@ -806,10 +806,10 @@ export const updateGeneralSettings = form(UpdateGeneralSettingsSchema, async (da
 		settingsToUpdate.push({ key: 'store_name', value: data.storeName });
 	}
 	if (data.storeLogo !== undefined) {
-		settingsToUpdate.push({ key: 'store_logo_asset_id', value: data.storeLogo });
+		settingsToUpdate.push({ key: 'store_logo', value: data.storeLogo });
 	}
 	if (data.storeFavicon !== undefined) {
-		settingsToUpdate.push({ key: 'store_favicon_asset_id', value: data.storeFavicon });
+		settingsToUpdate.push({ key: 'store_favicon', value: data.storeFavicon });
 	}
 	if (data.storeEmail !== undefined) {
 		settingsToUpdate.push({ key: 'store_email', value: data.storeEmail });
