@@ -5,11 +5,21 @@ import { i18n } from '$lib/i18n';
 
 const handleParaglide: Handle = i18n.handle();
 
-// Gracefully handle PostHog shutdown timeout during build
+// Gracefully handle PostHog shutdown timeout and unhandled rejections during build
 if (process.env.NODE_ENV === 'production') {
 	process.on('beforeExit', () => {
-		// Allow PostHog to gracefully shutdown without blocking
+		// Allow PostHog or other background tasks to shut down without blocking build
 		process.exit(0);
+	});
+
+	process.on('unhandledRejection', (reason) => {
+		// Specifically catch PostHog timeout rejection to prevent build failure
+		if (reason instanceof Error && reason.message.includes('PostHog')) {
+			console.warn('Caught PostHog unhandled rejection during shutdown:', reason.message);
+			process.exit(0);
+		}
+		// Log other unhandled rejections but don't ignore them automatically
+		console.error('Unhandled Rejection:', reason);
 	});
 }
 

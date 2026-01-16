@@ -25,7 +25,7 @@ export default defineConfig({
 					// Vendor chunks
 					if (id.includes('node_modules')) {
 						// Large UI libraries
-						if (id.includes('@radix-ui') || id.includes('lucide-svelte')) {
+						if (id.includes('bits-ui') || id.includes('lucide-svelte')) {
 							return 'vendor-ui';
 						}
 						// Editor libraries
