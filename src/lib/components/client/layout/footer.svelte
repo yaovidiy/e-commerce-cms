@@ -47,7 +47,8 @@
 									alt={publicSettings.storeName}
 									width={240}
 									height={40}
-                  class="max-h-full max-w-full object-contain"
+									class="max-h-10 max-w-full object-cover"
+									thumbnail={false}
 								/>
 							{:else}
 								<span class="text-lg font-bold">{publicSettings.storeName}</span>
