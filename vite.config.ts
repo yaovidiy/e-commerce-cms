@@ -16,35 +16,7 @@ export default defineConfig({
 		// Enable minification
 		minify: 'esbuild',
 		// Target modern browsers for smaller bundles
-		target: 'es2020',
-		// Enable tree-shaking
-		rollupOptions: {
-			output: {
-				// Manual chunks for better code splitting
-				manualChunks: (id) => {
-					// Vendor chunks
-					if (id.includes('node_modules')) {
-						// Large UI libraries
-						if (id.includes('bits-ui') || id.includes('lucide-svelte')) {
-							return 'vendor-ui';
-						}
-						// Editor libraries
-						if (id.includes('@tiptap') || id.includes('prosemirror')) {
-							return 'vendor-editor';
-						}
-						// Other vendor code
-						return 'vendor';
-					}
-					
-					// Admin features (lazy loaded)
-					if (id.includes('/src/lib/components/admin/')) {
-						return 'admin';
-					}
-				}
-			}
-		},
-		// Chunk size warning limit
-		chunkSizeWarningLimit: 600
+		target: 'es2020'
 	},
 	optimizeDeps: {
 		// Pre-bundle dependencies for faster dev server
