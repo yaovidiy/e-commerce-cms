@@ -7,7 +7,7 @@
  * Run with: bun tsx scripts/create-analytics-indexes.ts
  */
 
-import Database from 'better-sqlite3';
+import { Database } from "bun:sqlite";
 import { join } from 'path';
 
 const dbPath = join(process.cwd(), 'local.db');

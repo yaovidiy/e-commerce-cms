@@ -11,7 +11,7 @@
  * - User queries (authentication, lookups)
  */
 
-import Database from 'better-sqlite3';
+import { Database } from "bun:sqlite";
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 

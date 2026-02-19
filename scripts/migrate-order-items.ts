@@ -7,8 +7,8 @@
  * Run with: pnpm tsx scripts/migrate-order-items.ts
  */
 
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { join } from 'path';
 import * as schema from '../src/lib/server/db/schema.js';
 
