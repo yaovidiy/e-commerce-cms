@@ -24,43 +24,6 @@ export const GetBlogsSchema = v.object({
 	pageSize: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 12)
 });
 
-// Auth schemas
-export const LoginSchema = v.object({
-	username: v.pipe(
-		v.string(),
-		v.minLength(3, 'Username must be at least 3 characters'),
-		v.maxLength(31, 'Username must be at most 31 characters'),
-		v.regex(
-			/^[a-z0-9_-]+$/,
-			'Username must contain only lowercase letters, numbers, dashes, and underscores'
-		)
-	),
-	password: v.pipe(
-		v.string(),
-		v.minLength(6, 'Password must be at least 6 characters'),
-		v.maxLength(255, 'Password must be at most 255 characters')
-	),
-	redirect: v.optional(v.string(), '')
-});
-
-export const RegisterSchema = v.object({
-	username: v.pipe(
-		v.string(),
-		v.minLength(3, 'Username must be at least 3 characters'),
-		v.maxLength(31, 'Username must be at most 31 characters'),
-		v.regex(
-			/^[a-z0-9_-]+$/,
-			'Username must contain only lowercase letters, numbers, dashes, and underscores'
-		)
-	),
-	email: v.optional(v.pipe(v.string(), v.email('Invalid email address'))),
-	password: v.pipe(
-		v.string(),
-		v.minLength(6, 'Password must be at least 6 characters'),
-		v.maxLength(255, 'Password must be at most 255 characters')
-	)
-});
-
 export const CreateUserSchema = v.object({
 	username: v.pipe(
 		v.string(),

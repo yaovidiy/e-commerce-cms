@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { User, Phone, Menu, Search, ShoppingCart } from '@lucide/svelte/icons';
-	import { logout } from '$lib/remotes/user.remote';
+	import { authClient } from '$lib/auth-client';
 	import { getMyProfile } from '$lib/remotes/profile.remote';
 	import { getNavigationMenuByLocation } from '$lib/remotes/navigation.remote';
 	import { getAllContactPhones } from '$lib/remotes/navigation.remote';
@@ -24,6 +24,17 @@
 	const isAuthRoute = $derived(page.url.pathname.startsWith('/auth'));
 
 	let searchQuery = $state('');
+	let logoutPending = $state(false);
+
+	async function handleLogout() {
+		logoutPending = true;
+		try {
+			await authClient.signOut();
+			goto('/');
+		} finally {
+			logoutPending = false;
+		}
+	}
 </script>
 
 <header class="sticky top-0 z-50 w-full bg-white">
@@ -228,12 +239,12 @@
 									<DropdownMenu.Separator />
 									<DropdownMenu.Item>
 										<button
-											type="submit"
-											disabled={!!logout.pending}
-											onclick={() => logout()}
+											type="button"
+											disabled={logoutPending}
+											onclick={handleLogout}
 											class="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50"
 										>
-											{logout.pending
+											{logoutPending
 												? m.auth_logging_out?.() || 'Logging out...'
 												: m.auth_logout()}
 										</button>

@@ -60,7 +60,7 @@ export const updateProfile = form(UpdateProfileSchema, async (data) => {
     // Update user profile
     const [updatedUser] = await db
         .update(tables.user)
-        .set(updateData)
+        .set({ ...updateData, updatedAt: new Date() })
         .where(eq(tables.user.id, user.id))
         .returning();
     

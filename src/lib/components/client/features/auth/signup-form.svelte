@@ -2,73 +2,114 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { register } from '$lib/remotes/user.remote';
+	import { authClient } from '$lib/auth-client';
 	import * as m from '$lib/paraglide/messages';
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 
+	let username = $state('');
+	let email = $state('');
+	let password = $state('');
 	let confirmPassword = $state('');
+	let pending = $state(false);
+	let usernameError = $state('');
+	let emailError = $state('');
+	let passwordError = $state('');
 	let passwordMismatch = $state(false);
 
 	function checkPasswords() {
-		const password = register.fields.password.value();
 		passwordMismatch = password !== confirmPassword && confirmPassword.length > 0;
+	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		if (passwordMismatch) return;
+
+		pending = true;
+		usernameError = '';
+		emailError = '';
+		passwordError = '';
+
+		try {
+			const result = await authClient.signUp.email({
+				name: username,
+				email,
+				password,
+				username
+			});
+
+			if (result.error) {
+				const message = result.error.message || 'Registration failed';
+				if (message.toLowerCase().includes('username')) {
+					usernameError = message;
+				} else if (message.toLowerCase().includes('email')) {
+					emailError = message;
+				} else {
+					passwordError = message;
+				}
+			} else {
+				confirmPassword = '';
+				passwordMismatch = false;
+				goto('/');
+			}
+		} catch (error) {
+			console.error('Registration error:', error);
+			toast.error(error instanceof Error ? error.message : 'An unknown error occurred during registration.');
+		} finally {
+			pending = false;
+		}
 	}
 </script>
 
-<form
-	{...register.enhance(async ({ submit, form }) => {
-		try {
-			await submit();
-			confirmPassword = '';
-			passwordMismatch = false;
-			goto('/');
-			form.reset();
-		} catch (error) {
-			console.error('Registration error:', error);
-		}
-	})}
->
+<form onsubmit={handleSubmit}>
 	<div class="space-y-4">
 		<div class="space-y-2">
 			<Label for="username">{m.auth_username()}</Label>
 			<Input
-				{...register.fields.username.as('text')}
 				id="username"
+				type="text"
+				bind:value={username}
 				placeholder={m.auth_username()}
-				disabled={!!register.pending}
+				disabled={pending}
 				required
+				autocomplete="username"
 			/>
-			{#each register.fields.username.issues() as issue}
-				<p class="text-sm text-red-600 dark:text-red-400">{issue.message}</p>
-			{/each}
+			{#if usernameError}
+				<p class="text-sm text-red-600 dark:text-red-400">{usernameError}</p>
+			{/if}
 		</div>
 
 		<div class="space-y-2">
 			<Label for="email">{m.auth_email()}</Label>
 			<Input
-				{...register.fields.email.as('email')}
 				id="email"
+				type="email"
+				bind:value={email}
 				placeholder={m.auth_email()}
-				disabled={!!register.pending}
+				disabled={pending}
+				required
+				autocomplete="email"
 			/>
-			{#each register.fields.email.issues() as issue}
-				<p class="text-sm text-red-600 dark:text-red-400">{issue.message}</p>
-			{/each}
+			{#if emailError}
+				<p class="text-sm text-red-600 dark:text-red-400">{emailError}</p>
+			{/if}
 		</div>
 
 		<div class="space-y-2">
 			<Label for="password">{m.auth_password()}</Label>
 			<Input
-				{...register.fields.password.as('password')}
 				id="password"
+				type="password"
+				bind:value={password}
 				placeholder={m.auth_password()}
-				disabled={!!register.pending}
+				disabled={pending}
 				oninput={checkPasswords}
 				required
+				autocomplete="new-password"
 			/>
-			{#each register.fields.password.issues() as issue}
-				<p class="text-sm text-red-600 dark:text-red-400">{issue.message}</p>
-			{/each}
+			{#if passwordError}
+				<p class="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+			{/if}
 		</div>
 
 		<div class="space-y-2">
@@ -78,17 +119,18 @@
 				type="password"
 				bind:value={confirmPassword}
 				placeholder={m.auth_confirm_password()}
-				disabled={!!register.pending}
+				disabled={pending}
 				oninput={checkPasswords}
 				required
+				autocomplete="new-password"
 			/>
 			{#if passwordMismatch}
 				<p class="text-sm text-red-600 dark:text-red-400">{m.auth_error_passwords_not_match()}</p>
 			{/if}
 		</div>
 
-		<Button type="submit" class="w-full" disabled={!!register.pending || passwordMismatch}>
-			{register.pending ? '...' : m.auth_sign_up()}
+		<Button type="submit" class="w-full" disabled={pending || passwordMismatch}>
+			{pending ? '...' : m.auth_sign_up()}
 		</Button>
 	</div>
 </form>

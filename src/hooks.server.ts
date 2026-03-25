@@ -1,7 +1,9 @@
 import { sequence } from '@sveltejs/kit/hooks';
-import * as auth from '$lib/server/auth.js';
+import { auth } from '$lib/server/auth';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
 import type { Handle } from '@sveltejs/kit';
 import { i18n } from '$lib/i18n';
+import { building } from '$app/environment';
 
 const handleParaglide: Handle = i18n.handle();
 
@@ -24,22 +26,21 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const handleAuth: Handle = async ({ event, resolve }) => {
-	const sessionToken = event.cookies.get(auth.sessionCookieName);
-	if (!sessionToken) {
+	return svelteKitHandler({ auth, event, resolve, building });
+};
+
+const handleSession: Handle = async ({ event, resolve }) => {
+	const sessionData = await auth.api.getSession({
+		headers: event.request.headers
+	});
+
+	if (sessionData) {
+		event.locals.user = sessionData.user;
+		event.locals.session = sessionData.session;
+	} else {
 		event.locals.user = null;
 		event.locals.session = null;
-		return resolve(event);
 	}
-
-	const { session, user } = await auth.validateSessionToken(sessionToken);
-	if (session) {
-		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
-	} else {
-		auth.deleteSessionTokenCookie(event);
-	}
-
-	event.locals.user = user;
-	event.locals.session = session;
 
 	return resolve(event);
 };
@@ -102,4 +103,4 @@ const handleSeoHeaders: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
-export const handle: Handle = sequence(handleParaglide, handleAuth, handleSeoHeaders);
+export const handle: Handle = sequence(handleParaglide, handleAuth, handleSession, handleSeoHeaders);

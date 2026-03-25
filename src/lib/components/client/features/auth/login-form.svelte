@@ -2,60 +2,83 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { login } from '$lib/remotes/user.remote';
+	import { authClient } from '$lib/auth-client';
 	import * as m from '$lib/paraglide/messages';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
 	// Get redirect URL from query params
-	let redirectUrl = $derived(page.url.searchParams.get('redirect') || '');
-</script>
+	let redirectUrl = $derived(page.url.searchParams.get('redirect') || '/dashboard');
 
-<form
-	{...login.enhance(async ({ submit, form }) => {
+	let username = $state('');
+	let password = $state('');
+	let pending = $state(false);
+	let usernameError = $state('');
+	let passwordError = $state('');
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		pending = true;
+		usernameError = '';
+		passwordError = '';
+
 		try {
-			await submit();
-			form.reset();
+			const result = await authClient.signIn.username({
+				username,
+				password
+			});
+
+			if (result.error) {
+				passwordError = result.error.message || 'Incorrect username or password';
+			} else {
+				goto(redirectUrl);
+			}
 		} catch (error) {
 			console.error('Login error:', error);
-			toast.error((error instanceof Error ? error.message : 'An unknown error occurred during login.'));
+			toast.error(error instanceof Error ? error.message : 'An unknown error occurred during login.');
+		} finally {
+			pending = false;
 		}
-	})}
->
-	<!-- Hidden redirect field -->
-	<input {...login.fields.redirect.as('text')} type="hidden" value={redirectUrl} />
-	
+	}
+</script>
+
+<form onsubmit={handleSubmit}>
 	<div class="space-y-4">
 		<div class="space-y-2">
 			<Label for="username">{m.auth_username()}</Label>
 			<Input
-				{...login.fields.username.as('text')}
 				id="username"
+				type="text"
+				bind:value={username}
 				placeholder={m.auth_username()}
-				disabled={!!login.pending}
+				disabled={pending}
 				required
+				autocomplete="username"
 			/>
-			{#each login.fields.username.issues() as issue}
-				<p class="text-sm text-red-600 dark:text-red-400">{issue.message}</p>
-			{/each}
+			{#if usernameError}
+				<p class="text-sm text-red-600 dark:text-red-400">{usernameError}</p>
+			{/if}
 		</div>
 
 		<div class="space-y-2">
 			<Label for="password">{m.auth_password()}</Label>
 			<Input
-				{...login.fields.password.as('password')}
 				id="password"
+				type="password"
+				bind:value={password}
 				placeholder={m.auth_password()}
-				disabled={!!login.pending}
+				disabled={pending}
 				required
+				autocomplete="current-password"
 			/>
-			{#each login.fields.password.issues() as issue}
-				<p class="text-sm text-red-600 dark:text-red-400">{issue.message}</p>
-			{/each}
+			{#if passwordError}
+				<p class="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+			{/if}
 		</div>
 
-		<Button type="submit" class="w-full" disabled={!!login.pending}>
-			{login.pending ? '...' : m.auth_sign_in()}
+		<Button type="submit" class="w-full" disabled={pending}>
+			{pending ? '...' : m.auth_sign_in()}
 		</Button>
 	</div>
 </form>

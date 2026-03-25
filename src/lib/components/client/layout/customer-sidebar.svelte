@@ -6,7 +6,20 @@
 	import { getMyProfile } from '$lib/remotes/profile.remote';
 	import { getWishlistCount } from '$lib/remotes/wishlist.remote';
 	import { goto } from '$app/navigation';
-	import { logout, me } from '$lib/remotes/user.remote';
+	import { me } from '$lib/remotes/user.remote';
+	import { authClient } from '$lib/auth-client';
+
+	let logoutPending = $state(false);
+
+	async function handleLogout() {
+		logoutPending = true;
+		try {
+			await authClient.signOut();
+			goto('/auth/login');
+		} finally {
+			logoutPending = false;
+		}
+	}
 
 	// Navigation items for customer dashboard
 	const navItems = [
@@ -160,16 +173,15 @@
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 				<Sidebar.MenuItem>
-					<form {...logout} class="w-full">
-						<button
-							type="submit"
-							disabled={!!logout.pending}
-							class="hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground ring-sidebar-ring flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
-						>
-							<LogOut class="size-4" />
-							<span>{logout.pending ? 'Logging out...' : m.auth_logout()}</span>
-						</button>
-					</form>
+					<button
+						type="button"
+						disabled={logoutPending}
+						onclick={handleLogout}
+						class="hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground ring-sidebar-ring flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
+					>
+						<LogOut class="size-4" />
+						<span>{logoutPending ? 'Logging out...' : m.auth_logout()}</span>
+					</button>
 				</Sidebar.MenuItem>
 			{:catch error}
 				<Sidebar.MenuItem>

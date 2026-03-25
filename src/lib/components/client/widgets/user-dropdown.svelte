@@ -4,11 +4,17 @@
 	import { goto } from '$app/navigation';
 	import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
 	import { getMyProfile } from '$lib/remotes/profile.remote';
-	import { logout } from '$lib/remotes/user.remote';
+	import { authClient } from '$lib/auth-client';
 	import * as m from '$lib/paraglide/messages';
 
 	let open = false;
 	const userPromise = getMyProfile();
+
+	async function handleLogout() {
+		open = false;
+		await authClient.signOut();
+		goto('/');
+	}
 </script>
 
 <DropdownMenu.Root bind:open>
@@ -41,13 +47,7 @@
 							goto('/dashboard/settings');
 						}}>{m.nav_settings?.() || 'Налаштування'}</DropdownMenu.Item>
 					<DropdownMenu.Separator />
-					<DropdownMenu.Item
-						onclick={async () => {
-							open = false;
-							await logout();
-							goto('/');
-						}}
-					>
+					<DropdownMenu.Item onclick={handleLogout}>
 						{m.auth_logout?.() || 'Вийти'}
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>

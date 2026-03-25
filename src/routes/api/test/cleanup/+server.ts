@@ -25,6 +25,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			if (user) {
 				// Delete user sessions first
 				await db.delete(tables.session).where(eq(tables.session.userId, user.id));
+				// Delete user accounts (better-auth credentials)
+				await db.delete(tables.account).where(eq(tables.account.userId, user.id));
 				// Delete user blogs
 				await db.delete(tables.blog).where(eq(tables.blog.authorId, user.id));
 				// Delete user
