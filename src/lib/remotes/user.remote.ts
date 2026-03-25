@@ -1,10 +1,8 @@
 import { form, query, getRequestEvent, command } from '$app/server';
 import { db } from '$lib/server/db';
 import * as tables from '$lib/server/db/schema';
-import * as auth from '$lib/server/auth';
+import { auth, getUser as authGetUser, requireAdminUser } from '$lib/server/auth';
 import {
-	LoginSchema,
-	RegisterSchema,
 	CreateUserSchema,
 	UpdateUserSchema,
 	DeleteUserSchema,
@@ -12,18 +10,8 @@ import {
 	FilterUsersSchema
 } from '$lib/server/schemas';
 import { eq, count, like, asc, desc, and } from 'drizzle-orm';
-import { hash, verify } from '@node-rs/argon2';
-import { encodeBase32LowerCase } from '@oslojs/encoding';
 import * as v from 'valibot';
-import { redirect } from '@sveltejs/kit';
 import { createPaginatedResponse, calculatePagination } from '$lib/server/pagination-utils';
-
-// Helper function to generate user ID
-function generateUserId() {
-	const bytes = crypto.getRandomValues(new Uint8Array(15));
-	const id = encodeBase32LowerCase(bytes);
-	return id;
-}
 
 // Query functions (read operations)
 export const me = query(async () => {
@@ -36,6 +24,7 @@ export const me = query(async () => {
 	return {
 		id: event.locals.user.id,
 		username: event.locals.user.username,
+		name: event.locals.user.name,
 		email: event.locals.user.email,
 		role: event.locals.user.role,
 		isAdmin: event.locals.user.isAdmin
@@ -43,7 +32,7 @@ export const me = query(async () => {
 });
 
 export const getAllUsers = query(FilterUsersSchema, async (data) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const { username, page, pageSize, sortField, sortDirection } = data;
 
@@ -110,7 +99,7 @@ export const getAllUsers = query(FilterUsersSchema, async (data) => {
 });
 
 export const getUserById = query(GetUserByIdSchema, async (data) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const [user] = await db
 		.select({
@@ -132,7 +121,7 @@ export const getUserById = query(GetUserByIdSchema, async (data) => {
 });
 
 export const getUserByUsername = query(v.string(), async (username) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const [user] = await db
 		.select({
@@ -149,122 +138,9 @@ export const getUserByUsername = query(v.string(), async (username) => {
 	return user || null;
 });
 
-// Auth form functions with session management
-export const login = form(LoginSchema, async (data, invalid) => {
-	const event = getRequestEvent();
-	const { username, password, redirect: redirectUrl } = data;
-
-	const [existingUser] = await db
-		.select()
-		.from(tables.user)
-		.where(eq(tables.user.username, username));
-
-	if (!existingUser) {
-		invalid(invalid.password('Incorrect username or password'));
-		console.info('No such user', username);
-		return;
-	}
-
-	const validPassword = await verify(existingUser.passwordHash, password, {
-		memoryCost: 19456,
-		timeCost: 2,
-		outputLen: 32,
-		parallelism: 1
-	});
-
-	if (!validPassword) {
-		invalid(invalid.password('Incorrect username or password'));
-		console.info('Invalid password for user', username);
-		return;
-	}
-
-	// Create session
-	const sessionToken = auth.generateSessionToken();
-	const session = await auth.createSession(sessionToken, existingUser.id);
-	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
-
-	// Redirect to the specified URL or default to dashboard
-	redirect(303, redirectUrl || '/dashboard');
-});
-
-export const register = form(RegisterSchema, async (data, invalid) => {
-	const event = getRequestEvent();
-	const { username, email, password } = data;
-
-	// Check if username already exists
-	const [existingUser] = await db
-		.select()
-		.from(tables.user)
-		.where(eq(tables.user.username, username));
-
-	if (existingUser) {
-		invalid(invalid.username('Username already taken'));
-		console.info('Username already taken:', username);
-		return;
-	}
-
-	// Check if this is the first user
-	const [userCountResult] = await db
-		.select({ count: count() })
-		.from(tables.user);
-
-	const isFirstUser = userCountResult.count === 0;
-
-	// Generate user ID
-	const userId = generateUserId();
-
-	// Hash password
-	const passwordHash = await hash(password, {
-		memoryCost: 19456,
-		timeCost: 2,
-		outputLen: 32,
-		parallelism: 1
-	});
-
-	// Create user
-	const [newUser] = await db
-		.insert(tables.user)
-		.values({
-			id: userId,
-			username,
-			email: email || null,
-			passwordHash,
-			role: isFirstUser ? 'admin' : 'user',
-			isAdmin: isFirstUser,
-			createdAt: new Date()
-		})
-		.returning();
-
-	// Create session
-	const sessionToken = auth.generateSessionToken();
-	const session = await auth.createSession(sessionToken, newUser.id);
-	auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
-
-	return {
-		id: newUser.id,
-		username: newUser.username,
-		email: newUser.email,
-		role: newUser.role,
-		isAdmin: newUser.isAdmin
-	};
-});
-
-export const logout = command(async () => {
-	const event = getRequestEvent();
-
-	if (!event?.locals?.session) {
-		throw new Error('No active session');
-	}
-
-	await auth.invalidateSession(event.locals.session.id);
-	auth.deleteSessionTokenCookie(event);
-
-	return { success: true };
-});
-
 // Admin CRUD operations
 export const createUser = form(CreateUserSchema, async (data) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const event = getRequestEvent();
 	const { username, email, password, role, isAdmin } = data;
@@ -284,43 +160,57 @@ export const createUser = form(CreateUserSchema, async (data) => {
 		throw new Error('Username already taken');
 	}
 
-	// Generate user ID
-	const userId = generateUserId();
-
-	// Hash password
-	const passwordHash = await hash(password, {
-		memoryCost: 19456,
-		timeCost: 2,
-		outputLen: 32,
-		parallelism: 1
+	// Use better-auth to create user (handles password hashing and account creation)
+	const response = await auth.api.signUpEmail({
+		body: {
+			name: username,
+			email,
+			password,
+			username
+		},
+		headers: new Headers()
 	});
 
-	// Create user
-	const [newUser] = await db
-		.insert(tables.user)
-		.values({
-			id: userId,
-			username,
-			email: email || null,
-			passwordHash,
-			role: role || 'user',
-			isAdmin: isAdmin || false,
-			createdAt: new Date()
+	const newUser = response.user;
+
+	// Update user with admin-specific fields
+	if (role || isAdmin !== undefined) {
+		await db
+			.update(tables.user)
+			.set({
+				role: role || 'user',
+				isAdmin: isAdmin || false,
+				updatedAt: new Date()
+			})
+			.where(eq(tables.user.id, newUser.id));
+	}
+
+	const [updatedUser] = await db
+		.select({
+			id: tables.user.id,
+			username: tables.user.username,
+			name: tables.user.name,
+			email: tables.user.email,
+			role: tables.user.role,
+			isAdmin: tables.user.isAdmin,
+			createdAt: tables.user.createdAt
 		})
-		.returning();
+		.from(tables.user)
+		.where(eq(tables.user.id, newUser.id));
 
 	return {
-		id: newUser.id,
-		username: newUser.username,
-		email: newUser.email,
-		role: newUser.role,
-		isAdmin: newUser.isAdmin,
-		createdAt: newUser.createdAt
+		id: updatedUser.id,
+		username: updatedUser.username,
+		name: updatedUser.name,
+		email: updatedUser.email,
+		role: updatedUser.role,
+		isAdmin: updatedUser.isAdmin,
+		createdAt: updatedUser.createdAt
 	};
 });
 
 export const updateUser = form(UpdateUserSchema, async (data) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const event = getRequestEvent();
 	const { id, username, email, password, role, isAdmin } = data;
@@ -347,8 +237,10 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 		throw new Error('User not found');
 	}
 
-	// Build update object
-	const updateData: Partial<tables.InsertUser> = {};
+	// Build update object for user table
+	const updateData: Partial<tables.InsertUser> = {
+		updatedAt: new Date()
+	};
 
 	if (username !== undefined) {
 		// Check if new username is taken
@@ -361,19 +253,23 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 			throw new Error('Username already taken');
 		}
 		updateData.username = username;
+		updateData.name = username;
 	}
 
-	if (email !== undefined) {
-		updateData.email = email || null;
+	if (email !== undefined && email !== null) {
+		updateData.email = email;
 	}
 
+	// If password provided, update the account record with properly hashed password
 	if (password !== undefined) {
-		updateData.passwordHash = await hash(password, {
-			memoryCost: 19456,
-			timeCost: 2,
-			outputLen: 32,
-			parallelism: 1
-		});
+		const { hashPassword } = await import('better-auth/crypto');
+		const hashedPassword = await hashPassword(password);
+		await db
+			.update(tables.account)
+			.set({ password: hashedPassword, updatedAt: new Date() })
+			.where(
+				and(eq(tables.account.userId, id), eq(tables.account.providerId, 'credential'))
+			);
 	}
 
 	// Only admins can change role/isAdmin
@@ -404,7 +300,7 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 });
 
 export const deleteUser = form(DeleteUserSchema, async (data) => {
-	auth.requireAdminUser();
+	requireAdminUser();
 
 	const event = getRequestEvent();
 	const { id } = data;
@@ -432,6 +328,9 @@ export const deleteUser = form(DeleteUserSchema, async (data) => {
 	// Delete user sessions first
 	await db.delete(tables.session).where(eq(tables.session.userId, id));
 
+	// Delete user accounts (credentials)
+	await db.delete(tables.account).where(eq(tables.account.userId, id));
+
 	// Delete user
 	await db.delete(tables.user).where(eq(tables.user.id, id));
 
@@ -445,14 +344,14 @@ export const toggleAdminStatus = command(
 		isAdmin: v.boolean()
 	}),
 	async (data) => {
-		auth.requireAdminUser();
+		requireAdminUser();
 
 		const { id, isAdmin } = data;
 
 		// Update user
 		await db
 			.update(tables.user)
-			.set({ isAdmin })
+			.set({ isAdmin, updatedAt: new Date() })
 			.where(eq(tables.user.id, id));
 
 		// Refresh the query with default parameters
