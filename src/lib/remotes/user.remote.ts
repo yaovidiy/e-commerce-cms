@@ -164,7 +164,7 @@ export const createUser = form(CreateUserSchema, async (data) => {
 	const response = await auth.api.signUpEmail({
 		body: {
 			name: username,
-			email: email || `${username}@placeholder.local`,
+			email,
 			password,
 			username
 		},
@@ -256,8 +256,8 @@ export const updateUser = form(UpdateUserSchema, async (data) => {
 		updateData.name = username;
 	}
 
-	if (email !== undefined) {
-		updateData.email = email || existingUser.email;
+	if (email !== undefined && email !== null) {
+		updateData.email = email;
 	}
 
 	// If password provided, update the account record with properly hashed password

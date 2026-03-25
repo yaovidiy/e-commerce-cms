@@ -34,7 +34,7 @@ export const CreateUserSchema = v.object({
 			'Username must contain only lowercase letters, numbers, dashes, and underscores'
 		)
 	),
-	email: v.optional(v.pipe(v.string(), v.email('Invalid email address'))),
+	email: v.pipe(v.string(), v.email('Invalid email address')),
 	password: v.pipe(
 		v.string(),
 		v.minLength(6, 'Password must be at least 6 characters'),

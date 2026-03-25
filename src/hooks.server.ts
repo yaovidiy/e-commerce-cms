@@ -25,10 +25,12 @@ if (process.env.NODE_ENV === 'production') {
 	});
 }
 
+// Handles better-auth API routes (e.g., /api/auth/sign-in/username, /api/auth/sign-up/email)
 const handleAuth: Handle = async ({ event, resolve }) => {
 	return svelteKitHandler({ auth, event, resolve, building });
 };
 
+// Validates the session cookie on each request and populates event.locals.user / session
 const handleSession: Handle = async ({ event, resolve }) => {
 	const sessionData = await auth.api.getSession({
 		headers: event.request.headers

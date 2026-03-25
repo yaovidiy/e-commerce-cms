@@ -39,13 +39,17 @@
 			});
 
 			if (result.error) {
-				const message = result.error.message || 'Registration failed';
-				if (message.toLowerCase().includes('username')) {
-					usernameError = message;
-				} else if (message.toLowerCase().includes('email')) {
-					emailError = message;
+				const errorCode = result.error.statusText || '';
+				const errorMessage = result.error.message || 'Registration failed';
+				// Check for username-specific errors by error code
+				if (errorCode === 'USERNAME_IS_ALREADY_TAKEN' || errorCode === 'INVALID_USERNAME') {
+					usernameError = errorMessage;
+				} else if (result.error.status === 409 || errorCode === 'USER_ALREADY_EXISTS') {
+					// Email conflict
+					emailError = errorMessage;
 				} else {
-					passwordError = message;
+					// Generic error shown as password/form error
+					passwordError = errorMessage;
 				}
 			} else {
 				confirmPassword = '';

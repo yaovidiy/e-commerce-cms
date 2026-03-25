@@ -8,8 +8,11 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
-	// Get redirect URL from query params
-	let redirectUrl = $derived(page.url.searchParams.get('redirect') || '/dashboard');
+	// Get redirect URL from query params - validate to prevent open redirect
+	let rawRedirect = $derived(page.url.searchParams.get('redirect') || '/dashboard');
+	let redirectUrl = $derived(
+		rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard'
+	);
 
 	let username = $state('');
 	let password = $state('');
